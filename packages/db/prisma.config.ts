@@ -11,7 +11,8 @@ export default defineConfig({
   },
   datasource: {
     // Les migrations passent par l'URL directe : le pooler de Neon ne supporte pas
-    // tout ce dont `migrate` a besoin. `generate` n'a pas besoin d'URL.
-    url: process.env.DIRECT_URL ?? "",
+    // tout ce dont `migrate` a besoin. DATABASE_URL_UNPOOLED est le nom que lui donne
+    // l'intégration Neon de Vercel. `generate` n'a pas besoin d'URL.
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL_UNPOOLED || "",
   },
 });
