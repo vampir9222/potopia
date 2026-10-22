@@ -16,7 +16,8 @@
     "db:reset:test": "tsx scripts/reset-test.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:boundaries": "tsx scripts/check-boundaries.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",

@@ -19,7 +19,8 @@
     "db:deploy": "pnpm --filter @app/db db:deploy",
     "db:seed": "pnpm --filter @app/db db:seed",
     "db:reset:test": "pnpm --filter @app/db db:reset:test",
-    "storage:init": "pnpm --filter @app/storage storage:init"
+    "storage:init": "pnpm --filter @app/storage storage:init",
+    "check:boundaries": "pnpm --filter @app/db check:boundaries"
   },
   "devDependencies": {
     "prettier": "3.9.10",
