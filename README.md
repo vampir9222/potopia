@@ -215,8 +215,9 @@ propose aussitôt.
    ]
    ```
 
-3. **Vercel** : importer le repo, **Root Directory** `apps/web`, et comme **Build Command**
-   `cd ../.. && pnpm turbo run build --filter=@app/web` (génère le client Prisma avant le build).
+3. **Vercel** : importer le repo, **Root Directory** `apps/web`, Node.js 24. Garder la **Build
+   Command** proposée par Vercel, `turbo run build` : lancée depuis `apps/web`, elle construit l'app
+   et ses dépendances, génération du client Prisma comprise.
    Déclarer toutes les variables de `.env.example` (sauf `TEST_DATABASE_URL`), avec
    `BETTER_AUTH_URL=https://<projet>.vercel.app` et un `BETTER_AUTH_SECRET` propre à la prod.
 4. **Discord** : ajouter la redirect URI de prod (voir plus haut).
