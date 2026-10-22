@@ -1,0 +1,14 @@
+// Socle du schéma Prisma. Les modèles vivent dans le schema.prisma de chaque module
+// (packages/* et games/*), copiés à côté de ce fichier par scripts/assemble.ts.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Un schéma Postgres par domaine. Ajouter ici le schéma de tout nouveau module.
+  schemas  = ["core", "economy", "ideas"]
+}

@@ -205,7 +205,7 @@ depuis ce seul fichier.
 ## Étapes de réalisation
 
 - [x] 1. Init : monorepo, `packages/config`, Turbo, Prettier, `.env.example`, `docker-compose.yml`.
-- [ ] 2. `packages/db` : assemblage des schémas, Prisma, migration initiale (triggers, CHECK), seed
+- [x] 2. `packages/db` : assemblage des schémas, Prisma, migration initiale (triggers, CHECK), seed
       fictif.
 - [ ] 3. `packages/core` : Better Auth + Discord + contrôle d'appartenance au serveur, users, guards,
       registre, activité, notifications, et leurs tests.

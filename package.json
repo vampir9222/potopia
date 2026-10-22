@@ -13,7 +13,12 @@
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "db:up": "docker compose up -d --wait"
+    "db:up": "docker compose up -d --wait",
+    "db:generate": "pnpm --filter @app/db generate",
+    "db:migrate": "pnpm --filter @app/db db:migrate",
+    "db:deploy": "pnpm --filter @app/db db:deploy",
+    "db:seed": "pnpm --filter @app/db db:seed",
+    "db:reset:test": "pnpm --filter @app/db db:reset:test"
   },
   "devDependencies": {
     "prettier": "3.9.10",
