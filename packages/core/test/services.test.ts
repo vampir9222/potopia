@@ -9,6 +9,7 @@ import {
   listRecentEvents,
   markAllAsRead,
   markAsRead,
+  MAX_RECENT_EVENTS,
   notify,
   notifyAdmins,
   publishEvent,
@@ -101,6 +102,18 @@ describe("activité", () => {
     const events = await listRecentEvents(10);
     expect(events.map((e) => e.type)).toEqual(["second", "first"]);
     expect(events[1]?.payload).toEqual({});
+  });
+
+  it("listRecentEvents ne renvoie jamais plus de MAX_RECENT_EVENTS", async () => {
+    const userId = await createUser("100000000000000002");
+    await db.activityEvent.createMany({
+      data: Array.from({ length: MAX_RECENT_EVENTS + 5 }, (_, i) => ({
+        userId,
+        app: "ideas",
+        type: `e${i}`,
+      })),
+    });
+    expect(await listRecentEvents(1000)).toHaveLength(MAX_RECENT_EVENTS);
   });
 
   it("publishEvent respecte la transaction passée en option", async () => {
