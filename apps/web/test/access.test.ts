@@ -53,6 +53,7 @@ const troisGuessRoute = await import("@/app/api/trois/guess/route");
 const troisPracticeRoute = await import("@/app/api/trois/practice/route");
 const troisLeaderboardRoute = await import("@/app/api/trois/leaderboard/route");
 const { default: TroisPage } = await import("@/app/(platform)/trois/page");
+const { default: WalletPage } = await import("@/app/(platform)/wallet/page");
 
 const ADMIN_ID = "100000000000000001";
 const MEMBER_ID = "100000000000000002";
@@ -133,6 +134,7 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "(platform)/page": () => DashboardPage(),
   "ideas/page": () => IdeasPage(),
   "trois/page": () => TroisPage(),
+  "wallet/page": () => WalletPage({ searchParams: Promise.resolve({}) }),
 };
 const adminPages: Record<string, () => Promise<unknown>> = {
   "admin/layout": () => AdminLayout({ children }),

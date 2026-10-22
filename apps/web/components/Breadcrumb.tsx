@@ -11,6 +11,7 @@ const LABELS: Record<string, string> = {
   economy: "Monnaie",
   ideas: "Boîte à idées",
   trois: "TROIS",
+  wallet: "Ma monnaie",
 };
 
 /** Libellé d'un segment dynamique (identifiant), selon la section qui le précède. */
