@@ -9,7 +9,7 @@
  * font-display… La police de titres du thème Fantasy est fournie par l'app (--font-display-face).
  */
 
-/* Fantasy (par défaut) : sombre et chaud, or, pourpre et parchemin, cadres ornés, braises. */
+/* Fantasy : sombre et chaud, or, pourpre et parchemin, cadres ornés, braises. */
 :root,
 [data-theme="fantasy"] {
   color-scheme: dark;
@@ -43,7 +43,7 @@
   --fans: none;
 }
 
-/* Classique : le thème d'origine, bleu nuit et sobre, sans décors. */
+/* Classique (par défaut, voir DEFAULT_THEME) : bleu nuit et sobre, sans décors. */
 [data-theme="classic"] {
   --bg: #0e1015;
   --surface: #171a22;

@@ -221,8 +221,8 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 décors.
 
 - Un thème est un bloc `[data-theme="…"]` de variables CSS, déclaré aussi dans
-  `packages/ui/src/themes.ts`. Trois thèmes : **Fantasy**, le thème par défaut (or, pourpre, cadres
-  ornés, braises, titres en Cinzel), **Classique** (bleu sobre, sans décors) et **RGB** (néon gaming :
+  `packages/ui/src/themes.ts`. Trois thèmes : **Classique**, le thème par défaut (bleu sobre, sans
+  décors), **Fantasy** (or, pourpre, cadres ornés, braises, titres en Cinzel) et **RGB** (néon gaming :
   la teinte de l'accent tourne en continu via une propriété CSS animée, cadres à bordure arc-en-ciel,
   boucle de watercooling animée en fond, titres en Orbitron).
 - Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`) : un thème
