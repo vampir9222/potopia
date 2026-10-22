@@ -54,6 +54,13 @@ testés un par un : `turbo run test --concurrency=1`). API Discord toujours mock
 - Versions : TypeScript 6.0 (typescript-eslint ne supporte pas la 7), Prisma 7.x (Better Auth exige
   `^7`). Versions de deps épinglées exactement.
 
+## Git
+
+- `main` est protégée et déployée en production par Vercel : jamais de push direct. On travaille
+  sur `develop` (ou une branche issue de `develop`), on pousse, puis pull request vers `main` ; la
+  CI doit être verte pour fusionner.
+- Pousser ou ouvrir une PR seulement à la demande de l'utilisateur.
+
 ## Environnement
 
 - Windows. Le projet doit rester sur un disque local : les partages réseau (Z:) refusent les liens

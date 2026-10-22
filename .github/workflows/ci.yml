@@ -1,10 +1,11 @@
-# Intégration continue : à chaque push et pull request, le projet doit installer, passer le lint,
-# le typecheck, le contrôle des frontières, les tests (Postgres et stockage S3 réels) et le build.
+# Intégration continue : à chaque push (main, develop) et pull request, le projet doit installer,
+# passer le lint, le typecheck, le contrôle des frontières, les tests (Postgres et stockage S3 réels)
+# et le build. main est protégée : on y arrive par pull request, CI verte obligatoire.
 name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
 
 concurrency:
