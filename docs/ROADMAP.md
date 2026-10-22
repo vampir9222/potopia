@@ -242,6 +242,36 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 
 ---
 
+## Étape 7b : intégration du jeu TROIS
+
+Le Wordle à 3 mots par jour, développé à part (repo `trois`, branche `main`), devient le premier
+jeu du portail. Détails du jeu : [games/trois/README.md](../games/trois/README.md).
+
+**Tâches**
+
+- `games/trois` : schéma Postgres `trois` (`games`, `guesses`, `daily_words`, modèles préfixés
+  `Trois`), tirage des mots, évaluation, partie, mode test, stats et classement.
+- Identité du portail (Discord) à la place des comptes du jeu : plus de pseudo#tag, de cookie
+  d'appareil, de code de connexion ni de système d'amis. Historique repris à zéro.
+- Routes `/api/trois/{game,guess,practice,leaderboard}` (requireMember), page `/trois`, tuile du
+  registre, événement `trois/day_completed` (score seulement) dans le fil d'activité.
+- Pas de récompense en monnaie pour l'instant.
+
+**Tests**
+
+- Feedback des lettres, lettres en double comprises.
+- Tirage : 3 mots distincts, identiques pour tous, tirages simultanés cohérents, pas de répétition.
+- Partie : ordre des mots, réponse cachée tant que le mot n'est pas terminé, défaite au 6e essai,
+  essais simultanés jamais comptés deux fois, refus après la journée.
+- Mode test sans écriture, classement sans lettres, points de la semaine.
+- Chaque route `/api/trois/*` et la page refusent sans session (401) et une session révoquée (403).
+
+**Fini quand**
+
+- Un membre joue les 3 mots du jour sur le portail et apparaît au classement et dans l'activité.
+
+---
+
 ## Étape 8 : finitions
 
 **Tâches**

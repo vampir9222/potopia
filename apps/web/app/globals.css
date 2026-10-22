@@ -1,8 +1,10 @@
 @import "tailwindcss";
 @import "@app/ui/theme.css";
+@import "@app/trois/ui/trois.css";
 
 /* Les packages sont liés dans node_modules, que Tailwind n'analyse pas : on les déclare. */
 @source "../../../packages/ui/src";
 @source "../../../packages/core/ui";
 @source "../../../packages/economy/ui";
 @source "../../../packages/ideas/ui";
+@source "../../../games/trois/ui";

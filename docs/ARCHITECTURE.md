@@ -36,7 +36,8 @@ Pourquoi Better Auth plutôt qu'Auth.js :
 
 ```
 apps/web/            app Next mince : routes, layouts, server actions, route handlers
-games/               jeux à venir (vide pour l'instant)
+games/
+  trois/             Wordle français à 3 mots par jour (premier jeu intégré)
 packages/
   config/            tsconfig, eslint, brand.ts
   db/                client Prisma partagé, assemblage des schémas, migrations, seed
@@ -248,11 +249,13 @@ depuis ce seul fichier.
 - [x] 6. `apps/web` : login, `/refused`, header avec cloche, dashboard façon Odoo responsive, page
       admin de la monnaie.
 - [x] 7. `packages/ideas` : formulaire, upload, pages admin, et leurs tests.
+- [ ] 7b. `games/trois` : intégration du jeu TROIS (identité Discord, classement, activité).
 - [ ] 8. Finitions : `check:boundaries`, CI GitHub Actions, README complet.
 
 ## Hors périmètre (pour l'instant)
 
-Cartes jouables, boosters, Wordle, combat, design final.
+Cartes jouables, boosters, combat, design final. Pas de récompense en monnaie dans TROIS pour
+l'instant.
 
 ## Environnement de dev
 
@@ -267,3 +270,6 @@ Cartes jouables, boosters, Wordle, combat, design final.
 - Tailwind n'analyse pas `node_modules` : `app/globals.css` déclare chaque dossier de composants des
   packages avec `@source`, un par un (un glob du type `packages/*/ui` n'est pas pris en compte).
   Ajouter une ligne pour tout nouveau package qui a un dossier `ui/`.
+- Après l'ajout d'un package au monorepo : `pnpm install`, puis redémarrer `pnpm dev`. Si Next ne
+  trouve toujours pas le package, vider son cache de dev (`apps/web/.next/dev`), qui garde les échecs
+  de résolution d'un lancement à l'autre.

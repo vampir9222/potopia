@@ -1,0 +1,62 @@
+// Constantes et types partagés client/serveur (aucune donnée secrète ici)
+export const WORD_LEN = 5;
+export const MAX_TRIES = 6;
+export const WORDS_PER_DAY = 3;
+
+export type Mark = "correct" | "present" | "absent";
+export type WordStatus = "playing" | "won" | "lost";
+
+export type WordView = {
+  status: WordStatus;
+  tries: number;
+  marks: Mark[][];
+  guesses?: string[];
+  answer?: string;
+};
+export type DayView = {
+  date: string;
+  number: number;
+  maxTries: number;
+  over: boolean;
+  words: WordView[];
+};
+
+export function normalize(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/œ/g, "oe")
+    .replace(/æ/g, "ae")
+    .replace(/[^a-z]/g, "");
+}
+
+const EMOJI: Record<Mark, string> = { correct: "🟩", present: "🟧", absent: "⬛" };
+
+export function shareText(day: DayView, url = "") {
+  const head = day.words
+    .map((w) => (w.status === "won" ? w.tries : "X") + "/" + day.maxTries)
+    .join(" · ");
+  const grids = day.words.map(
+    (w, i) => `Mot ${i + 1}\n` + w.marks.map((r) => r.map((m) => EMOJI[m]).join("")).join("\n"),
+  );
+  return `TROIS #${day.number} — ${head}\n\n${grids.join("\n\n")}${url ? "\n\n" + url : ""}`;
+}
+
+/** Classement du jour : ceux qui ont commencé d'abord, puis mots trouvés, puis le moins d'essais au total. */
+export function dayScore(d: DayView) {
+  const found = d.words.filter((w) => w.status === "won").length;
+  const tries = d.words.reduce((s, w) => s + w.tries, 0);
+  return { found, tries, started: tries > 0 };
+}
+
+export function compareDays(a: DayView, b: DayView) {
+  const A = dayScore(a);
+  const B = dayScore(b);
+  return Number(B.started) - Number(A.started) || B.found - A.found || A.tries - B.tries;
+}
+
+export type Period = "day" | "week" | "month";
+
+/** Points d'un mot trouvé : 6 en 1 essai … 1 en 6 essais (0 si raté). */
+export const wordPoints = (tries: number) => MAX_TRIES + 1 - tries;

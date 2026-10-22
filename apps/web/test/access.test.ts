@@ -48,6 +48,11 @@ const { default: AdminIdeasPage } = await import("@/app/(platform)/admin/ideas/p
 const { default: AdminIdeaPage } = await import("@/app/(platform)/admin/ideas/[id]/page");
 const uploadUrlRoute = await import("@/app/api/ideas/upload-url/route");
 const ideaImageRoute = await import("@/app/api/admin/ideas/[id]/image/route");
+const troisGameRoute = await import("@/app/api/trois/game/route");
+const troisGuessRoute = await import("@/app/api/trois/guess/route");
+const troisPracticeRoute = await import("@/app/api/trois/practice/route");
+const troisLeaderboardRoute = await import("@/app/api/trois/leaderboard/route");
+const { default: TroisPage } = await import("@/app/(platform)/trois/page");
 
 const ADMIN_ID = "100000000000000001";
 const MEMBER_ID = "100000000000000002";
@@ -103,7 +108,23 @@ const requestIdeaImage = () =>
 const routes: Record<string, () => Promise<Response>> = {
   "POST /api/ideas/upload-url": requestUploadUrl,
   "GET /api/admin/ideas/[id]/image": requestIdeaImage,
+  "GET /api/trois/game": () => troisGameRoute.GET(withCookie("/api/trois/game")),
+  "POST /api/trois/guess": () =>
+    troisGuessRoute.POST(withCookie("/api/trois/guess", { guess: "faire" })),
+  "POST /api/trois/practice": () =>
+    troisPracticeRoute.POST(withCookie("/api/trois/practice", { guess: "faire", slot: 0 })),
+  "GET /api/trois/leaderboard": () =>
+    troisLeaderboardRoute.GET(withCookie("/api/trois/leaderboard?period=week")),
 };
+
+/** Requête vers l'app avec les cookies de la requête courante (POST JSON si body). */
+function withCookie(path: string, body?: unknown): Request {
+  return new Request(`http://localhost:3000${path}`, {
+    method: body ? "POST" : "GET",
+    headers: { cookie: request.headers.get("cookie") ?? "", "content-type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
 
 /** Pages et layouts protégés. */
 const children = null;
@@ -111,6 +132,7 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "(platform)/layout": () => PlatformLayout({ children }),
   "(platform)/page": () => DashboardPage(),
   "ideas/page": () => IdeasPage(),
+  "trois/page": () => TroisPage(),
 };
 const adminPages: Record<string, () => Promise<unknown>> = {
   "admin/layout": () => AdminLayout({ children }),

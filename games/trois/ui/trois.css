@@ -1,0 +1,219 @@
+/*
+ * Styles du jeu TROIS, importés par apps/web/app/globals.css après Tailwind et le thème.
+ * Couleurs des cases, animations des tuiles et mode secret Boobzilla.
+ */
+
+@theme {
+  --color-good: #16a34a;
+  --color-near: #f59e0b;
+  --color-miss: #52525b;
+}
+
+.trois {
+  color: #f4f4f5;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateX(0);
+  }
+  50% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0);
+  }
+}
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  80% {
+    transform: translateX(4px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-8px);
+  }
+  40%,
+  60% {
+    transform: translateX(8px);
+  }
+}
+@keyframes pop {
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes dance {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-22px);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+  65% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes toast {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+.animate-flip {
+  animation: flip 0.5s ease both;
+}
+.animate-shake {
+  animation: shake 0.5s ease;
+}
+.animate-pop {
+  animation: pop 0.12s ease;
+}
+.animate-dance {
+  animation: dance 0.6s ease both;
+}
+.animate-toast {
+  animation: toast 0.2s ease both;
+}
+
+/* ─── 🤫 mode Boobzilla ─────────────────────────────────────────────────────
+   Couleurs qui tournent en continu (pas de clignotement brutal), tout gigote. */
+@keyframes rgb {
+  to {
+    filter: hue-rotate(360deg) saturate(1.6);
+  }
+}
+@keyframes wobble {
+  0%,
+  100% {
+    transform: rotate(-1.2deg) scale(1);
+  }
+  50% {
+    transform: rotate(1.2deg) scale(1.015);
+  }
+}
+@keyframes jelly {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(1.15, 0.85);
+  }
+  60% {
+    transform: scale(0.9, 1.1) rotate(-3deg);
+  }
+}
+@keyframes title {
+  0% {
+    transform: translateX(-50%) scale(0.3) rotate(-20deg);
+  }
+  40% {
+    transform: translateX(-50%) scale(1.2) rotate(6deg);
+  }
+  70%,
+  100% {
+    transform: translateX(-50%) scale(1) rotate(-3deg);
+  }
+}
+@keyframes rainbow {
+  to {
+    background-position: 200% 0;
+  }
+}
+@keyframes stomp {
+  0% {
+    left: -200px;
+    transform: translateY(0) scaleX(-1);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateY(-30px) scaleX(-1);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateY(0) scaleX(-1);
+  }
+  100% {
+    left: 110%;
+    transform: translateY(0) scaleX(-1);
+  }
+}
+html.boobzilla header,
+html.boobzilla main,
+html.boobzilla aside {
+  filter: hue-rotate(0deg) saturate(1.6);
+  animation:
+    rgb 3s linear infinite,
+    wobble 1.6s ease-in-out infinite;
+}
+html.boobzilla button {
+  animation: jelly 0.9s ease-in-out infinite;
+}
+html.boobzilla button:nth-child(2n) {
+  animation-delay: -0.3s;
+}
+html.boobzilla button:nth-child(3n) {
+  animation-delay: -0.6s;
+}
+.boobzilla-frame {
+  border: 10px solid transparent;
+  border-image: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00) 1;
+  box-shadow: inset 0 0 80px rgba(255, 0, 255, 0.35);
+  animation: rgb 2s linear infinite;
+}
+.boobzilla-title {
+  background: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.6);
+  text-shadow: 0 0 30px rgba(255, 0, 255, 0.6);
+  animation:
+    title 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both,
+    rainbow 1.5s linear infinite;
+}
+.boobzilla-sprite {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  user-select: none;
+}
+.boobzilla-kaiju {
+  animation: stomp 9s linear infinite;
+}
+.boobzilla-exit {
+  background: linear-gradient(90deg, #f00, #f80, #0c0, #08f, #a0f, #f00);
+  background-size: 200% 100%;
+  border: 3px solid #fff;
+  animation: rainbow 2s linear infinite !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-flip,
+  .animate-shake,
+  .animate-pop,
+  .animate-dance {
+    animation: none;
+  }
+}

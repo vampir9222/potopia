@@ -1,0 +1,59 @@
+// Domaine trois : le Wordle français à 3 mots par jour. `userId` référence core.users sans relation.
+// Modèles préfixés Trois : les noms de modèles Prisma sont uniques entre tous les modules.
+
+enum TroisGameStatus {
+  PLAYING
+  WON
+  LOST
+
+  @@schema("trois")
+}
+
+/// Une partie = un des 3 mots d'une journée pour un joueur.
+model TroisGame {
+  id        String          @id @default(uuid(7))
+  userId    String          @map("user_id")
+  /// Date à Paris, YYYY-MM-DD
+  date      String
+  /// 0, 1 ou 2
+  slot      Int
+  status    TroisGameStatus @default(PLAYING)
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  guesses TroisGuess[]
+
+  @@unique([userId, date, slot])
+  @@index([date])
+  @@map("games")
+  @@schema("trois")
+}
+
+model TroisGuess {
+  id        String   @id @default(uuid(7))
+  gameId    String   @map("game_id")
+  attempt   Int
+  word      String
+  /// "CPAAC" : C = bien placé, P = mal placé, A = absent
+  marks     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  game TroisGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  /// Deux essais envoyés en parallèle ne passent pas tous les deux.
+  @@unique([gameId, attempt])
+  @@map("guesses")
+  @@schema("trois")
+}
+
+/// Mots tirés chaque jour : garantit qu'un mot ne revient pas tant que la liste n'est pas épuisée.
+model TroisDailyWord {
+  date      String
+  slot      Int
+  word      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([date, slot])
+  @@index([word])
+  @@map("daily_words")
+  @@schema("trois")
+}

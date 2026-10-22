@@ -1,0 +1,545 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  normalize,
+  shareText,
+  WORD_LEN,
+  type DayView,
+  type Mark,
+  type WordView,
+} from "../src/game";
+import { api } from "./api";
+import { feedSecret } from "./Boobzilla";
+import { confetti } from "./confetti";
+import type { Stats } from "./Profile";
+import { sfx } from "./sound";
+
+/** Mot vide, pour un créneau hors limites (ne devrait pas arriver). */
+const EMPTY_WORD: WordView = { status: "playing", tries: 0, marks: [] };
+
+const ROWS = ["azertyuiop", "qsdfghjklm", "wxcvbn"];
+const TILE: Record<Mark, string> = {
+  correct: "bg-good border-good",
+  present: "bg-near border-near",
+  absent: "bg-miss border-miss",
+};
+const RANK: Record<Mark, number> = { absent: 0, present: 1, correct: 2 };
+const FLIP_STEP = 120;
+const REVEAL_MS = WORD_LEN * FLIP_STEP + 400;
+const PRAISE = ["Génial !", "Magnifique !", "Splendide !", "Bravo !", "Pas mal !", "Ouf !"];
+
+/** Mode test : un mot déjà terminé qu'on rejoue pour de faux (rien n'est enregistré). */
+type Practice = { slot: number; guesses: string[]; marks: Mark[][] };
+
+function practiceView(p: Practice, maxTries: number, answer?: string): WordView {
+  const last = p.marks.at(-1);
+  const status = last?.every((m) => m === "correct")
+    ? "won"
+    : p.guesses.length >= maxTries
+      ? "lost"
+      : "playing";
+  return {
+    status,
+    tries: p.guesses.length,
+    marks: p.marks,
+    guesses: p.guesses,
+    answer: status === "playing" ? undefined : answer,
+  };
+}
+
+/** Mot trouvé : les cases sautent, une gerbe de confettis, et la grande fanfare pour un 3 sur 3. */
+function celebrate(perfect: boolean) {
+  if (perfect) {
+    sfx.perfect();
+    confetti({ big: true });
+  } else {
+    sfx.win();
+    confetti();
+  }
+}
+
+/** Un son par case, synchronisé avec l'animation de retournement. */
+const playReveal = (marks: Mark[]) =>
+  marks.forEach((m, i) => sfx.tile(m, (i * FLIP_STEP + 250) / 1000));
+
+export function Game({
+  day,
+  onUpdate,
+  onShowLeaderboard,
+}: {
+  day: DayView;
+  onUpdate: (d: DayView, s?: Stats) => void;
+  onShowLeaderboard: () => void;
+}) {
+  const current = day.words.findIndex((w) => w.status === "playing");
+  const [view, setView] = useState(current === -1 ? day.words.length - 1 : current);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [shake, setShake] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [revealing, setRevealing] = useState<{ slot: number; row: number } | null>(null);
+  const [practice, setPractice] = useState<Practice | null>(null);
+  const [dancing, setDancing] = useState<{ slot: number; row: number } | null>(null);
+
+  const real = day.words[view] ?? EMPTY_WORD;
+  const word = practice ? practiceView(practice, day.maxTries, real.answer) : real;
+  // créneau dans lequel on tape : le mot rejoué en mode test, sinon le mot en cours
+  const active = practice ? view : current;
+  const playable = !busy && !revealing && view === active && word.status === "playing";
+
+  const flash = useCallback((msg: string, ms = 1600) => {
+    setToast(msg);
+    setTimeout(() => setToast((t) => (t === msg ? null : t)), ms);
+  }, []);
+
+  const fail = useCallback(
+    (msg: string) => {
+      sfx.error();
+      setShake(true);
+      flash(msg);
+    },
+    [flash],
+  );
+
+  const dance = useCallback((slot: number, row: number) => {
+    setDancing({ slot, row });
+    setTimeout(() => setDancing(null), WORD_LEN * 100 + 600);
+  }, []);
+
+  const startPractice = (slot: number) => {
+    sfx.click();
+    setInput("");
+    setPractice({ slot, guesses: [], marks: [] });
+  };
+
+  const stopPractice = () => {
+    sfx.click();
+    setInput("");
+    setPractice(null);
+  };
+
+  const submit = useCallback(async () => {
+    if (!playable) return;
+    if (input.length < WORD_LEN) return fail("Pas assez de lettres");
+    setBusy(true);
+    try {
+      if (practice) {
+        const r = await api("/api/trois/practice", { body: { guess: input, slot: practice.slot } });
+        const next = {
+          ...practice,
+          guesses: [...practice.guesses, input],
+          marks: [...practice.marks, r.marks],
+        };
+        const row = practice.guesses.length;
+        setPractice(next);
+        setRevealing({ slot: view, row });
+        setInput("");
+        playReveal(r.marks);
+        const w = practiceView(next, day.maxTries, real.answer);
+        setTimeout(() => {
+          setRevealing(null);
+          if (w.status === "won") {
+            celebrate(false);
+            dance(view, row);
+            flash(PRAISE[row] ?? "Bravo !");
+          }
+          if (w.status === "lost") {
+            sfx.lose();
+            flash(`C'était « ${w.answer?.toUpperCase()} »`, 2500);
+          }
+        }, REVEAL_MS);
+        return;
+      }
+
+      // le serveur fait tout : validation du mot + feedback lettre par lettre
+      const r = await api("/api/trois/guess", { body: { guess: input, slot: current } });
+      const row = r.day.words[r.slot].tries - 1;
+      setRevealing({ slot: r.slot, row });
+      setInput("");
+      onUpdate(r.day, r.stats);
+      playReveal(r.marks);
+      const w = r.day.words[r.slot];
+      const perfect = r.day.over && r.day.words.every((x: WordView) => x.status === "won");
+      setTimeout(() => {
+        setRevealing(null);
+        if (w.status === "won") {
+          celebrate(perfect);
+          dance(r.slot, row);
+          flash(perfect ? "Trois sur trois ! 🏆" : (PRAISE[row] ?? "Bravo !"));
+        }
+        if (w.status === "lost") {
+          sfx.lose();
+          flash(`C'était « ${w.answer?.toUpperCase()} »`, 2500);
+        }
+        if (w.status !== "playing" && r.slot < r.day.words.length - 1)
+          setTimeout(() => setView(r.slot + 1), 1200);
+      }, REVEAL_MS);
+    } catch (e) {
+      fail((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [
+    playable,
+    input,
+    practice,
+    view,
+    day.maxTries,
+    real.answer,
+    current,
+    onUpdate,
+    flash,
+    fail,
+    dance,
+  ]);
+
+  const press = useCallback(
+    (k: string) => {
+      if (!playable) return;
+      if (k === "enter") return void submit();
+      if (k === "back") {
+        if (input) sfx.back();
+        return setInput((s) => s.slice(0, -1));
+      }
+      const l = normalize(k);
+      if (l.length === 1 && input.length < WORD_LEN) {
+        sfx.key();
+        setInput((s) => (s.length < WORD_LEN ? s + l : s));
+      }
+    },
+    [playable, submit, input],
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === "Enter") press("enter");
+      else if (e.key === "Backspace") press("back");
+      else if (/^\p{L}$/u.test(e.key)) press(e.key);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [press]);
+
+  // le mot secret ne doit pas rester dans la grille
+  useEffect(() => {
+    const clear = () => setInput("");
+    window.addEventListener("boobzilla", clear);
+    return () => window.removeEventListener("boobzilla", clear);
+  }, []);
+
+  useEffect(() => {
+    if (shake) {
+      const t = setTimeout(() => setShake(false), 500);
+      return () => clearTimeout(t);
+    }
+  }, [shake]);
+
+  // couleurs du clavier : la meilleure info connue pour chaque lettre (mot affiché)
+  const keyColors = useMemo(() => {
+    const m: Record<string, Mark> = {};
+    word.guesses?.forEach((g, r) => {
+      if (revealing && revealing.slot === view && revealing.row === r) return;
+      [...g].forEach((l, i) => {
+        const mark = word.marks[r]?.[i];
+        if (!mark) return;
+        const known = m[l];
+        if (!known || RANK[mark] > RANK[known]) m[l] = mark;
+      });
+    });
+    return m;
+  }, [word, revealing, view]);
+
+  return (
+    <div className="relative flex flex-1 flex-col items-center gap-4 px-2 pt-4 pb-3">
+      {toast && (
+        <div className="animate-toast absolute top-14 left-1/2 z-20 rounded-lg bg-zinc-100 px-4 py-2 font-semibold text-zinc-900 shadow-lg">
+          {toast}
+        </div>
+      )}
+
+      {/* sélecteur des 3 mots */}
+      <div className="flex gap-2">
+        {day.words.map((w, i) => {
+          const locked = current !== -1 && i > current;
+          return (
+            <button
+              key={i}
+              disabled={locked}
+              onClick={() => {
+                sfx.click();
+                setPractice(null);
+                setInput("");
+                setView(i);
+              }}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition ${
+                view === i ? "border-zinc-200 bg-zinc-800" : "border-zinc-800"
+              } ${locked ? "opacity-40" : "hover:border-zinc-500"}`}
+            >
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${
+                  w.status === "won"
+                    ? "bg-good"
+                    : w.status === "lost"
+                      ? "bg-red-500"
+                      : i === current
+                        ? "bg-near"
+                        : "bg-zinc-600"
+                }`}
+              />
+              Mot {i + 1}
+              {locked && " 🔒"}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* mode test */}
+      {practice ? (
+        <div className="border-near/60 bg-near/10 flex w-full max-w-sm items-center justify-between gap-2 rounded-xl border border-dashed px-3 py-2 text-sm">
+          <span>
+            🧪 <b>Mode test</b> <span className="text-zinc-400">· rien n&apos;est enregistré</span>
+          </span>
+          <span className="flex gap-1">
+            <button
+              onClick={() => celebrate(true)}
+              title="Écouter la fanfare du 3 sur 3"
+              className="rounded-lg bg-zinc-800 px-2 py-1 hover:bg-zinc-700"
+            >
+              🎺
+            </button>
+            {word.status !== "playing" && (
+              <button
+                onClick={() => startPractice(view)}
+                className="rounded-lg bg-zinc-800 px-2 py-1 hover:bg-zinc-700"
+              >
+                Rejouer
+              </button>
+            )}
+            <button
+              onClick={stopPractice}
+              className="rounded-lg bg-zinc-800 px-2 py-1 hover:bg-zinc-700"
+            >
+              Quitter
+            </button>
+          </span>
+        </div>
+      ) : (
+        real.status !== "playing" && (
+          <button
+            onClick={() => startPractice(view)}
+            className="rounded-full border border-dashed border-zinc-700 px-3 py-1 text-xs text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+          >
+            🧪 Rejouer ce mot pour de faux
+          </button>
+        )
+      )}
+
+      {/* grille */}
+      <div className="grid gap-1.5">
+        {Array.from({ length: day.maxTries }, (_, r) => {
+          const guess = word.guesses?.[r];
+          const typing = !guess && r === word.tries && view === active ? input : "";
+          const isRevealing = revealing?.slot === view && revealing.row === r;
+          const isDancing = dancing?.slot === view && dancing.row === r;
+          return (
+            <div
+              key={r}
+              className={`grid grid-cols-5 gap-1.5 ${shake && view === active && r === word.tries ? "animate-shake" : ""}`}
+            >
+              {Array.from({ length: WORD_LEN }, (_, i) => {
+                const letter = guess?.[i] ?? typing[i] ?? "";
+                const mark = guess ? word.marks[r]?.[i] : undefined;
+                return (
+                  <div
+                    key={i}
+                    style={
+                      isRevealing
+                        ? { animationDelay: `${i * FLIP_STEP}ms` }
+                        : isDancing
+                          ? { animationDelay: `${i * 100}ms` }
+                          : undefined
+                    }
+                    className={`grid h-14 w-14 place-items-center rounded-md border-2 text-3xl font-bold uppercase sm:h-16 sm:w-16 ${
+                      mark
+                        ? `${TILE[mark]} text-white`
+                        : letter
+                          ? "animate-pop border-zinc-500"
+                          : "border-zinc-800"
+                    } ${isRevealing ? "animate-flip" : isDancing ? "animate-dance" : ""}`}
+                  >
+                    {letter}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      {word.status !== "playing" && word.answer && (
+        <p className="text-sm text-zinc-400">
+          Mot {view + 1} : <b className="tracking-widest text-zinc-100 uppercase">{word.answer}</b>
+          {word.status === "won"
+            ? ` en ${word.tries} essai${word.tries > 1 ? "s" : ""}`
+            : " — raté"}
+          {practice && " (test)"}
+        </p>
+      )}
+
+      {day.over && !practice ? (
+        <DayOver day={day} onShowLeaderboard={onShowLeaderboard} flash={flash} />
+      ) : (
+        <Keyboard colors={keyColors} onKey={press} disabled={!playable} />
+      )}
+    </div>
+  );
+}
+
+function Keyboard({
+  colors,
+  onKey,
+  disabled,
+}: {
+  colors: Record<string, Mark>;
+  onKey: (k: string) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div
+      className={`mt-auto flex w-full flex-col gap-1.5 select-none ${disabled ? "opacity-70" : ""}`}
+    >
+      {ROWS.map((row, ri) => (
+        <div key={ri} className="flex justify-center gap-1">
+          {ri === 2 && (
+            <Key wide onClick={() => onKey("enter")}>
+              Entrée
+            </Key>
+          )}
+          {[...row].map((l) => (
+            <Key
+              key={l}
+              mark={colors[l]}
+              onClick={() => {
+                feedSecret(l);
+                onKey(l);
+              }}
+            >
+              {l}
+            </Key>
+          ))}
+          {ri === 2 && (
+            <Key wide onClick={() => onKey("back")}>
+              ⌫
+            </Key>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Key({
+  children,
+  mark,
+  wide,
+  onClick,
+}: {
+  children: React.ReactNode;
+  mark?: Mark;
+  wide?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`h-14 rounded-md text-sm font-bold uppercase transition active:scale-95 ${
+        wide ? "flex-[1.6] px-1 text-xs" : "max-w-11 flex-1"
+      } ${mark ? TILE[mark] + " text-white" : "bg-zinc-700 text-zinc-100"} ${mark === "absent" ? "opacity-50" : ""}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function DayOver({
+  day,
+  onShowLeaderboard,
+  flash,
+}: {
+  day: DayView;
+  onShowLeaderboard: () => void;
+  flash: (m: string) => void;
+}) {
+  const [left, setLeft] = useState("");
+  useEffect(() => {
+    const tick = () => {
+      // temps restant avant minuit à Paris
+      const parts = new Intl.DateTimeFormat("fr-FR", {
+        timeZone: "Europe/Paris",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23",
+      }).formatToParts(new Date());
+      const n = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+      const s = 86400 - (n("hour") * 3600 + n("minute") * 60 + n("second"));
+      const pad = (x: number) => String(x).padStart(2, "0");
+      setLeft(`${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`);
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const found = day.words.filter((w) => w.status === "won").length;
+
+  async function share() {
+    const text = shareText(day, `${location.origin}/trois`);
+    try {
+      if (navigator.share && /Mobi|Android/i.test(navigator.userAgent))
+        await navigator.share({ text });
+      else {
+        await navigator.clipboard.writeText(text);
+        sfx.success();
+        flash("Résultat copié !");
+      }
+    } catch {
+      /* partage annulé */
+    }
+  }
+
+  return (
+    <div className="mt-auto w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 text-center">
+      <p className="text-lg font-bold">
+        {found === 3
+          ? "Trois sur trois ! 🏆"
+          : found === 0
+            ? "Journée difficile… 😅"
+            : `${found}/3 mots trouvés`}
+      </p>
+      <div className="mt-2 flex justify-center gap-2 text-sm text-zinc-400">
+        {day.words.map((w, i) => (
+          <span key={i} className="tracking-widest uppercase">
+            {w.answer}
+            {i < 2 && " ·"}
+          </span>
+        ))}
+      </div>
+      <p className="mt-4 text-xs tracking-wide text-zinc-500 uppercase">Prochains mots dans</p>
+      <p className="font-mono text-3xl">{left}</p>
+      <div className="mt-4 flex gap-2">
+        <button onClick={share} className="bg-good flex-1 rounded-xl py-3 font-semibold text-white">
+          Partager
+        </button>
+        <button
+          onClick={onShowLeaderboard}
+          className="flex-1 rounded-xl bg-zinc-700 py-3 font-semibold"
+        >
+          Classement
+        </button>
+      </div>
+    </div>
+  );
+}

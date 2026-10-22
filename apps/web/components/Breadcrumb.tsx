@@ -10,6 +10,7 @@ const LABELS: Record<string, string> = {
   admin: "Administration",
   economy: "Monnaie",
   ideas: "Boîte à idées",
+  trois: "TROIS",
 };
 
 /** Libellé d'un segment dynamique (identifiant), selon la section qui le précède. */

@@ -1,5 +1,6 @@
 import { ForbiddenError, UnauthorizedError } from "@app/core";
 import { InvalidImageError, RateLimitError } from "@app/ideas";
+import { TroisError } from "@app/trois";
 import { ZodError } from "zod";
 
 const STATUSES: [new (...args: never[]) => Error, number][] = [
@@ -14,6 +15,10 @@ const STATUSES: [new (...args: never[]) => Error, number][] = [
  * Les autres erreurs remontent (500), sans détail renvoyé au client.
  */
 export function errorResponse(error: unknown): Response {
+  // Erreurs de jeu : statut et message choisis par le jeu (essai refusé, mot inconnu…).
+  if (error instanceof TroisError) {
+    return Response.json({ error: error.message }, { status: error.status });
+  }
   for (const [type, status] of STATUSES) {
     if (error instanceof type) return Response.json({ error: error.message }, { status });
   }

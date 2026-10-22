@@ -1,8 +1,9 @@
-import { Lightbulb, Shield, type LucideIcon } from "lucide-react";
+import { Grid3x3, Lightbulb, Shield, type LucideIcon } from "lucide-react";
 import type { AppEntry, AppIconName } from "../src/apps/registry";
 
 // Import explicite de chaque icône : importer tout lucide alourdirait le bundle client.
 const ICONS: Record<AppIconName, LucideIcon> = {
+  grid: Grid3x3,
   lightbulb: Lightbulb,
   shield: Shield,
 };

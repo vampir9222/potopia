@@ -6,3 +6,5 @@ coverage/
 packages/db/prisma/schema/
 packages/db/src/generated/
 packages/db/prisma/migrations/
+# Listes de mots des jeux : gardées telles que générées
+games/*/data/
