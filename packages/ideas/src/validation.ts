@@ -16,7 +16,6 @@ export const LIMITS = {
   concernedPeople: 200,
   effectIdea: 1000,
   imageBytes: 5 * 1024 * 1024,
-  ideasPerHour: 5,
   uploadsPerHour: 10,
 } as const;
 

@@ -85,13 +85,6 @@ export async function submitIdea(
   const { imageKey, ...fields } = ideaInput.parse(input);
 
   await withTx(async (tx) => {
-    await lockUser(tx, "submit", userId);
-    const recent = await tx.idea.count({
-      where: { authorId: userId, createdAt: { gte: new Date(Date.now() - HOUR_MS) } },
-    });
-    if (recent >= LIMITS.ideasPerHour) {
-      throw new RateLimitError("Tu as déjà envoyé 5 idées cette heure : réessaie plus tard.");
-    }
     if (imageKey) await claimImage(tx, userId, imageKey);
 
     await tx.idea.create({ data: { ...fields, authorId: userId, imageKey } });

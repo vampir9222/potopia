@@ -202,7 +202,7 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 **Rate-limit des idées.**
 
 - Comptage en base sur l'heure glissante, protégé par un `pg_advisory_xact_lock` par utilisateur.
-- Limites : 5 idées par heure et 10 URLs d'upload par heure.
+- Limites : aucune sur le nombre d'idées, 10 URLs d'upload d'image par heure.
 
 **Notifications.**
 

@@ -97,19 +97,9 @@ describe("submitIdea", () => {
     expect(await db.idea.count()).toBe(1);
   });
 
-  it("refuse le 6e envoi dans l'heure", async () => {
-    for (let i = 1; i <= 5; i++) await submitIdea(MEMBER.id, idea(i));
-    await expect(submitIdea(MEMBER.id, idea(6))).rejects.toBeInstanceOf(RateLimitError);
-    // La limite est par membre.
-    await expect(submitIdea(OTHER.id, idea(1))).resolves.toEqual({ ok: true });
-  });
-
-  it("la limite tient sous des envois simultanés", async () => {
-    const results = await Promise.allSettled(
-      Array.from({ length: 10 }, (_, i) => submitIdea(MEMBER.id, idea(i))),
-    );
-    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(5);
-    expect(await db.idea.count()).toBe(5);
+  it("n'impose pas de limite d'envoi", async () => {
+    for (let i = 1; i <= 10; i++) await submitIdea(MEMBER.id, idea(i));
+    expect(await db.idea.count()).toBe(10);
   });
 });
 
