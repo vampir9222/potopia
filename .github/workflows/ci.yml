@@ -1,0 +1,85 @@
+# Intégration continue : à chaque push et pull request, le projet doit installer, passer le lint,
+# le typecheck, le contrôle des frontières, les tests (Postgres et stockage S3 réels) et le build.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      # Base de test (les tests la vident) : même image que docker-compose.yml.
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d app_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+      # Stockage compatible S3 (remplace R2) : les tests créent leur bucket.
+      storage:
+        image: rustfs/rustfs:1.0.3
+        env:
+          RUSTFS_ACCESS_KEY: localaccess
+          RUSTFS_SECRET_KEY: localsecret
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -fs http://localhost:9000/health"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+
+    # Valeurs locales fictives : aucun secret n'est nécessaire en CI.
+    env:
+      TEST_DATABASE_URL: postgresql://app:app@localhost:5432/app_test
+      R2_ENDPOINT: http://localhost:9000
+      R2_ACCESS_KEY_ID: localaccess
+      R2_SECRET_ACCESS_KEY: localsecret
+      TURBO_TELEMETRY_DISABLED: 1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Installation
+        run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Frontières entre modules
+        run: pnpm check:boundaries
+
+      - name: Tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
