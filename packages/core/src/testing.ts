@@ -1,4 +1,5 @@
-/** Outils de test : faux Discord (fetch mocké) et vrai flux OAuth de Better Auth. Jamais importé en prod. */
+/** Outils de test et de seed local : faux Discord (fetch mocké), vrai flux OAuth de Better Auth, membres fictifs. Jamais importé en prod. */
+import { db } from "@app/db";
 import { getAuth } from "./auth/auth";
 
 export const GUILD_ID = "123456789012345678";
@@ -127,4 +128,20 @@ export async function signInWithDiscord(
     location: callback.headers.get("location"),
     headers: new Headers({ cookie: cookieHeader(callback) }),
   };
+}
+
+/**
+ * Crée un membre fictif (tests, seed local) sans passer par Discord. Idempotent : ne fait rien si
+ * l'ID existe déjà.
+ */
+export async function createFakeMember(input: {
+  id: string;
+  discordId: string;
+  name: string;
+}): Promise<void> {
+  await db.user.upsert({
+    where: { id: input.id },
+    create: { ...input, email: `${input.id}@example.test`, emailVerified: true },
+    update: {},
+  });
 }

@@ -24,3 +24,6 @@ packages/db/src/generated/
 .DS_Store
 Thumbs.db
 *.log
+
+# Scripts locaux non versionnés (seed de démo…)
+*.local.ts
