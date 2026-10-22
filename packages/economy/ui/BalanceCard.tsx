@@ -2,6 +2,7 @@
 
 import { BRAND, formatCurrency } from "@app/config/brand";
 import { useEffect, useRef, useState } from "react";
+import { CurrencyIcon } from "./CurrencyIcon";
 
 type Props = {
   balance: number;
@@ -39,22 +40,13 @@ export function BalanceCard({ balance }: Props) {
   const shown = useCountUp(balance);
 
   return (
-    <div className="border-accent/30 bg-bg/60 rounded-theme relative flex items-center gap-3 overflow-hidden border p-3">
-      <span
-        aria-hidden
-        className="text-on-accent grid size-10 place-items-center rounded-full bg-(image:--accent-gradient) text-xs font-black shadow-[0_0_14px_-2px_var(--accent)]"
-      >
-        {BRAND.currency.symbol}
-      </span>
-      <div className="min-w-0">
-        <p className="text-muted text-xs">Solde</p>
-        <p
-          className="text-gradient text-2xl font-bold tabular-nums"
-          title={formatCurrency(balance)}
-        >
-          {number.format(shown)}
-        </p>
-      </div>
-    </div>
+    <p
+      className="bg-surface border-border inline-flex items-center gap-1.5 self-start rounded-full border py-1 pr-3 pl-1"
+      title={`Solde : ${formatCurrency(balance)}`}
+    >
+      <CurrencyIcon decorative className="size-6" />
+      <span className="sr-only">Solde : </span>
+      <span className="text-text text-sm font-bold tabular-nums">{number.format(shown)}</span>
+    </p>
   );
 }

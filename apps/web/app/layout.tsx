@@ -21,6 +21,7 @@ const gaming = Orbitron({
 
 export const metadata: Metadata = {
   title: { default: BRAND.name, template: `%s · ${BRAND.name}` },
+  icons: { icon: { url: BRAND.logo, type: "image/svg+xml" } },
   robots: { index: false, follow: false },
 };
 

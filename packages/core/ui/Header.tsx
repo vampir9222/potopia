@@ -19,8 +19,11 @@ export function Header({ user, menuButton, actions }: Props) {
         className="via-accent/60 absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent to-transparent"
       />
       {menuButton}
-      <a href="/" className="font-display text-gradient text-xl font-bold tracking-[0.12em]">
-        {BRAND.name}
+      <a href="/" className="flex items-center gap-2">
+        <img src={BRAND.logo} alt="" className="size-11 shrink-0" />
+        <span className="font-display text-gradient text-xl font-bold tracking-[0.12em]">
+          {BRAND.name}
+        </span>
       </a>
       <div className="ml-auto flex items-center gap-2">
         {actions}

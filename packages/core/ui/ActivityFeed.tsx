@@ -1,5 +1,8 @@
 import { formatRelative } from "./format";
 import { Avatar } from "@app/ui";
+import { VisibleRows } from "./VisibleRows";
+
+const VISIBLE_ROWS = 10;
 
 export type ActivityItem = {
   id: string;
@@ -19,10 +22,10 @@ export function ActivityFeed({ items }: Props) {
   if (items.length === 0) {
     return <p className="text-muted py-6 text-center text-sm">Rien de neuf pour l'instant.</p>;
   }
-  // Hauteur d'environ 10 lignes, le reste défile. Le padding horizontal compense le `-mx-2` des
-  // lignes mises en avant, sinon rogné par le conteneur défilant.
+  // 10 lignes visibles, le reste défile. Le padding horizontal compense le `-mx-2` des lignes mises
+  // en avant, sinon rogné par le conteneur défilant.
   return (
-    <ul className="stagger divide-border -mx-2 max-h-132 divide-y overflow-y-auto px-2">
+    <VisibleRows rows={VISIBLE_ROWS} className="stagger divide-border -mx-2 divide-y px-2">
       {items.map((item) => (
         <li
           key={item.id}
@@ -40,6 +43,6 @@ export function ActivityFeed({ items }: Props) {
           </time>
         </li>
       ))}
-    </ul>
+    </VisibleRows>
   );
 }

@@ -5,10 +5,14 @@
  */
 export const BRAND = {
   name: "Potopia",
+  /** Logo du site, aussi utilisé comme favicon (fichier servi par apps/web/public). */
+  logo: "/brand/logo.svg",
   currency: {
     name: "PotoCoin",
     plural: "PotoCoins",
     symbol: "PC",
+    /** Pièce affichée à côté des montants (fichier servi par apps/web/public). */
+    icon: "/brand/currency.svg",
   },
   locale: "fr-FR",
 } as const;
