@@ -1,0 +1,8 @@
+pnpm-lock.yaml
+.next/
+.turbo/
+dist/
+coverage/
+packages/db/prisma/schema/
+packages/db/src/generated/
+packages/db/prisma/migrations/

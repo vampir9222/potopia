@@ -1,0 +1,26 @@
+# Dépendances
+node_modules/
+
+# Secrets : seul .env.example est versionné
+.env
+.env.*
+!.env.example
+
+# Builds / caches
+.next/
+dist/
+out/
+.turbo/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.vercel/
+
+# Prisma : schéma assemblé et client générés
+packages/db/prisma/schema/
+packages/db/src/generated/
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+*.log
