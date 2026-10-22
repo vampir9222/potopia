@@ -53,14 +53,14 @@ export function NotificationBell({ notifications, unreadCount, markAsRead, markA
       >
         <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="bg-accent text-bg absolute top-1 right-1 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold">
+          <span className="bg-accent text-on-accent absolute top-1 right-1 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="border-border bg-surface absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border shadow-lg">
+        <div className="border-border bg-surface rounded-theme absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden border shadow-lg">
           <div className="border-border flex items-center justify-between border-b px-4 py-2">
             <span className="text-text text-sm font-medium">Notifications</span>
             {unreadCount > 0 && (
@@ -85,7 +85,7 @@ export function NotificationBell({ notifications, unreadCount, markAsRead, markA
                     onClick={() => {
                       if (!n.readAt) startTransition(() => markAsRead(n.id));
                     }}
-                    className="hover:bg-bg flex gap-3 px-4 py-3"
+                    className="hover:bg-surface-hover flex gap-3 px-4 py-3"
                   >
                     <span
                       aria-hidden

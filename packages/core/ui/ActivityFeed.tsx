@@ -1,5 +1,5 @@
 import { formatRelative } from "./format";
-import { UserAvatar } from "./UserAvatar";
+import { Avatar } from "@app/ui";
 
 export type ActivityItem = {
   id: string;
@@ -21,7 +21,7 @@ export function ActivityFeed({ items }: Props) {
     <ul className="divide-border divide-y">
       {items.map((item) => (
         <li key={item.id} className="flex items-center gap-3 py-3">
-          <UserAvatar user={item.user ?? { name: "?", image: null }} size={28} />
+          <Avatar name={item.user?.name ?? "?"} src={item.user?.image} size={28} />
           <p className="text-text min-w-0 flex-1 text-sm">
             <span className="font-medium">{item.user?.name ?? "Quelqu'un"}</span> {item.text}
           </p>

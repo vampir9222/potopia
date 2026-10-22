@@ -18,7 +18,8 @@
     "db:migrate": "pnpm --filter @app/db db:migrate",
     "db:deploy": "pnpm --filter @app/db db:deploy",
     "db:seed": "pnpm --filter @app/db db:seed",
-    "db:reset:test": "pnpm --filter @app/db db:reset:test"
+    "db:reset:test": "pnpm --filter @app/db db:reset:test",
+    "storage:init": "pnpm --filter @app/storage storage:init"
   },
   "devDependencies": {
     "prettier": "3.9.10",

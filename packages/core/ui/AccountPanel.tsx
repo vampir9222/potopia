@@ -1,6 +1,6 @@
 import { LogOut } from "lucide-react";
 import type { ReactNode } from "react";
-import { UserAvatar } from "./UserAvatar";
+import { Avatar, Button } from "@app/ui";
 
 type Props = {
   user: { name: string; image: string | null; role: "member" | "admin" };
@@ -12,9 +12,9 @@ type Props = {
 
 export function AccountPanel({ user, signOut, children }: Props) {
   return (
-    <section className="border-border bg-surface flex flex-col gap-4 rounded-xl border p-4">
+    <section className="border-border bg-surface rounded-theme flex flex-col gap-4 border p-4">
       <div className="flex items-center gap-3">
-        <UserAvatar user={user} size={48} />
+        <Avatar name={user.name} src={user.image} size={48} />
         <div className="min-w-0">
           <p className="text-text truncate font-medium">{user.name}</p>
           {user.role === "admin" && <p className="text-accent text-xs">Admin</p>}
@@ -22,13 +22,10 @@ export function AccountPanel({ user, signOut, children }: Props) {
       </div>
       {children}
       <form action={signOut}>
-        <button
-          type="submit"
-          className="border-border text-muted hover:text-text flex w-full items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm"
-        >
+        <Button type="submit" variant="secondary" className="w-full">
           <LogOut size={16} aria-hidden />
           Se déconnecter
-        </button>
+        </Button>
       </form>
     </section>
   );

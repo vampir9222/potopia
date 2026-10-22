@@ -20,7 +20,7 @@ export function AppGrid({ apps }: Props) {
           <li key={app.id}>
             <a
               href={app.route}
-              className="border-border bg-surface text-text hover:border-accent flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center text-sm transition-colors"
+              className="border-border bg-surface text-text hover:border-accent rounded-theme flex aspect-square flex-col items-center justify-center gap-2 border p-3 text-center text-sm transition-colors"
             >
               <Icon size={28} className="text-accent" aria-hidden />
               <span className="line-clamp-2">{app.name}</span>

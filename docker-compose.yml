@@ -1,6 +1,6 @@
-# Postgres local pour les tests (et le dev si tu ne veux pas utiliser Neon).
-# Lancer : pnpm db:up
+# Services locaux pour le dev et les tests. Lancer : pnpm db:up
 services:
+  # Postgres (à la place de Neon en local) avec une base app_test pour les tests.
   postgres:
     image: postgres:17-alpine
     environment:
@@ -18,5 +18,25 @@ services:
       timeout: 3s
       retries: 20
 
+  # Stockage objet compatible S3 (à la place de Cloudflare R2 en local).
+  # API sur :9000, console web sur :9001. Buckets créés par `pnpm storage:init`.
+  storage:
+    image: rustfs/rustfs:1.0.3
+    environment:
+      RUSTFS_ACCESS_KEY: localaccess
+      RUSTFS_SECRET_KEY: localsecret
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - storagedata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:9000/health"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
 volumes:
   pgdata:
+  storagedata:

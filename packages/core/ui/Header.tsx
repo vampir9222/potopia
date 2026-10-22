@@ -1,6 +1,6 @@
 import { BRAND } from "@app/config/brand";
 import type { ReactNode } from "react";
-import { UserAvatar } from "./UserAvatar";
+import { Avatar } from "@app/ui";
 
 type Props = {
   user: { name: string; image: string | null };
@@ -19,7 +19,7 @@ export function Header({ user, menuButton, actions }: Props) {
       </a>
       <div className="ml-auto flex items-center gap-2">
         {actions}
-        <UserAvatar user={user} />
+        <Avatar name={user.name} src={user.image} />
       </div>
     </header>
   );

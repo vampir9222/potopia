@@ -1,6 +1,7 @@
 "use client";
 
 import { BRAND } from "@app/config/brand";
+import { Button, Input, Label, Select } from "@app/ui";
 import { useActionState, useState } from "react";
 
 export type AdjustState =
@@ -17,9 +18,6 @@ type Props = {
   action: (state: AdjustState, formData: FormData) => Promise<AdjustState>;
 };
 
-const field =
-  "border-border bg-bg text-text w-full rounded-md border px-3 py-2 text-sm focus:border-accent focus:outline-none";
-
 export function AdminAdjustForm({ members, defaultUserId, action }: Props) {
   const [state, formAction, pending] = useActionState(action, { status: "idle" });
   // Nouvelle clé après chaque envoi réussi : une double soumission du même envoi ne s'applique qu'une fois.
@@ -33,9 +31,9 @@ export function AdminAdjustForm({ members, defaultUserId, action }: Props) {
   return (
     <form action={formAction} className="flex flex-col gap-3">
       <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-muted">Membre</span>
-        <select name="userId" required defaultValue={defaultUserId ?? ""} className={field}>
+      <Label>
+        Membre
+        <Select name="userId" required defaultValue={defaultUserId ?? ""}>
           <option value="" disabled>
             Choisir un membre
           </option>
@@ -44,36 +42,32 @@ export function AdminAdjustForm({ members, defaultUserId, action }: Props) {
               {m.name}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Label>
       <div className="flex gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted">Opération</span>
-          <select name="direction" defaultValue="credit" className={field}>
+        <Label>
+          Opération
+          <Select name="direction" defaultValue="credit">
             <option value="credit">Créditer</option>
             <option value="debit">Débiter</option>
-          </select>
-        </label>
-        <label className="flex flex-1 flex-col gap-1 text-sm">
-          <span className="text-muted">Montant ({BRAND.currency.symbol})</span>
-          <input name="amount" type="number" min={1} step={1} required className={field} />
-        </label>
+          </Select>
+        </Label>
+        <Label className="flex-1">
+          Montant ({BRAND.currency.symbol})
+          <Input name="amount" type="number" min={1} step={1} required />
+        </Label>
       </div>
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-muted">Motif (visible par le membre)</span>
-        <input name="reason" required minLength={3} maxLength={200} className={field} />
-      </label>
-      <button
-        type="submit"
-        disabled={pending}
-        className="bg-accent text-bg rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50"
-      >
+      <Label>
+        Motif (visible par le membre)
+        <Input name="reason" required minLength={3} maxLength={200} />
+      </Label>
+      <Button type="submit" disabled={pending}>
         {pending ? "Envoi…" : "Valider"}
-      </button>
+      </Button>
       {state.status !== "idle" && (
         <p
           role="status"
-          className={`text-sm ${state.status === "ok" ? "text-accent" : "text-red-400"}`}
+          className={`text-sm ${state.status === "ok" ? "text-success" : "text-danger"}`}
         >
           {state.message}
         </p>

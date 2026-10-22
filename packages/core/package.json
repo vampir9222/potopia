@@ -15,6 +15,7 @@
   "dependencies": {
     "@app/config": "workspace:*",
     "@app/db": "workspace:*",
+    "@app/ui": "workspace:*",
     "better-auth": "1.7.12",
     "lucide-react": "1.61.0",
     "zod": "4.6.7"

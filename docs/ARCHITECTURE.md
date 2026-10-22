@@ -8,16 +8,16 @@ notifications) et boîte à idées. Aucun jeu pour l'instant.
 
 ## Stack
 
-| Sujet       | Choix                                                                       |
-| ----------- | --------------------------------------------------------------------------- |
-| Monorepo    | pnpm workspaces + Turborepo, TypeScript 6.0 strict                          |
-| Web         | Next.js 16 (App Router), React 19, Tailwind v4                              |
-| Base        | PostgreSQL (Neon, URL poolée), Prisma 7 + `@prisma/adapter-pg`, multiSchema |
-| Auth        | Better Auth, provider Discord uniquement                                    |
-| Stockage    | Cloudflare R2 privé (`@aws-sdk/client-s3`, `s3-request-presigner`)          |
-| Validation  | zod 4                                                                       |
-| Tests       | Vitest 5, Postgres local via Docker (`docker compose`)                      |
-| Hébergement | Vercel, repo GitHub public                                                  |
+| Sujet       | Choix                                                                                |
+| ----------- | ------------------------------------------------------------------------------------ |
+| Monorepo    | pnpm workspaces + Turborepo, TypeScript 6.0 strict                                   |
+| Web         | Next.js 16 (App Router), React 19, Tailwind v4                                       |
+| Base        | PostgreSQL (Neon, URL poolée), Prisma 7 + `@prisma/adapter-pg`, multiSchema          |
+| Auth        | Better Auth, provider Discord uniquement                                             |
+| Stockage    | Cloudflare R2 privé (`@aws-sdk/client-s3`, `s3-request-presigner`) ; RustFS en local |
+| Validation  | zod 4                                                                                |
+| Tests       | Vitest 5, Postgres et stockage S3 locaux via Docker (`docker compose`)               |
+| Hébergement | Vercel, repo GitHub public                                                           |
 
 Notes de versions :
 
@@ -228,7 +228,7 @@ depuis ce seul fichier.
 - [x] 3. `packages/core` : Better Auth + Discord + contrôle d'appartenance au serveur, users, guards,
       registre, activité, notifications, et leurs tests.
 - [x] 4. `packages/economy` : ledger, wallets, et leurs tests.
-- [ ] 5. `packages/storage` et `packages/ui` : client R2, presign, thème sombre, primitives.
+- [x] 5. `packages/storage` et `packages/ui` : client R2, presign, thème sombre, primitives.
 - [ ] 6. `apps/web` : login, `/refused`, header avec cloche, dashboard façon Odoo responsive, page
       admin de la monnaie.
 - [ ] 7. `packages/ideas` : formulaire, upload, pages admin, et leurs tests.
@@ -242,4 +242,7 @@ Cartes jouables, boosters, Wordle, combat, design final.
 
 - Le projet doit être sur un **disque local**. Un partage réseau SMB refuse les liens symboliques
   dont pnpm a besoin.
-- Docker Desktop doit être lancé pour le Postgres local (`pnpm db:up`).
+- Docker Desktop doit être lancé pour les services locaux (`pnpm db:up`) : Postgres et un stockage
+  compatible S3 (RustFS) qui remplace R2. `R2_ENDPOINT` pointe dessus ; en prod il reste vide et
+  l'endpoint R2 du compte est utilisé. Le bucket local se crée avec `pnpm storage:init`. MinIO n'est
+  plus publié en image Docker, d'où RustFS.

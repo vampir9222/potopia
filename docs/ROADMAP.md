@@ -141,7 +141,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 
 ---
 
-## Étape 5 : `packages/storage` et `packages/ui`
+## Étape 5 : `packages/storage` et `packages/ui` ✅
 
 **storage**
 

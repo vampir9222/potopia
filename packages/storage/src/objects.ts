@@ -1,0 +1,80 @@
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3ServiceException,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { z } from "zod";
+import { getStorage, type Storage } from "./client";
+
+// URLs courtes : 5 min par défaut, 15 min au plus.
+export const DEFAULT_EXPIRES_IN = 300;
+export const MAX_EXPIRES_IN = 900;
+
+/** Clé d'objet générée côté serveur : segments `[a-z0-9._-]` séparés par `/`, sans `..`. */
+const keySchema = z
+  .string()
+  .max(512)
+  .regex(/^[a-z0-9._-]+(\/[a-z0-9._-]+)*$/i, "Clé d'objet invalide.")
+  .refine((key) => !key.split("/").includes(".."), "Clé d'objet invalide.");
+
+const expiresInSchema = z.number().int().min(1).max(MAX_EXPIRES_IN).default(DEFAULT_EXPIRES_IN);
+
+const presignPutInput = z.object({
+  key: keySchema,
+  contentType: z.string().min(1).max(100),
+  contentLength: z.number().int().positive(),
+  expiresIn: expiresInSchema,
+});
+
+/**
+ * URL PUT présignée. Content-Type et Content-Length font partie de la signature :
+ * le navigateur doit envoyer exactement ce type et cette taille, sinon le stockage refuse.
+ */
+export async function presignPut(
+  input: z.input<typeof presignPutInput>,
+  storage: Storage = getStorage(),
+): Promise<string> {
+  const { key, contentType, contentLength, expiresIn } = presignPutInput.parse(input);
+  const command = new PutObjectCommand({
+    Bucket: storage.bucket,
+    Key: key,
+    ContentType: contentType,
+    ContentLength: contentLength,
+  });
+  return getSignedUrl(storage.s3, command, {
+    expiresIn,
+    signableHeaders: new Set(["content-type", "content-length"]),
+  });
+}
+
+const presignGetInput = z.object({ key: keySchema, expiresIn: expiresInSchema });
+
+export async function presignGet(
+  input: z.input<typeof presignGetInput>,
+  storage: Storage = getStorage(),
+): Promise<string> {
+  const { key, expiresIn } = presignGetInput.parse(input);
+  return getSignedUrl(storage.s3, new GetObjectCommand({ Bucket: storage.bucket, Key: key }), {
+    expiresIn,
+  });
+}
+
+export type ObjectInfo = { contentType: string | null; contentLength: number };
+
+/** Métadonnées d'un objet, ou null s'il n'existe pas. */
+export async function headObject(
+  key: string,
+  storage: Storage = getStorage(),
+): Promise<ObjectInfo | null> {
+  try {
+    const res = await storage.s3.send(
+      new HeadObjectCommand({ Bucket: storage.bucket, Key: keySchema.parse(key) }),
+    );
+    return { contentType: res.ContentType ?? null, contentLength: res.ContentLength ?? 0 };
+  } catch (error) {
+    if (error instanceof S3ServiceException && error.$metadata.httpStatusCode === 404) return null;
+    throw error;
+  }
+}
