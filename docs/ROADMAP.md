@@ -53,7 +53,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 
 ---
 
-## Étape 3 : `packages/core`
+## Étape 3 : `packages/core` ✅
 
 **3a. Schéma et données**
 

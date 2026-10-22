@@ -1,0 +1,120 @@
+// Domaine core : utilisateurs, auth (tables Better Auth), activité, notifications.
+// Les autres domaines référencent un utilisateur par une simple colonne `user_id`, sans relation.
+
+enum Role {
+  member
+  admin
+
+  @@schema("core")
+}
+
+model User {
+  id            String   @id
+  // Recopié depuis le compte Discord lié à chaque connexion, jamais saisi par l'utilisateur.
+  discordId     String?  @unique @map("discord_id")
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  // Avatar sur le CDN Discord.
+  image         String?
+  // Miroir de ADMIN_DISCORD_IDS mis à jour à chaque connexion. Les contrôles lisent l'env.
+  role          Role     @default(member)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  sessions       Session[]
+  accounts       Account[]
+  activityEvents ActivityEvent[]
+  notifications  Notification[]
+
+  @@map("users")
+  @@schema("core")
+}
+
+model Session {
+  id             String   @id
+  token          String   @unique
+  userId         String   @map("user_id")
+  expiresAt      DateTime @map("expires_at")
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  // Dernière vérification de l'appartenance au serveur Discord (revérifiée toutes les 6 h).
+  guildCheckedAt DateTime @default(now()) @map("guild_checked_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+  @@schema("core")
+}
+
+model Account {
+  id                    String    @id
+  userId                String    @map("user_id")
+  providerId            String    @map("provider_id")
+  // ID Discord de l'utilisateur pour le provider discord.
+  accountId             String    @map("account_id")
+  // Tokens OAuth chiffrés par Better Auth (encryptOAuthTokens).
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+  @@schema("core")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
+  @@schema("core")
+}
+
+model ActivityEvent {
+  id        String   @id @default(uuid(7))
+  userId    String   @map("user_id")
+  // Module émetteur (`ideas`, `economy`, un jeu…) et type d'événement propre à ce module.
+  app       String
+  type      String
+  payload   Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt(sort: Desc)])
+  @@map("activity_events")
+  @@schema("core")
+}
+
+model Notification {
+  id        String    @id @default(uuid(7))
+  userId    String    @map("user_id")
+  title     String
+  link      String?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+  @@schema("core")
+}

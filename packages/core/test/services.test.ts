@@ -1,0 +1,122 @@
+import { db } from "@app/db";
+import { truncateTestDb } from "@app/db/testing";
+import { beforeEach, describe, expect, it } from "vitest";
+import {
+  countUnread,
+  getUsersByIds,
+  getVisibleApps,
+  listNotifications,
+  listRecentEvents,
+  markAllAsRead,
+  markAsRead,
+  notify,
+  notifyAdmins,
+  publishEvent,
+} from "../src/index";
+
+const ADMIN_ID = "100000000000000001";
+
+async function createUser(discordId: string): Promise<string> {
+  const user = await db.user.create({
+    data: {
+      id: `user-${discordId}`,
+      discordId,
+      name: `Joueur ${discordId.slice(-3)}`,
+      email: `${discordId}@example.test`,
+    },
+  });
+  return user.id;
+}
+
+beforeEach(truncateTestDb);
+
+describe("registre des apps", () => {
+  it("getVisibleApps filtre par rôle", () => {
+    expect(getVisibleApps({ role: "member" }).map((a) => a.id)).not.toContain("admin");
+    expect(getVisibleApps({ role: "admin" }).map((a) => a.id)).toContain("admin");
+  });
+});
+
+describe("users", () => {
+  it("getUsersByIds ignore les doublons et les IDs inconnus", async () => {
+    const id = await createUser("100000000000000002");
+    const users = await getUsersByIds([id, id, "inconnu"]);
+    expect(users.map((u) => u.id)).toEqual([id]);
+  });
+});
+
+describe("notifications", () => {
+  it("notify puis markAsRead", async () => {
+    const userId = await createUser("100000000000000002");
+    const n = await notify({ userId, title: "Tu as été crédité", link: "/" });
+    expect(await countUnread(userId)).toBe(1);
+
+    expect(await markAsRead({ userId, notificationId: n.id })).toBe(true);
+    expect(await countUnread(userId)).toBe(0);
+    expect((await listNotifications(userId))[0]?.readAt).toBeInstanceOf(Date);
+  });
+
+  it("markAsRead ne touche pas la notification d'un autre", async () => {
+    const owner = await createUser("100000000000000002");
+    const other = await createUser("100000000000000003");
+    const n = await notify({ userId: owner, title: "Privée" });
+
+    expect(await markAsRead({ userId: other, notificationId: n.id })).toBe(false);
+    expect(await countUnread(owner)).toBe(1);
+  });
+
+  it("markAllAsRead ne lit que les notifications de l'utilisateur", async () => {
+    const a = await createUser("100000000000000002");
+    const b = await createUser("100000000000000003");
+    await notify({ userId: a, title: "Un" });
+    await notify({ userId: a, title: "Deux" });
+    await notify({ userId: b, title: "Trois" });
+
+    expect(await markAllAsRead({ userId: a })).toBe(2);
+    expect(await countUnread(b)).toBe(1);
+  });
+
+  it("refuse un lien externe", async () => {
+    const userId = await createUser("100000000000000002");
+    await expect(notify({ userId, title: "x", link: "https://example.test" })).rejects.toThrow();
+    await expect(notify({ userId, title: "x", link: "//example.test" })).rejects.toThrow();
+  });
+
+  it("notifyAdmins ne notifie que les admins de l'env", async () => {
+    const admin = await createUser(ADMIN_ID);
+    const member = await createUser("100000000000000002");
+
+    expect(await notifyAdmins({ title: "Nouvelle idée reçue" })).toBe(1);
+    expect(await countUnread(admin)).toBe(1);
+    expect(await countUnread(member)).toBe(0);
+  });
+});
+
+describe("activité", () => {
+  it("publishEvent puis listRecentEvents, du plus récent au plus ancien", async () => {
+    const userId = await createUser("100000000000000002");
+    await publishEvent({ userId, app: "ideas", type: "first" });
+    await publishEvent({ userId, app: "ideas", type: "second", payload: { n: 2 } });
+
+    const events = await listRecentEvents(10);
+    expect(events.map((e) => e.type)).toEqual(["second", "first"]);
+    expect(events[1]?.payload).toEqual({});
+  });
+
+  it("publishEvent respecte la transaction passée en option", async () => {
+    const userId = await createUser("100000000000000002");
+    await expect(
+      db.$transaction(async (tx) => {
+        await publishEvent({ userId, app: "ideas", type: "rolled_back" }, { tx });
+        expect(await tx.activityEvent.count()).toBe(1);
+        throw new Error("annulation");
+      }),
+    ).rejects.toThrow("annulation");
+    expect(await db.activityEvent.count()).toBe(0);
+
+    await db.$transaction(async (tx) => {
+      await publishEvent({ userId, app: "ideas", type: "committed" }, { tx });
+    });
+    expect(await db.activityEvent.count()).toBe(1);
+  });
+});

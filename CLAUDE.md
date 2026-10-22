@@ -15,7 +15,8 @@ pnpm format          # prettier --write
 pnpm db:up           # Postgres local (Docker Desktop doit être lancé), port 5433
 ```
 
-Tests : Postgres local via `TEST_DATABASE_URL` (base `app_test`, vidée par les tests).
+Tests : Postgres local via `TEST_DATABASE_URL` (base `app_test`, vidée par les tests, donc packages
+testés un par un : `turbo run test --concurrency=1`). API Discord toujours mockée.
 
 ## Règles non négociables
 

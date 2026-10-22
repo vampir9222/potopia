@@ -91,8 +91,19 @@ actions aux composants en props.
     `DISCORD_GUILD_ID`.
   - Si l'utilisateur n'est pas membre, aucun compte ni session n'est créé et il est redirigé vers
     `/refused`.
+  - Ce contrôle vit dans le `getUserInfo` du provider Discord : il s'exécute juste après l'échange
+    du code OAuth, avant toute écriture de Better Auth en base. Si Discord est injoignable, la
+    connexion échoue vers `/login?error=…`.
+  - `discordId` est recopié depuis le compte Discord lié (`accounts.account_id`) à chaque création
+    de session. Il n'est jamais modifiable par l'utilisateur (`input: false`), sinon un membre
+    pourrait se donner l'ID d'un admin via l'API Better Auth.
 - **Revérification toutes les 6 h** (champ `guildCheckedAt` sur la session). Un membre qui a quitté
   le serveur voit sa session révoquée ; ses données sont conservées.
+  - Le token Discord est rafraîchi au besoin. Un refresh refusé ou un 401 de Discord vaut révocation
+    (l'utilisateur a retiré l'autorisation).
+  - Une panne ou un rate-limit de Discord ne révoque rien : la session est gardée et la vérification
+    retentée à la requête suivante.
+  - `requireMember` renvoie 401 sans session, 403 quand la session vient d'être révoquée.
 - **Pas de bot Discord.** La plateforme ne connaît donc que les membres déjà connectés au moins une
   fois. Un bot pourra être ajouté plus tard si besoin.
 - **Admins** : liste `ADMIN_DISCORD_IDS`.
@@ -207,7 +218,7 @@ depuis ce seul fichier.
 - [x] 1. Init : monorepo, `packages/config`, Turbo, Prettier, `.env.example`, `docker-compose.yml`.
 - [x] 2. `packages/db` : assemblage des schémas, Prisma, migration initiale (triggers, CHECK), seed
       fictif.
-- [ ] 3. `packages/core` : Better Auth + Discord + contrôle d'appartenance au serveur, users, guards,
+- [x] 3. `packages/core` : Better Auth + Discord + contrôle d'appartenance au serveur, users, guards,
       registre, activité, notifications, et leurs tests.
 - [ ] 4. `packages/economy` : ledger, wallets, et leurs tests.
 - [ ] 5. `packages/storage` et `packages/ui` : client R2, presign, thème sombre, primitives.
