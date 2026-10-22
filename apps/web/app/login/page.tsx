@@ -1,6 +1,7 @@
 import { BRAND } from "@app/config/brand";
 import { getSession } from "@app/core";
 import { Button, Card } from "@app/ui";
+import { Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -22,14 +23,27 @@ export default async function LoginPage({
 
   return (
     <main className="flex min-h-dvh items-center justify-center p-4">
-      <Card className="flex w-full max-w-sm flex-col items-center gap-6 py-10 text-center">
+      <Card className="animate-rise flex w-full max-w-sm flex-col items-center gap-6 px-6 py-10 text-center">
+        {/* emblème qui flotte, entouré d'un halo */}
+        <div className="animate-float relative grid size-20 place-items-center">
+          <span className="bg-arcane/30 absolute inset-0 rounded-full blur-xl" aria-hidden />
+          <span className="border-accent/60 bg-surface relative grid size-16 place-items-center rounded-full border shadow-[0_0_24px_-4px_var(--accent)]">
+            <Sparkles size={28} className="text-accent" aria-hidden />
+          </span>
+        </div>
         <div>
-          <h1 className="text-text text-2xl font-semibold">{BRAND.name}</h1>
-          <p className="text-muted mt-1 text-sm">Réservé aux membres du serveur Discord.</p>
+          <h1 className="font-display text-gradient-shimmer text-4xl font-bold tracking-[0.12em]">
+            {BRAND.name}
+          </h1>
+          <p className="text-muted mt-2 text-sm">
+            Les jeux du serveur, entre membres.
+            <br />
+            Connecte-toi avec ton compte Discord pour entrer.
+          </p>
         </div>
         <form action={signInWithDiscord} className="w-full">
-          <Button type="submit" className="w-full">
-            Se connecter avec Discord
+          <Button type="submit" className="h-11 w-full text-base">
+            Entrer avec Discord
           </Button>
         </form>
         {error && (

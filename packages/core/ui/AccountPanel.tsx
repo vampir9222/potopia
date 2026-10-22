@@ -12,12 +12,14 @@ type Props = {
 
 export function AccountPanel({ user, signOut, children }: Props) {
   return (
-    <section className="border-border bg-surface rounded-theme flex flex-col gap-4 border p-4">
+    <section className="theme-frame rounded-theme flex flex-col gap-4 p-4">
       <div className="flex items-center gap-3">
         <Avatar name={user.name} src={user.image} size={48} />
         <div className="min-w-0">
-          <p className="text-text truncate font-medium">{user.name}</p>
-          {user.role === "admin" && <p className="text-accent text-xs">Admin</p>}
+          <p className="font-display text-text truncate font-semibold tracking-wide">{user.name}</p>
+          <p className="text-muted text-xs">
+            {user.role === "admin" ? <span className="text-accent">♛ Admin</span> : "Membre"}
+          </p>
         </div>
       </div>
       {children}

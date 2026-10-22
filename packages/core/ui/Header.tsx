@@ -12,9 +12,17 @@ type Props = {
 
 export function Header({ user, menuButton, actions }: Props) {
   return (
-    <header className="border-border bg-bg/90 sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4 backdrop-blur">
+    <header className="bg-bg/80 sticky top-0 z-30 flex h-14 items-center gap-3 px-4 backdrop-blur-md">
+      {/* liseré doré sous le header */}
+      <span
+        aria-hidden
+        className="via-accent/60 absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent to-transparent"
+      />
       {menuButton}
-      <a href="/" className="text-text text-lg font-semibold">
+      <a
+        href="/"
+        className="font-display text-gradient-shimmer text-xl font-bold tracking-[0.12em]"
+      >
         {BRAND.name}
       </a>
       <div className="ml-auto flex items-center gap-2">

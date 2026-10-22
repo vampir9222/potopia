@@ -28,13 +28,13 @@ export function SideNav({ isAdmin }: { isAdmin: boolean }) {
               href={href}
               aria-current={isActive(href) ? "page" : undefined}
               className={cx(
-                "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+                "group flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-all duration-200",
                 isActive(href)
-                  ? "bg-surface-hover text-text font-medium"
-                  : "text-muted hover:bg-surface-hover hover:text-text",
+                  ? "bg-accent/10 text-accent font-semibold shadow-[inset_2px_0_0_var(--accent)]"
+                  : "text-muted hover:bg-surface-hover hover:text-text hover:translate-x-0.5",
               )}
             >
-              <Icon size={16} aria-hidden />
+              <Icon size={16} aria-hidden className="transition-transform group-hover:scale-110" />
               {label}
             </Link>
           </li>

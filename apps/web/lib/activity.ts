@@ -24,6 +24,11 @@ const DESCRIPTIONS: Record<string, (payload: Payload) => string> = {
   },
 };
 
+/** Exploit mis en avant en or dans le fil : un 3 sur 3 à TROIS. */
+function isFeat(app: string, type: string, payload: Payload): boolean {
+  return app === "trois" && type === "day_completed" && numberField(payload, "found") === 3;
+}
+
 export function describeEvent(app: string, type: string, payload: Payload = {}): string {
   return DESCRIPTIONS[`${app}/${type}`]?.(payload) ?? "a été actif sur la plateforme";
 }
@@ -37,6 +42,7 @@ export async function getActivityFeed(limit = 20): Promise<ActivityItem[]> {
       id: event.id,
       user: user ? { name: user.name, image: user.image } : null,
       text: describeEvent(event.app, event.type, event.payload),
+      highlight: isFeat(event.app, event.type, event.payload),
       createdAt: event.createdAt,
     };
   });

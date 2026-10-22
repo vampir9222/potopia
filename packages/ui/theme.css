@@ -1,15 +1,57 @@
 /*
- * Thème de la plateforme : toutes les couleurs passent par ces variables.
- * Restyler la plateforme = modifier ce fichier. Sombre par défaut.
+ * Thèmes de la plateforme : couleurs, polices, dégradés et décors passent par ces variables.
+ * Chaque thème est un bloc [data-theme="…"] posé sur <html> ; la liste des thèmes proposés est
+ * dans src/themes.ts. Ajouter un thème = un bloc ici + une entrée là-bas.
  *
  * Dans l'app (après `@import "tailwindcss";`) : `@import "@app/ui/theme.css";`
- * Les variables deviennent des couleurs Tailwind : bg-bg, bg-surface, border-border, text-text,
- * text-muted, text-accent, bg-accent, text-on-accent, text-danger, text-success…
+ * Les variables deviennent des classes Tailwind : bg-bg, bg-surface, border-border, text-text,
+ * text-muted, text-accent, bg-accent, text-on-accent, text-arcane, text-danger, text-success,
+ * font-display… La police de titres du thème Fantasy est fournie par l'app (--font-display-face).
  */
 
-:root {
+/* Fantasy (par défaut) : sombre et chaud, or, pourpre et parchemin, cadres ornés, braises. */
+:root,
+[data-theme="fantasy"] {
   color-scheme: dark;
 
+  --bg: #0f0b12;
+  --surface: #19131d;
+  --surface-hover: #241b29;
+  --border: #3a2d3c;
+  --text: #f1e8d8;
+  --muted: #a8998b;
+  /* Accent principal (boutons, liens, éléments actifs). */
+  --accent: #e6b04e;
+  --accent-hover: #f3c870;
+  /* Texte posé sur un fond --accent. */
+  --on-accent: #1b1205;
+  /* Accent secondaire (lueurs, halos). */
+  --arcane: #9b6cf0;
+  --danger: #e8644f;
+  --success: #7fca86;
+
+  --radius: 0.85rem;
+  --font-body: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-display-face, "Cinzel"), "Times New Roman", serif;
+
+  --accent-gradient: linear-gradient(135deg, #f7dc96 0%, #e6b04e 45%, #b9792a 100%);
+  --shimmer-gradient: linear-gradient(
+    90deg,
+    #b9792a 0%,
+    #f7dc96 25%,
+    #e6b04e 50%,
+    #f7dc96 75%,
+    #b9792a 100%
+  );
+  --frame: color-mix(in oklab, var(--accent) 28%, var(--border));
+  /* Décors : losanges des cadres, braises, lueurs d'ambiance (0 = aucune). */
+  --ornaments: block;
+  --embers: block;
+  --ambient: 1;
+}
+
+/* Classique : le thème d'origine, bleu nuit et sobre, sans décors. */
+[data-theme="classic"] {
   --bg: #0e1015;
   --surface: #171a22;
   --surface-hover: #1f2330;
@@ -18,13 +60,20 @@
   --muted: #8d94a6;
   --accent: #7c8cff;
   --accent-hover: #96a3ff;
-  /* Texte posé sur un fond --accent. */
   --on-accent: #0e1015;
+  --arcane: #5b6bd8;
   --danger: #f2766b;
   --success: #5fcf8e;
 
   --radius: 0.75rem;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-body);
+
+  --accent-gradient: linear-gradient(135deg, #a5b0ff 0%, #7c8cff 100%);
+  --shimmer-gradient: linear-gradient(90deg, #7c8cff 0%, #c3caff 50%, #7c8cff 100%);
+  --frame: var(--border);
+  --ornaments: none;
+  --embers: none;
+  --ambient: 0.35;
 }
 
 @theme inline {
@@ -37,21 +86,265 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-on-accent: var(--on-accent);
+  --color-arcane: var(--arcane);
   --color-danger: var(--danger);
   --color-success: var(--success);
   --radius-theme: var(--radius);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
 @layer base {
   body {
     background-color: var(--bg);
     color: var(--text);
-    font-family: var(--font-sans);
+    font-family: var(--font-body);
+  }
+
+  /* Lueurs d'ambiance qui dérivent lentement derrière tout le contenu. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -20%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        40% 35% at 20% 15%,
+        color-mix(in oklab, var(--arcane) 22%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        35% 30% at 85% 80%,
+        color-mix(in oklab, var(--accent) 14%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        60% 50% at 50% 110%,
+        color-mix(in oklab, var(--arcane) 12%, transparent),
+        transparent 70%
+      );
+    opacity: var(--ambient);
+    animation: drift 40s ease-in-out infinite alternate;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 40%, transparent);
   }
 
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Cadre des cartes, avec un losange à deux coins selon le thème. */
+  .theme-frame {
+    position: relative;
+    border: 1px solid var(--frame);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--surface) 92%, var(--accent)) 0%,
+        var(--surface) 30%
+      ),
+      var(--surface);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--accent) 18%, transparent),
+      0 10px 30px -18px rgb(0 0 0 / 0.9);
+  }
+  .theme-frame::before,
+  .theme-frame::after {
+    content: "";
+    display: var(--ornaments);
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    background: var(--accent-gradient);
+    transform: rotate(45deg);
+    box-shadow: 0 0 8px color-mix(in oklab, var(--accent) 60%, transparent);
+    pointer-events: none;
+  }
+  .theme-frame::before {
+    top: -4px;
+    left: 18px;
+  }
+  .theme-frame::after {
+    right: 18px;
+    bottom: -4px;
+  }
+
+  /* Texte en dégradé d'or (logo, titres importants). */
+  .text-gradient {
+    background: var(--accent-gradient);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-shimmer {
+    background: var(--shimmer-gradient);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer-text 6s linear infinite;
+  }
+
+  /* Reflet qui balaie un élément au survol (boutons dorés, tuiles). */
+  .shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      rgb(255 255 255 / 0.35) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+  }
+  .shine:hover::after {
+    transition: transform 0.7s ease;
+    transform: translateX(120%);
+  }
+
+  /* Apparition en cascade : enfants directs (.stagger) ou blocs d'une page (.page-stagger). */
+  :is(.stagger > *, .page-stagger > * > *) {
+    animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+  :is(.stagger > :nth-child(2), .page-stagger > * > :nth-child(2)) {
+    animation-delay: 70ms;
+  }
+  :is(.stagger > :nth-child(3), .page-stagger > * > :nth-child(3)) {
+    animation-delay: 140ms;
+  }
+  :is(.stagger > :nth-child(4), .page-stagger > * > :nth-child(4)) {
+    animation-delay: 210ms;
+  }
+  :is(.stagger > :nth-child(5), .page-stagger > * > :nth-child(5)) {
+    animation-delay: 280ms;
+  }
+  :is(.stagger > :nth-child(6), .page-stagger > * > :nth-child(6)) {
+    animation-delay: 350ms;
+  }
+  :is(.stagger > :nth-child(n + 7), .page-stagger > * > :nth-child(n + 7)) {
+    animation-delay: 420ms;
+  }
+
+  /* Braises qui montent (composant Embers). */
+  .ember {
+    display: var(--embers);
+    position: absolute;
+    bottom: -10px;
+    border-radius: 9999px;
+    background: radial-gradient(circle, #ffe2a0 0%, var(--accent) 45%, transparent 70%);
+    opacity: 0;
+    animation: ember-rise linear infinite;
+  }
+}
+
+@utility animate-rise {
+  animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+@utility animate-float {
+  animation: float 3.5s ease-in-out infinite;
+}
+@utility animate-wiggle {
+  animation: wiggle 4s ease-in-out infinite;
+  transform-origin: 50% 10%;
+}
+@utility animate-glow {
+  animation: glow 2.4s ease-in-out infinite;
+}
+
+@keyframes drift {
+  to {
+    transform: translate3d(4%, -3%, 0) rotate(6deg) scale(1.08);
+  }
+}
+/* Remplissage « backwards » : une fois finie, l'animation ne laisse aucun transform, qui casserait
+   les éléments en position fixed à l'intérieur (overlays, toasts). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes wiggle {
+  0%,
+  88%,
+  100% {
+    transform: rotate(0);
+  }
+  90% {
+    transform: rotate(14deg);
+  }
+  92% {
+    transform: rotate(-12deg);
+  }
+  94% {
+    transform: rotate(8deg);
+  }
+  96% {
+    transform: rotate(-5deg);
+  }
+}
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in oklab, var(--accent) 0%, transparent);
+  }
+}
+@keyframes shimmer-text {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes ember-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--ember-drift, 20px), -100vh, 0) scale(0.4);
+  }
+}
+
+/* Moins d'animations si l'appareil le demande : tout s'arrête, rien ne disparaît. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .ember {
+    display: none;
   }
 }

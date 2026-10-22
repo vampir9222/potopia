@@ -6,6 +6,8 @@ export type ActivityItem = {
   user: { name: string; image: string | null } | null;
   /** Phrase déjà rédigée par l'app (« a proposé une idée »), sans contenu privé. */
   text: string;
+  /** Mise en avant dorée (exploit : 3 sur 3, record…). */
+  highlight?: boolean;
   createdAt: Date;
 };
 
@@ -18,12 +20,18 @@ export function ActivityFeed({ items }: Props) {
     return <p className="text-muted py-6 text-center text-sm">Rien de neuf pour l'instant.</p>;
   }
   return (
-    <ul className="divide-border divide-y">
+    <ul className="stagger divide-border divide-y">
       {items.map((item) => (
-        <li key={item.id} className="flex items-center gap-3 py-3">
+        <li
+          key={item.id}
+          className={`flex items-center gap-3 py-3 ${item.highlight ? "bg-accent/8 -mx-2 rounded-md px-2 shadow-[inset_2px_0_0_var(--accent)]" : ""}`}
+        >
           <Avatar name={item.user?.name ?? "?"} src={item.user?.image} size={28} />
           <p className="text-text min-w-0 flex-1 text-sm">
-            <span className="font-medium">{item.user?.name ?? "Quelqu'un"}</span> {item.text}
+            <span className="font-medium">{item.user?.name ?? "Quelqu'un"}</span>{" "}
+            <span className={item.highlight ? "text-gradient font-semibold" : undefined}>
+              {item.text}
+            </span>
           </p>
           <time dateTime={item.createdAt.toISOString()} className="text-muted shrink-0 text-xs">
             {formatRelative(item.createdAt)}

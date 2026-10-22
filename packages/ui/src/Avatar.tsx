@@ -9,7 +9,11 @@ type Props = {
 
 /** Image ronde, ou initiale du nom si pas d'image. */
 export function Avatar({ name, src, size = 32, className }: Props) {
-  const base = cx("bg-surface-hover shrink-0 rounded-full", className);
+  // Liseré doré, comme un médaillon.
+  const base = cx(
+    "bg-surface-hover shrink-0 rounded-full ring-1 ring-accent/50 ring-offset-1 ring-offset-bg",
+    className,
+  );
   if (src) {
     return <img src={src} alt="" width={size} height={size} className={base} />;
   }

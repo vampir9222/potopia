@@ -37,7 +37,7 @@ export function Modal({ open, onClose, title, children, variant = "modal", class
         if (e.target === e.currentTarget) onClose();
       }}
       className={cx(
-        "border-border bg-surface text-text backdrop:bg-black/60",
+        "theme-frame text-text fixed backdrop:bg-black/70 backdrop:backdrop-blur-sm",
         variant === "modal"
           ? "rounded-theme m-auto w-[min(32rem,calc(100vw-2rem))] border p-0"
           : "m-0 h-dvh max-h-none w-[min(20rem,85vw)] border-r p-0",
@@ -45,7 +45,9 @@ export function Modal({ open, onClose, title, children, variant = "modal", class
       )}
     >
       <div className="border-border flex items-center justify-between gap-2 border-b px-4 py-3">
-        <h2 className="text-sm font-semibold">{title}</h2>
+        <h2 className="font-display text-accent text-sm font-semibold tracking-wider uppercase">
+          {title}
+        </h2>
         <button
           type="button"
           onClick={onClose}

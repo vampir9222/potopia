@@ -51,16 +51,17 @@ export function NotificationBell({ notifications, unreadCount, markAsRead, markA
         aria-expanded={open}
         className="text-muted hover:bg-surface hover:text-text relative rounded-md p-2"
       >
-        <Bell size={20} />
+        {/* la cloche s'agite de temps en temps tant qu'il reste du non-lu */}
+        <Bell size={20} className={unreadCount > 0 ? "animate-wiggle text-accent" : undefined} />
         {unreadCount > 0 && (
-          <span className="bg-accent text-on-accent absolute top-1 right-1 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold">
+          <span className="animate-glow bg-accent text-on-accent absolute top-1 right-1 min-w-4 rounded-full px-1 text-center text-[10px] leading-4 font-semibold">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="border-border bg-surface rounded-theme absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden border shadow-lg">
+        <div className="theme-frame rounded-theme animate-rise absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden shadow-2xl">
           <div className="border-border flex items-center justify-between border-b px-4 py-2">
             <span className="text-text text-sm font-medium">Notifications</span>
             {unreadCount > 0 && (
