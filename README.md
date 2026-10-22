@@ -188,6 +188,13 @@ await withTx(async (tx) => {
   fois. `debit` lève `InsufficientFundsError` si le solde ne suffit pas.
 - La phrase affichée dans le fil d'activité se déclare dans `apps/web/lib/activity.ts`.
 
+### Jouer des sons
+
+Le bouton volume du header règle tous les sons du site. Un son doit le respecter : `effectiveVolume()`
+de `@app/ui` donne le volume à appliquer (0 à 1, 0 si coupé) et `onVolumeChange(fn)` prévient quand
+il change. Pour un `<audio>` : `audio.volume = effectiveVolume()` ; avec Web Audio : un `GainNode`
+en fin de chaîne (voir `games/trois/ui/sound.ts`).
+
 ### Ajouter un thème
 
 Un bloc `[data-theme="montheme"]` de variables CSS dans `packages/ui/theme.css` (couleurs, dégradés,

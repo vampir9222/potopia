@@ -8,3 +8,21 @@
 @source "../../../packages/economy/ui";
 @source "../../../packages/ideas/ui";
 @source "../../../games/trois/ui";
+
+/* Boule de musique (SpinOrb) : halo vert pendant la lecture. */
+.orb-glow {
+  filter: drop-shadow(0 0 6px rgb(140 230 60 / 0.7));
+  animation: orb-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes orb-pulse {
+  50% {
+    filter: drop-shadow(0 0 12px rgb(140 230 60 / 0.9));
+  }
+}
+
+/* Quand la boule tourne très vite (le flou est dans les sprites) : halo plus fort. */
+.orb-fast {
+  animation: none;
+  filter: drop-shadow(0 0 14px rgb(160 245 80 / 0.95));
+}

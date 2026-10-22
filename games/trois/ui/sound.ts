@@ -1,5 +1,6 @@
 "use client";
 
+import { effectiveVolume, onVolumeChange } from "@app/ui";
 import { useSyncExternalStore } from "react";
 import type { Mark } from "../src/game";
 
@@ -8,6 +9,7 @@ import type { Mark } from "../src/game";
 const KEY = "trois_muted";
 let ctx: AudioContext | null = null;
 let master: AudioNode | null = null;
+let volume: GainNode | null = null;
 let muted = false;
 const listeners = new Set<() => void>();
 
@@ -24,11 +26,18 @@ function audio() {
   if (!ctx || !master) {
     ctx = new AudioContext();
     master = ctx.createDynamicsCompressor();
-    master.connect(ctx.destination);
+    // volume global du site (bouton du header), appliqué en toute fin de chaîne
+    volume = ctx.createGain();
+    volume.gain.value = effectiveVolume();
+    master.connect(volume).connect(ctx.destination);
   }
   if (ctx.state === "suspended") void ctx.resume();
   return { a: ctx, out: master };
 }
+
+onVolumeChange(() => {
+  if (ctx && volume) volume.gain.setTargetAtTime(effectiveVolume(), ctx.currentTime, 0.02);
+});
 
 type Tone = {
   freq: number;
