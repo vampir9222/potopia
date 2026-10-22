@@ -249,7 +249,7 @@ depuis ce seul fichier.
 - [x] 6. `apps/web` : login, `/refused`, header avec cloche, dashboard façon Odoo responsive, page
       admin de la monnaie.
 - [x] 7. `packages/ideas` : formulaire, upload, pages admin, et leurs tests.
-- [ ] 7b. `games/trois` : intégration du jeu TROIS (identité Discord, classement, activité).
+- [x] 7b. `games/trois` : intégration du jeu TROIS (identité Discord, classement, activité).
 - [ ] 8. Finitions : `check:boundaries`, CI GitHub Actions, README complet.
 
 ## Hors périmètre (pour l'instant)

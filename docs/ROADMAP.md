@@ -242,7 +242,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 
 ---
 
-## Étape 7b : intégration du jeu TROIS
+## Étape 7b : intégration du jeu TROIS ✅
 
 Le Wordle à 3 mots par jour, développé à part (repo `trois`, branche `main`), devient le premier
 jeu du portail. Détails du jeu : [games/trois/README.md](../games/trois/README.md).
