@@ -28,9 +28,12 @@ export async function publishEvent(
   });
 }
 
+/** Nombre maximal d'événements renvoyés, quelle que soit la limite demandée. */
+export const MAX_RECENT_EVENTS = 50;
+
 export async function listRecentEvents(limit = 20): Promise<ActivityEvent[]> {
   return db.activityEvent.findMany({
     orderBy: { createdAt: "desc" },
-    take: Math.min(Math.max(limit, 1), 100),
+    take: Math.min(Math.max(limit, 1), MAX_RECENT_EVENTS),
   });
 }

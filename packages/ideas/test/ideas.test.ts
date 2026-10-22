@@ -8,7 +8,6 @@ import {
   getIdeaImageUrl,
   InvalidImageError,
   listIdeas,
-  RateLimitError,
   submitIdea,
 } from "../src/index";
 
@@ -97,19 +96,9 @@ describe("submitIdea", () => {
     expect(await db.idea.count()).toBe(1);
   });
 
-  it("refuse le 6e envoi dans l'heure", async () => {
-    for (let i = 1; i <= 5; i++) await submitIdea(MEMBER.id, idea(i));
-    await expect(submitIdea(MEMBER.id, idea(6))).rejects.toBeInstanceOf(RateLimitError);
-    // La limite est par membre.
-    await expect(submitIdea(OTHER.id, idea(1))).resolves.toEqual({ ok: true });
-  });
-
-  it("la limite tient sous des envois simultanés", async () => {
-    const results = await Promise.allSettled(
-      Array.from({ length: 10 }, (_, i) => submitIdea(MEMBER.id, idea(i))),
-    );
-    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(5);
-    expect(await db.idea.count()).toBe(5);
+  it("n'impose pas de limite d'envoi", async () => {
+    for (let i = 1; i <= 10; i++) await submitIdea(MEMBER.id, idea(i));
+    expect(await db.idea.count()).toBe(10);
   });
 });
 
@@ -162,20 +151,11 @@ describe("images", () => {
       await expect(createUploadUrl(MEMBER.id, { contentType, size: 100 })).rejects.toThrow();
     }
     await expect(
-      createUploadUrl(MEMBER.id, { contentType: "image/png", size: 5 * 1024 * 1024 + 1 }),
-    ).rejects.toThrow(/5 Mo/);
+      createUploadUrl(MEMBER.id, { contentType: "image/png", size: 3 * 1024 * 1024 + 1 }),
+    ).rejects.toThrow(/3 Mo/);
     await expect(
       createUploadUrl(MEMBER.id, { contentType: "image/png", size: 0 }),
     ).rejects.toThrow();
-  });
-
-  it("refuse la 11e URL d'upload dans l'heure", async () => {
-    for (let i = 0; i < 10; i++) {
-      await createUploadUrl(MEMBER.id, { contentType: "image/webp", size: 100 });
-    }
-    await expect(
-      createUploadUrl(MEMBER.id, { contentType: "image/webp", size: 100 }),
-    ).rejects.toBeInstanceOf(RateLimitError);
   });
 });
 

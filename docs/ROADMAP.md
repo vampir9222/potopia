@@ -205,7 +205,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 **Tâches**
 
 - `schema.prisma` (schéma `ideas`) : `Idea` et `IdeaUpload`, avec la migration.
-- Validation zod : longueurs maximales, rareté (enum), types d'image et taille de 5 Mo.
+- Validation zod : longueurs maximales, rareté (enum), types d'image et taille de 3 Mo.
 - `createUploadUrl(userId, { contentType, size })` :
   - rate-limit à 10 par heure ;
   - génère la clé `ideas/<uuid>.<ext>` ;

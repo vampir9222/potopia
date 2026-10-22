@@ -6,7 +6,7 @@ export {
   requireMember,
   type SessionUser,
 } from "./access/session";
-export { publishEvent, listRecentEvents, type ActivityEvent } from "./activity";
+export { publishEvent, listRecentEvents, MAX_RECENT_EVENTS, type ActivityEvent } from "./activity";
 export { apps, getVisibleApps, type AppEntry, type AppIconName } from "./apps/registry";
 export { createAuth, getAuth, type Auth } from "./auth/auth";
 export { checkGuildMembership, DiscordApiError, mapProfileToUser } from "./auth/discord";

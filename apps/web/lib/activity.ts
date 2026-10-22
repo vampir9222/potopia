@@ -1,4 +1,4 @@
-import { getUsersByIds, listRecentEvents, type ActivityEvent } from "@app/core";
+import { getUsersByIds, listRecentEvents, MAX_RECENT_EVENTS, type ActivityEvent } from "@app/core";
 import type { ActivityItem } from "@app/core/ui";
 
 type Payload = ActivityEvent["payload"];
@@ -33,7 +33,7 @@ export function describeEvent(app: string, type: string, payload: Payload = {}):
   return DESCRIPTIONS[`${app}/${type}`]?.(payload) ?? "a été actif sur la plateforme";
 }
 
-export async function getActivityFeed(limit = 20): Promise<ActivityItem[]> {
+export async function getActivityFeed(limit = MAX_RECENT_EVENTS): Promise<ActivityItem[]> {
   const events = await listRecentEvents(limit);
   const users = new Map((await getUsersByIds(events.map((e) => e.userId))).map((u) => [u.id, u]));
   return events.map((event) => {

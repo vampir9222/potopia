@@ -1,5 +1,5 @@
 export { getIdea, getIdeaImageUrl, listIdeaAuthorIds, listIdeas, type Idea } from "./admin";
-export { InvalidImageError, RateLimitError } from "./errors";
+export { InvalidImageError } from "./errors";
 export { countIdeas, createUploadUrl, submitIdea } from "./submit";
 export {
   IMAGE_TYPES,

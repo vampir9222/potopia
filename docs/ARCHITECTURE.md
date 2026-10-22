@@ -177,7 +177,10 @@ Pour l'instant, aucune app ne crédite de monnaie : seul l'admin le fait, avec u
 
 **Upload d'image (boîte à idées).**
 
-1. `POST /api/ideas/upload-url` : validation zod (jpeg, png ou webp, 5 Mo max) et rate-limit.
+Avant tout, le navigateur réencode l'image en WebP (2048 px de côté max, métadonnées EXIF
+retirées), puis contrôle la taille. S'il ne sait pas encoder le WebP, il envoie l'original.
+
+1. `POST /api/ideas/upload-url` : validation zod (jpeg, png ou webp, 3 Mo max).
 2. Le serveur génère la clé `ideas/<uuid>.<ext>`, crée la ligne `IdeaUpload`, puis renvoie une URL
    PUT présignée valable 5 min, qui signe `ContentType` et `ContentLength`.
 3. À la soumission de l'idée, le serveur verrouille la ligne `IdeaUpload` (`FOR UPDATE`), vérifie
@@ -202,7 +205,7 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 **Rate-limit des idées.**
 
 - Comptage en base sur l'heure glissante, protégé par un `pg_advisory_xact_lock` par utilisateur.
-- Limites : 5 idées par heure et 10 URLs d'upload par heure.
+- Pas de limite d'envoi (ni idées ni images) : la plateforme est réservée au groupe.
 
 **Notifications.**
 

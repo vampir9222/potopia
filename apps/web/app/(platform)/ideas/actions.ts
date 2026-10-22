@@ -1,6 +1,6 @@
 "use server";
 
-import { InvalidImageError, RateLimitError, submitIdea } from "@app/ideas";
+import { InvalidImageError, submitIdea } from "@app/ideas";
 import type { IdeaFormState } from "@app/ideas/ui";
 import { ZodError } from "zod";
 import { actionMember } from "@/lib/session";
@@ -25,7 +25,7 @@ export async function sendIdea(_prev: IdeaFormState, formData: FormData): Promis
     if (error instanceof ZodError) {
       return { status: "error", message: error.issues[0]?.message ?? "Formulaire invalide." };
     }
-    if (error instanceof RateLimitError || error instanceof InvalidImageError) {
+    if (error instanceof InvalidImageError) {
       return { status: "error", message: error.message };
     }
     throw error;
