@@ -70,7 +70,7 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
     if (!(picked.type in IMAGE_TYPES)) {
       setUploadError("Format d'image refusé (JPEG, PNG ou WebP).");
     } else if (picked.size > LIMITS.imageBytes) {
-      setUploadError("Image trop lourde (5 Mo maximum).");
+      setUploadError("Image trop lourde (3 Mo maximum).");
     } else {
       return setFile(picked);
     }
@@ -144,7 +144,7 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
       </Label>
 
       <div className="flex flex-col gap-1 text-sm">
-        <span className="text-muted">Image (facultatif, JPEG, PNG ou WebP, 5 Mo maximum)</span>
+        <span className="text-muted">Image (facultatif, JPEG, PNG ou WebP, 3 Mo maximum)</span>
         <div className="flex items-center gap-2">
           <label className="border-border text-muted hover:text-text hover:bg-surface-hover flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2">
             <ImagePlus size={16} aria-hidden />

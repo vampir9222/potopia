@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { notifyAdmins, publishEvent } from "@app/core";
 import { db, withTx, type DbTx } from "@app/db";
 import { headObject, presignPut } from "@app/storage";
-import { InvalidImageError, RateLimitError } from "./errors";
+import { InvalidImageError } from "./errors";
 import {
   IMAGE_TYPES,
   ideaInput,
@@ -12,17 +12,8 @@ import {
   type UploadInput,
 } from "./validation";
 
-const HOUR_MS = 60 * 60 * 1000;
 // Durée de validité de l'URL PUT : le navigateur envoie l'image juste après l'avoir obtenue.
 const UPLOAD_URL_TTL = 300;
-
-/**
- * Verrou transactionnel par utilisateur et par action : deux envois simultanés du même membre
- * sont sérialisés, le comptage de l'heure glissante reste juste.
- */
-async function lockUser(tx: DbTx, action: string, userId: string): Promise<void> {
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`ideas:${action}`}), hashtext(${userId}))`;
-}
 
 /**
  * Autorise l'envoi d'une image : clé générée ici (`ideas/<uuid>.<ext>`), enregistrée pour ce
@@ -37,13 +28,6 @@ export async function createUploadUrl(
   const key = `ideas/${randomUUID()}.${IMAGE_TYPES[contentType]}`;
 
   await withTx(async (tx) => {
-    await lockUser(tx, "upload", userId);
-    const recent = await tx.ideaUpload.count({
-      where: { userId, createdAt: { gte: new Date(Date.now() - HOUR_MS) } },
-    });
-    if (recent >= LIMITS.uploadsPerHour) {
-      throw new RateLimitError("Trop d'images envoyées : réessaie dans une heure.");
-    }
     await tx.ideaUpload.create({ data: { key, userId, contentType, size } });
   }, opts);
 

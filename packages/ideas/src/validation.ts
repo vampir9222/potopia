@@ -15,8 +15,7 @@ export const LIMITS = {
   description: 2000,
   concernedPeople: 200,
   effectIdea: 1000,
-  imageBytes: 5 * 1024 * 1024,
-  uploadsPerHour: 10,
+  imageBytes: 3 * 1024 * 1024,
 } as const;
 
 export const IMAGE_TYPES = {
@@ -78,7 +77,7 @@ export const uploadInput = z.object({
     .number()
     .int()
     .positive("Image vide.")
-    .max(LIMITS.imageBytes, "Image trop lourde (5 Mo maximum)."),
+    .max(LIMITS.imageBytes, "Image trop lourde (3 Mo maximum)."),
 });
 /** Entrée brute (navigateur) : type et taille sont validés par uploadInput. */
 export type UploadInput = { contentType: string; size: number };

@@ -8,7 +8,6 @@ import {
   getIdeaImageUrl,
   InvalidImageError,
   listIdeas,
-  RateLimitError,
   submitIdea,
 } from "../src/index";
 
@@ -152,20 +151,11 @@ describe("images", () => {
       await expect(createUploadUrl(MEMBER.id, { contentType, size: 100 })).rejects.toThrow();
     }
     await expect(
-      createUploadUrl(MEMBER.id, { contentType: "image/png", size: 5 * 1024 * 1024 + 1 }),
-    ).rejects.toThrow(/5 Mo/);
+      createUploadUrl(MEMBER.id, { contentType: "image/png", size: 3 * 1024 * 1024 + 1 }),
+    ).rejects.toThrow(/3 Mo/);
     await expect(
       createUploadUrl(MEMBER.id, { contentType: "image/png", size: 0 }),
     ).rejects.toThrow();
-  });
-
-  it("refuse la 11e URL d'upload dans l'heure", async () => {
-    for (let i = 0; i < 10; i++) {
-      await createUploadUrl(MEMBER.id, { contentType: "image/webp", size: 100 });
-    }
-    await expect(
-      createUploadUrl(MEMBER.id, { contentType: "image/webp", size: 100 }),
-    ).rejects.toBeInstanceOf(RateLimitError);
   });
 });
 
