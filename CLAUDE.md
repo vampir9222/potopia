@@ -56,13 +56,30 @@ testés un par un : `turbo run test --concurrency=1`). API Discord toujours mock
 
 ## Git (GitHub Flow)
 
-- `main` = production (déployée par Vercel), protégée : jamais de push direct, pas de branche
-  `develop`.
-- Un changement = une branche courte partant de `main` (`feat/…`, `fix/…`, `chore/…`), une PR
-  vers `main`, la CI `ci` verte, puis « Squash and merge » (la branche est supprimée).
-- Les previews Vercel des PR n'ont pas la connexion Discord (adresse variable, redirect URI
-  exacte exigée) : tester l'auth en local.
-- Pousser une branche ou ouvrir une PR seulement à la demande de l'utilisateur.
+`main` = production (déployée par Vercel à chaque fusion), protégée par un ruleset : jamais de
+push direct, PR obligatoire, check `ci` verte requise. Pas de branche `develop`.
+
+Circuit d'un changement :
+
+1. Partir de `main` à jour (`git checkout main && git pull`) et créer une branche courte :
+   `feat/…`, `fix/…`, `chore/…` ou `docs/…`.
+2. Faire les modifications et commiter. Avant de pousser : `pnpm format:check`, `lint`,
+   `typecheck`, `check:boundaries` et `test` passent en local.
+3. Pousser la branche (`git push -u origin <branche>`).
+4. Ouvrir la PR vers `main`. Sans `gh`, via l'API GitHub avec la connexion de git (jeton obtenu par
+   `git credential fill`, jamais affiché ni écrit sur disque ; corps JSON écrit en UTF-8 pour les
+   accents).
+5. Attendre la check `ci` de la PR. Rouge : corriger sur la branche et repousser.
+6. Verte : fusionner en squash (titre = résumé du changement, suivi de `(#<n° PR>)`).
+7. Revenir sur `main`, `git pull`, supprimer la branche locale (la distante est supprimée
+   automatiquement).
+
+Autorisations : les étapes 1 et 2 sont libres. Pousser, ouvrir la PR et fusionner (étapes 3 à 6)
+seulement quand l'utilisateur le demande (« fais la PR », « fusionne »…), sauf autorisation
+permanente notée ici.
+
+Les previews Vercel des PR n'ont pas la connexion Discord (adresse variable, redirect URI exacte
+exigée) : tester l'auth en local.
 
 ## Environnement
 
