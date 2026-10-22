@@ -138,7 +138,8 @@ actions aux composants en props.
 ### economy
 
 - `Wallet` : userId (PK), balance (Int, `CHECK balance >= 0`), updatedAt.
-- `Transaction` (table `transactions`) : id, userId, amount (Int signé, ≠ 0), reason, ref?,
+- `Transaction` (table `transactions`) : id, seq (ordre réel d'application, tiré à l'insertion), userId,
+  amount (Int signé, ≠ 0), reason, ref?,
   idempotencyKey (unique), balanceAfter, actorId? (l'admin à l'origine de l'opération), createdAt.
 - **Ledger en ajout seul** : un trigger SQL lève une erreur sur tout UPDATE ou DELETE de
   `transactions`. Une correction se fait par une transaction inverse.
@@ -216,8 +217,20 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 - Tuiles actuelles : « Boîte à idées » (membres) et « Administration » (admins). Le TCG aura sa propre
   tuile.
 
-**Thème.** Des variables CSS dans `packages/ui`, sombres par défaut. On restyle toute la plateforme
-depuis ce seul fichier.
+**Thèmes.** Tout le style passe par `packages/ui/theme.css` : couleurs, police des titres, dégradés et
+décors.
+
+- Un thème est un bloc `[data-theme="…"]` de variables CSS, déclaré aussi dans
+  `packages/ui/src/themes.ts`. Il en existe deux pour l'instant : **Fantasy**, le thème par défaut
+  (or, pourpre, cadres ornés, braises, titres en Cinzel), et **Classique** (bleu sobre, sans décors).
+- Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`) : un thème sobre les
+  coupe sans toucher aux composants.
+- Le choix se fait avec le bouton palette du header (`ThemeSwitcher`). Il est mémorisé par appareil
+  dans le cookie `theme`, que le layout racine lit pour poser `data-theme` dès le rendu serveur, sans
+  flash.
+- Les animations (apparitions en cascade, reflets, cloche, braises) sont coupées si l'appareil demande
+  moins d'animations.
+- Les jeux gardent leur propre style pour l'instant (TROIS).
 
 ## Tests (Vitest)
 

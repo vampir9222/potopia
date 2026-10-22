@@ -15,6 +15,9 @@ model Wallet {
 
 model Transaction {
   id             String   @id @default(uuid())
+  // Ordre réel d'application : tiré à l'insertion, donc après le verrou du wallet. created_at
+  // (début de la transaction SQL) peut être dans le désordre sous concurrence.
+  seq            BigInt   @unique @default(autoincrement())
   userId         String   @map("user_id")
   // Signé : positif pour un crédit, négatif pour un débit, jamais nul.
   amount         Int
@@ -29,7 +32,7 @@ model Transaction {
 
   wallet Wallet @relation(fields: [userId], references: [userId])
 
-  @@index([userId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([userId, seq(sort: Desc)])
   @@map("transactions")
   @@schema("economy")
 }

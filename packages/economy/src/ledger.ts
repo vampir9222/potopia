@@ -156,7 +156,9 @@ export async function getHistory(
   const take = Math.min(Math.max(limit, 1), 100);
   const rows = await db.transaction.findMany({
     where: { userId },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    // seq = ordre réel d'application ; il reste interne (bigint, non exposé).
+    orderBy: { seq: "desc" },
+    omit: { seq: true },
     take: take + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
