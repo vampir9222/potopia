@@ -10,3 +10,12 @@ export { Modal, Sheet } from "./Modal";
 export { RgbFans } from "./RgbFans";
 export { ThemeSwitcher } from "./ThemeSwitcher";
 export { DEFAULT_THEME, resolveTheme, THEME_COOKIE, THEMES, type ThemeId } from "./themes";
+export {
+  effectiveVolume,
+  getVolume,
+  onVolumeChange,
+  setVolume,
+  useVolume,
+  type VolumeState,
+} from "./volume";
+export { VolumeControl } from "./VolumeControl";
