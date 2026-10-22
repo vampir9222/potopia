@@ -105,7 +105,8 @@ serveur à la connexion, puis toutes les 6 heures.
 | `pnpm db:reset:test`    | Remet à zéro la base de test                                              |
 
 La CI GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lance format, lint,
-typecheck, frontières, tests (avec Postgres et stockage réels) et build à chaque push.
+typecheck, frontières et tests (avec Postgres et stockage réels) sur chaque pull request vers `main`,
+qui est protégée. Le build est fait par Vercel au déploiement.
 
 ---
 

@@ -54,6 +54,16 @@ testés un par un : `turbo run test --concurrency=1`). API Discord toujours mock
 - Versions : TypeScript 6.0 (typescript-eslint ne supporte pas la 7), Prisma 7.x (Better Auth exige
   `^7`). Versions de deps épinglées exactement.
 
+## Git (GitHub Flow)
+
+- `main` = production (déployée par Vercel), protégée : jamais de push direct, pas de branche
+  `develop`.
+- Un changement = une branche courte partant de `main` (`feat/…`, `fix/…`, `chore/…`), une PR
+  vers `main`, la CI `ci` verte, puis « Squash and merge » (la branche est supprimée).
+- Les previews Vercel des PR n'ont pas la connexion Discord (adresse variable, redirect URI
+  exacte exigée) : tester l'auth en local.
+- Pousser une branche ou ouvrir une PR seulement à la demande de l'utilisateur.
+
 ## Environnement
 
 - Windows. Le projet doit rester sur un disque local : les partages réseau (Z:) refusent les liens

@@ -1,11 +1,13 @@
-# Intégration continue : à chaque push et pull request, le projet doit installer, passer le lint,
-# le typecheck, le contrôle des frontières, les tests (Postgres et stockage S3 réels) et le build.
+# Intégration continue de main : à chaque pull request vers main (et à la fusion), le projet doit
+# installer, passer le format, le lint, le typecheck, le contrôle des frontières et les tests
+# (Postgres et stockage S3 réels). Le build est fait par Vercel au déploiement.
 name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -80,6 +82,3 @@ jobs:
 
       - name: Tests
         run: pnpm test
-
-      - name: Build
-        run: pnpm build
