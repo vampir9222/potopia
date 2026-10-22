@@ -20,7 +20,7 @@ export function Header({ user, menuButton, actions }: Props) {
       />
       {menuButton}
       <a href="/" className="flex items-center gap-2">
-        <img src={BRAND.logo} alt="" className="size-8 shrink-0" />
+        <img src={BRAND.logo} alt="" className="size-11 shrink-0" />
         <span className="font-display text-gradient text-xl font-bold tracking-[0.12em]">
           {BRAND.name}
         </span>
