@@ -4,6 +4,7 @@ import { Button, Input, Label, Select, Textarea } from "@app/ui";
 import { CircleCheck, ImagePlus, X } from "lucide-react";
 import { startTransition, useActionState, useRef, useState, type FormEvent } from "react";
 import { IMAGE_TYPES, LIMITS, RARITIES, RARITY_LABELS } from "../src/validation";
+import { toWebp } from "./webp";
 
 export type IdeaFormState =
   { status: "idle" } | { status: "ok" } | { status: "error"; message: string };
@@ -52,6 +53,8 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
   const [lengths, setLengths] = useState({ title: 0, description: 0 });
   const formRef = useRef<HTMLFormElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const pickRef = useRef(0);
+  const [converting, setConverting] = useState(false);
 
   // Après un envoi réussi : formulaire vidé, rien n'est relisible (boîte noire).
   const [handledState, setHandledState] = useState(state);
@@ -64,18 +67,25 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
     }
   }
 
-  function pickFile(picked: File | undefined) {
+  async function pickFile(picked: File | undefined) {
+    const pick = ++pickRef.current;
     setUploadError(null);
-    if (!picked) return setFile(null);
+    setFile(null);
+    setConverting(false);
+    if (!picked) return;
     if (!(picked.type in IMAGE_TYPES)) {
       setUploadError("Format d'image refusé (JPEG, PNG ou WebP).");
-    } else if (picked.size > LIMITS.imageBytes) {
-      setUploadError("Image trop lourde (3 Mo maximum).");
     } else {
-      return setFile(picked);
+      // Conversion avant le contrôle de taille : une grosse photo passe souvent sous la limite.
+      setConverting(true);
+      const converted = await toWebp(picked);
+      // Une autre image a été choisie pendant la conversion : celle-ci est abandonnée.
+      if (pick !== pickRef.current) return;
+      setConverting(false);
+      if (converted.size <= LIMITS.imageBytes) return setFile(converted);
+      setUploadError("Image trop lourde (3 Mo maximum).");
     }
     if (fileRef.current) fileRef.current.value = "";
-    setFile(null);
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -97,7 +107,7 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
     startTransition(() => formAction(formData));
   }
 
-  const pending = uploading || submitting;
+  const pending = converting || uploading || submitting;
   const error = uploadError ?? (state.status === "error" ? state.message : null);
 
   return (
@@ -144,7 +154,9 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
       </Label>
 
       <div className="flex flex-col gap-1 text-sm">
-        <span className="text-muted">Image (facultatif, JPEG, PNG ou WebP, 3 Mo maximum)</span>
+        <span className="text-muted">
+          Image (facultatif, JPEG, PNG ou WebP, convertie en WebP, 3 Mo maximum)
+        </span>
         <div className="flex items-center gap-2">
           <label className="border-border text-muted hover:text-text hover:bg-surface-hover flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2">
             <ImagePlus size={16} aria-hidden />
@@ -178,7 +190,13 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
       </div>
 
       <Button type="submit" disabled={pending}>
-        {uploading ? "Envoi de l'image…" : submitting ? "Envoi…" : "Envoyer l'idée"}
+        {converting
+          ? "Préparation de l'image…"
+          : uploading
+            ? "Envoi de l'image…"
+            : submitting
+              ? "Envoi…"
+              : "Envoyer l'idée"}
       </Button>
       <div role="status">
         {error ? (

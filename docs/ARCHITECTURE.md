@@ -177,6 +177,9 @@ Pour l'instant, aucune app ne crédite de monnaie : seul l'admin le fait, avec u
 
 **Upload d'image (boîte à idées).**
 
+Avant tout, le navigateur réencode l'image en WebP (2048 px de côté max, métadonnées EXIF
+retirées), puis contrôle la taille. S'il ne sait pas encoder le WebP, il envoie l'original.
+
 1. `POST /api/ideas/upload-url` : validation zod (jpeg, png ou webp, 3 Mo max).
 2. Le serveur génère la clé `ideas/<uuid>.<ext>`, crée la ligne `IdeaUpload`, puis renvoie une URL
    PUT présignée valable 5 min, qui signe `ContentType` et `ContentLength`.
