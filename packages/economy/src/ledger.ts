@@ -137,6 +137,17 @@ export async function getBalance(userId: string): Promise<number> {
   return wallet?.balance ?? 0;
 }
 
+/** Soldes de plusieurs membres en une requête ; 0 pour ceux qui n'ont pas de wallet. */
+export async function getBalances(userIds: readonly string[]): Promise<Map<string, number>> {
+  const wallets = await db.wallet.findMany({
+    where: { userId: { in: [...new Set(userIds)] } },
+    select: { userId: true, balance: true },
+  });
+  const balances = new Map(userIds.map((id) => [id, 0]));
+  for (const w of wallets) balances.set(w.userId, w.balance);
+  return balances;
+}
+
 /** Historique du plus récent au plus ancien. `cursor` = `nextCursor` de la page précédente. */
 export async function getHistory(
   userId: string,

@@ -1,4 +1,5 @@
-import { getAuth } from "../src/auth/auth";
+/** Outils de test : faux Discord (fetch mocké) et vrai flux OAuth de Better Auth. Jamais importé en prod. */
+import { getAuth } from "./auth/auth";
 
 export const GUILD_ID = "123456789012345678";
 export const OTHER_GUILD_ID = "876543210987654321";

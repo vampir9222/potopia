@@ -10,7 +10,7 @@ strict. Langue de l'UI et des docs : français.
 
 ```sh
 pnpm install
-pnpm dev | build | test | lint | typecheck
+pnpm dev | build | test | lint | typecheck   # dev : http://localhost:3000
 pnpm format          # prettier --write
 pnpm db:up           # Postgres (port 5433) + stockage S3 local RustFS (9000, console 9001) ; Docker Desktop lancé
 pnpm storage:init    # crée le bucket local et son CORS (une fois après db:up)

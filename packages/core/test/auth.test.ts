@@ -9,7 +9,7 @@ import {
   requireMember,
   UnauthorizedError,
 } from "../src/index";
-import { FakeDiscord, fakeUser, OTHER_GUILD_ID, signInWithDiscord } from "./fake-discord";
+import { FakeDiscord, fakeUser, OTHER_GUILD_ID, signInWithDiscord } from "../src/testing";
 
 const ADMIN_ID = "100000000000000001";
 const MEMBER_ID = "100000000000000002";

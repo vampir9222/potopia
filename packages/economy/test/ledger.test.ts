@@ -8,6 +8,7 @@ import {
   credit,
   debit,
   getBalance,
+  getBalances,
   getHistory,
   IdempotencyConflictError,
   InsufficientFundsError,
@@ -252,5 +253,13 @@ describe("adminAdjust", () => {
       adminAdjust({ actorId: USER, userId: USER, amount: 10, reason: "Triche" }),
     ).rejects.toThrow("Réservé aux admins.");
     expect(await getBalance(USER)).toBe(0);
+  });
+});
+
+describe("getBalances", () => {
+  it("renvoie 0 pour les membres sans wallet", async () => {
+    await credit({ userId: USER, amount: 7, reason: "Gain", idempotencyKey: key() });
+    const balances = await getBalances([USER, OTHER]);
+    expect(Object.fromEntries(balances)).toEqual({ [USER]: 7, [OTHER]: 0 });
   });
 });

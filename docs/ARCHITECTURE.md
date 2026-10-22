@@ -111,6 +111,16 @@ actions aux composants en props.
   - Le champ `role` en base est un simple miroir, mis à jour à chaque connexion.
 - **Contrôles côté serveur** : chaque layout, server action et route handler appelle
   `requireMember()` ou `requireAdmin()`. `proxy.ts` ne fait qu'un contrôle optimiste du cookie.
+  - Dans `apps/web`, les layouts et pages passent par `getCurrentMember()` / `getCurrentAdmin()`
+    (`lib/session.ts`) : redirection vers `/login` sans session, vers `/refused` si la session
+    vient d'être révoquée, `forbidden()` (403, `app/forbidden.tsx`) pour un non-admin. Les server
+    actions appellent `actionMember()` / `actionAdmin()`, qui lèvent `UnauthorizedError` (401) ou
+    `ForbiddenError` (403).
+  - Seules exceptions : les routes `/api/auth/*` de Better Auth et les actions de connexion et de
+    déconnexion, qui ouvrent et ferment la session.
+  - Les cookies posés par `getAuth().api.*` depuis une server action sont recopiés par
+    `applyAuthCookies` (`lib/auth-cookies.ts`), l'équivalent du plugin `nextCookies` de Better
+    Auth, qui ne peut pas vivre dans `packages/core` (pas d'import Next).
 
 ## Modèle de données
 
@@ -246,3 +256,8 @@ Cartes jouables, boosters, Wordle, combat, design final.
   compatible S3 (RustFS) qui remplace R2. `R2_ENDPOINT` pointe dessus ; en prod il reste vide et
   l'endpoint R2 du compte est utilisé. Le bucket local se crée avec `pnpm storage:init`. MinIO n'est
   plus publié en image Docker, d'où RustFS.
+- `pnpm dev` lance l'app sur `http://localhost:3000`. `next.config.ts` charge le `.env` de la
+  racine (Next ne lit sinon que celui de `apps/web`).
+- Tailwind n'analyse pas `node_modules` : `app/globals.css` déclare chaque dossier de composants des
+  packages avec `@source`, un par un (un glob du type `packages/*/ui` n'est pas pris en compte).
+  Ajouter une ligne pour tout nouveau package qui a un dossier `ui/`.

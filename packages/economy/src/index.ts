@@ -4,6 +4,7 @@ export {
   credit,
   debit,
   getBalance,
+  getBalances,
   getHistory,
   MAX_AMOUNT,
   type OperationInput,
