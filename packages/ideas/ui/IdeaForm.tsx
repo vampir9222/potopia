@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Input, Label, Select, Textarea } from "@app/ui";
-import { ImagePlus, X } from "lucide-react";
+import { CircleCheck, ImagePlus, X } from "lucide-react";
 import { startTransition, useActionState, useRef, useState, type FormEvent } from "react";
 import { IMAGE_TYPES, LIMITS, RARITIES, RARITY_LABELS } from "../src/validation";
 
@@ -180,13 +180,22 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
       <Button type="submit" disabled={pending}>
         {uploading ? "Envoi de l'image…" : submitting ? "Envoi…" : "Envoyer l'idée"}
       </Button>
-      <p role="status" className="text-sm">
+      <div role="status">
         {error ? (
-          <span className="text-danger">{error}</span>
+          <p className="text-danger text-sm">{error}</p>
         ) : state.status === "ok" && !pending ? (
-          <span className="text-success">Idée envoyée, merci ! Seuls les admins la liront.</span>
+          <div className="border-success/40 bg-success/10 rounded-theme flex gap-3 border p-3">
+            <CircleCheck size={20} className="text-success mt-0.5 shrink-0" aria-hidden />
+            <div className="text-sm">
+              <p className="text-text font-medium">C'est envoyé, merci !</p>
+              <p className="text-muted">
+                Ton idée est bien arrivée chez les admins. Elle reste entre eux et toi : elle
+                n'apparaîtra nulle part ailleurs. Tu peux en proposer une autre quand tu veux.
+              </p>
+            </div>
+          </div>
         ) : null}
-      </p>
+      </div>
     </form>
   );
 }
