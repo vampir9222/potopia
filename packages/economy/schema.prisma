@@ -1,0 +1,35 @@
+// Domaine economy : monnaie de la plateforme. `userId` référence core.users sans relation.
+// Contraintes ajoutées en SQL dans la migration : CHECK (balance >= 0), CHECK (amount <> 0),
+// et un trigger qui interdit UPDATE et DELETE sur transactions (ledger en ajout seul).
+
+model Wallet {
+  userId    String   @id @map("user_id")
+  balance   Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  transactions Transaction[]
+
+  @@map("wallets")
+  @@schema("economy")
+}
+
+model Transaction {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  // Signé : positif pour un crédit, négatif pour un débit, jamais nul.
+  amount         Int
+  reason         String
+  // Référence libre vers l'objet à l'origine de l'opération (partie, achat…).
+  ref            String?
+  idempotencyKey String   @unique @map("idempotency_key")
+  balanceAfter   Int      @map("balance_after")
+  // Admin à l'origine d'un ajustement manuel.
+  actorId        String?  @map("actor_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  wallet Wallet @relation(fields: [userId], references: [userId])
+
+  @@index([userId, createdAt(sort: Desc), id(sort: Desc)])
+  @@map("transactions")
+  @@schema("economy")
+}

@@ -144,14 +144,21 @@ actions aux composants en props.
 **`credit()` et `debit()`.** Tout se fait dans une seule transaction SQL :
 
 1. créer le wallet s'il n'existe pas ;
-2. pour un débit, prendre un `SELECT … FOR UPDATE` sur le wallet, puis refuser l'opération si le
-   solde est insuffisant ;
-3. `INSERT … ON CONFLICT (idempotency_key) DO NOTHING RETURNING` : si la clé existe déjà, renvoyer
-   la transaction existante sans toucher au solde ;
-4. mettre à jour le solde.
+2. le verrouiller avec `SELECT … FOR UPDATE` (crédit comme débit, pour que `balanceAfter` reste
+   juste sous concurrence) ;
+3. si la clé d'idempotence existe déjà, renvoyer la transaction d'origine, même si le solde a changé
+   depuis ; une clé réutilisée pour un autre membre ou un autre montant lève
+   `IdempotencyConflictError` ;
+4. pour un débit, refuser l'opération si le solde est insuffisant (`InsufficientFundsError`) ;
+5. `INSERT … ON CONFLICT (idempotency_key) DO NOTHING RETURNING`, qui couvre la même clé insérée en
+   parallèle sur un autre wallet ;
+6. mettre à jour le solde.
 
 Ces étapes sont en SQL brut plutôt que de rattraper l'erreur Prisma P2002, car une erreur dans une
 transaction Postgres annule toute la transaction.
+
+Le trigger d'ajout seul bloque UPDATE et DELETE, pas TRUNCATE : les tests vident la base avec
+TRUNCATE.
 
 Pour l'instant, aucune app ne crédite de monnaie : seul l'admin le fait, avec un motif obligatoire.
 
@@ -220,7 +227,7 @@ depuis ce seul fichier.
       fictif.
 - [x] 3. `packages/core` : Better Auth + Discord + contrôle d'appartenance au serveur, users, guards,
       registre, activité, notifications, et leurs tests.
-- [ ] 4. `packages/economy` : ledger, wallets, et leurs tests.
+- [x] 4. `packages/economy` : ledger, wallets, et leurs tests.
 - [ ] 5. `packages/storage` et `packages/ui` : client R2, presign, thème sombre, primitives.
 - [ ] 6. `apps/web` : login, `/refused`, header avec cloche, dashboard façon Odoo responsive, page
       admin de la monnaie.

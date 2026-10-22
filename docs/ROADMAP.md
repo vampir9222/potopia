@@ -109,7 +109,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 
 ---
 
-## Étape 4 : `packages/economy`
+## Étape 4 : `packages/economy` ✅
 
 **Tâches**
 
