@@ -265,7 +265,7 @@ décors.
       admin de la monnaie.
 - [x] 7. `packages/ideas` : formulaire, upload, pages admin, et leurs tests.
 - [x] 7b. `games/trois` : intégration du jeu TROIS (identité Discord, classement, activité).
-- [ ] 8. Finitions : `check:boundaries`, CI GitHub Actions, README complet.
+- [x] 8. Finitions : `check:boundaries`, CI GitHub Actions, README complet.
 
 ## Hors périmètre (pour l'instant)
 

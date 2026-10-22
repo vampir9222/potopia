@@ -272,7 +272,7 @@ jeu du portail. Détails du jeu : [games/trois/README.md](../games/trois/README.
 
 ---
 
-## Étape 8 : finitions
+## Étape 8 : finitions ✅
 
 **Tâches**
 
