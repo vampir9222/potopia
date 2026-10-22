@@ -35,19 +35,12 @@
   --font-display: var(--font-display-face, "Cinzel"), "Times New Roman", serif;
 
   --accent-gradient: linear-gradient(135deg, #f7dc96 0%, #e6b04e 45%, #b9792a 100%);
-  --shimmer-gradient: linear-gradient(
-    90deg,
-    #b9792a 0%,
-    #f7dc96 25%,
-    #e6b04e 50%,
-    #f7dc96 75%,
-    #b9792a 100%
-  );
   --frame: color-mix(in oklab, var(--accent) 28%, var(--border));
   /* Décors : losanges des cadres, braises, lueurs d'ambiance (0 = aucune). */
   --ornaments: block;
   --embers: block;
   --ambient: 1;
+  --fans: none;
 }
 
 /* Classique : le thème d'origine, bleu nuit et sobre, sans décors. */
@@ -69,11 +62,74 @@
   --font-display: var(--font-body);
 
   --accent-gradient: linear-gradient(135deg, #a5b0ff 0%, #7c8cff 100%);
-  --shimmer-gradient: linear-gradient(90deg, #7c8cff 0%, #c3caff 50%, #7c8cff 100%);
   --frame: var(--border);
   --ornaments: none;
   --embers: none;
   --ambient: 0.35;
+}
+
+/*
+ * RGB : gaming néon. La teinte de l'accent tourne en continu (--rgb-hue animé), les cadres ont
+ * une bordure arc-en-ciel qui tourne, et des ventilateurs RGB tournent en fond (composant RgbFans).
+ */
+@property --rgb-hue {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+@property --rgb-angle {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 0deg;
+}
+
+[data-theme="rgb"] {
+  --bg: #06060a;
+  --surface: #0e0e16;
+  --surface-hover: #171724;
+  --border: #26263a;
+  --text: #f0f2ff;
+  --muted: #8a8fae;
+  --accent: hsl(var(--rgb-hue) 95% 62%);
+  --accent-hover: hsl(calc(var(--rgb-hue) + 25) 95% 70%);
+  --on-accent: #06060a;
+  --arcane: hsl(calc(var(--rgb-hue) + 180) 95% 60%);
+  --danger: #ff4d6d;
+  --success: #3dffa2;
+
+  --radius: 0.6rem;
+  --font-display: var(--font-gaming-face, "Orbitron"), var(--font-body);
+
+  --accent-gradient: linear-gradient(
+    90deg,
+    hsl(var(--rgb-hue) 95% 62%),
+    hsl(calc(var(--rgb-hue) + 90) 95% 62%)
+  );
+  --rainbow: conic-gradient(
+    from var(--rgb-angle),
+    #ff0040,
+    #ff8000,
+    #ffee00,
+    #00ff6a,
+    #00d0ff,
+    #4d4dff,
+    #c000ff,
+    #ff0040
+  );
+  --frame: var(--accent);
+  --ornaments: none;
+  --embers: none;
+  --ambient: 0.55;
+  --fans: block;
+
+  animation: rgb-cycle 12s linear infinite;
+}
+
+@keyframes rgb-cycle {
+  to {
+    --rgb-hue: 360;
+    --rgb-angle: 360deg;
+  }
 }
 
 @theme inline {
@@ -175,6 +231,17 @@
     bottom: -4px;
   }
 
+  /* RGB : bordure arc-en-ciel qui tourne et halo de la couleur du moment. */
+  [data-theme="rgb"] .theme-frame {
+    border-color: transparent;
+    background:
+      linear-gradient(var(--surface), var(--surface)) padding-box,
+      var(--rainbow) border-box;
+    box-shadow:
+      0 0 22px -8px var(--accent),
+      0 10px 30px -18px rgb(0 0 0 / 0.9);
+  }
+
   /* Texte en dégradé d'or (logo, titres importants). */
   .text-gradient {
     background: var(--accent-gradient);
@@ -182,14 +249,6 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-  }
-  .text-gradient-shimmer {
-    background: var(--shimmer-gradient);
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: shimmer-text 6s linear infinite;
   }
 
   /* Reflet qui balaie un élément au survol (boutons dorés, tuiles). */
@@ -241,6 +300,20 @@
   }
 
   /* Braises qui montent (composant Embers). */
+  /* Ventilateurs RGB (composant RgbFans) : affichés seulement par le thème RGB. */
+  .rgb-fans {
+    display: var(--fans);
+  }
+  .rgb-fan {
+    position: absolute;
+    opacity: 0.22;
+    filter: drop-shadow(0 0 14px var(--accent));
+  }
+  .rgb-fan-blades {
+    transform-origin: 100px 100px;
+    animation: spin 2.4s linear infinite;
+  }
+
   .ember {
     display: var(--embers);
     position: absolute;
@@ -266,6 +339,11 @@
   animation: glow 2.4s ease-in-out infinite;
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 @keyframes drift {
   to {
     transform: translate3d(4%, -3%, 0) rotate(6deg) scale(1.08);
@@ -316,11 +394,6 @@
     box-shadow: 0 0 0 5px color-mix(in oklab, var(--accent) 0%, transparent);
   }
 }
-@keyframes shimmer-text {
-  to {
-    background-position: -200% 0;
-  }
-}
 @keyframes ember-rise {
   0% {
     opacity: 0;
@@ -344,7 +417,8 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .ember {
+  .ember,
+  .rgb-fans {
     display: none;
   }
 }

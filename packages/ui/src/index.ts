@@ -7,5 +7,6 @@ export { Embers } from "./Embers";
 export { EmptyState } from "./EmptyState";
 export { Input, Label, Select, Textarea } from "./fields";
 export { Modal, Sheet } from "./Modal";
+export { RgbFans } from "./RgbFans";
 export { ThemeSwitcher } from "./ThemeSwitcher";
 export { DEFAULT_THEME, resolveTheme, THEME_COOKIE, THEMES, type ThemeId } from "./themes";

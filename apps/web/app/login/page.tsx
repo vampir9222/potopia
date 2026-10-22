@@ -32,7 +32,7 @@ export default async function LoginPage({
           </span>
         </div>
         <div>
-          <h1 className="font-display text-gradient-shimmer text-4xl font-bold tracking-[0.12em]">
+          <h1 className="font-display text-gradient text-4xl font-bold tracking-[0.12em]">
             {BRAND.name}
           </h1>
           <p className="text-muted mt-2 text-sm">

@@ -49,7 +49,7 @@ export function BalanceCard({ balance }: Props) {
       <div className="min-w-0">
         <p className="text-muted text-xs">Solde</p>
         <p
-          className="font-display text-gradient text-2xl font-bold tabular-nums"
+          className="text-gradient text-2xl font-bold tabular-nums"
           title={formatCurrency(balance)}
         >
           {number.format(shown)}
