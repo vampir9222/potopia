@@ -70,7 +70,7 @@
 
 /*
  * RGB : gaming néon. La teinte de l'accent tourne en continu (--rgb-hue animé), les cadres ont
- * une bordure arc-en-ciel qui tourne, et des ventilateurs RGB tournent en fond (composant RgbFans).
+ * une bordure arc-en-ciel qui tourne, et une boucle de watercooling anime le fond (composant RgbFans).
  */
 @property --rgb-hue {
   syntax: "<number>";
@@ -300,18 +300,30 @@
   }
 
   /* Braises qui montent (composant Embers). */
-  /* Ventilateurs RGB (composant RgbFans) : affichés seulement par le thème RGB. */
+  /* Watercooling du thème RGB (composant RgbFans), affiché seulement par ce thème. */
   .rgb-fans {
     display: var(--fans);
   }
-  .rgb-fan {
-    position: absolute;
-    opacity: 0.22;
-    filter: drop-shadow(0 0 14px var(--accent));
+  .rgb-rig {
+    opacity: 0.3;
   }
   .rgb-fan-blades {
     transform-origin: 100px 100px;
     animation: spin 2.4s linear infinite;
+  }
+  /* liquide qui avance dans les tubes, par pulsations */
+  .rgb-coolant {
+    stroke: var(--accent);
+    stroke-dasharray: 60 40;
+    animation: coolant-flow 1.6s linear infinite;
+  }
+  /* surface du liquide qui ondule dans le réservoir */
+  .rgb-wave {
+    animation: wave 3s ease-in-out infinite alternate;
+  }
+  /* bulles qui montent dans le réservoir */
+  .rgb-rise {
+    animation: bubble-rise 4s ease-in infinite;
   }
 
   .ember {
@@ -339,6 +351,29 @@
   animation: glow 2.4s ease-in-out infinite;
 }
 
+@keyframes coolant-flow {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+@keyframes wave {
+  to {
+    transform: translateX(-50px);
+  }
+}
+@keyframes bubble-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  15% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-260px);
+  }
+}
 @keyframes spin {
   to {
     transform: rotate(360deg);
