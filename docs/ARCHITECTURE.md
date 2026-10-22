@@ -247,7 +247,7 @@ depuis ce seul fichier.
 - [x] 5. `packages/storage` et `packages/ui` : client R2, presign, thème sombre, primitives.
 - [x] 6. `apps/web` : login, `/refused`, header avec cloche, dashboard façon Odoo responsive, page
       admin de la monnaie.
-- [ ] 7. `packages/ideas` : formulaire, upload, pages admin, et leurs tests.
+- [x] 7. `packages/ideas` : formulaire, upload, pages admin, et leurs tests.
 - [ ] 8. Finitions : `check:boundaries`, CI GitHub Actions, README complet.
 
 ## Hors périmètre (pour l'instant)

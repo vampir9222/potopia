@@ -200,7 +200,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 
 ---
 
-## Étape 7 : `packages/ideas`
+## Étape 7 : `packages/ideas` ✅
 
 **Tâches**
 
