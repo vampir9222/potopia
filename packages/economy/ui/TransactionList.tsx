@@ -1,4 +1,5 @@
 import { BRAND } from "@app/config/brand";
+import { CurrencyIcon } from "./CurrencyIcon";
 
 export type TransactionItem = {
   id: string;
@@ -34,7 +35,7 @@ export function TransactionList({ transactions, showBalance = false }: Props) {
             <p
               className={`text-sm font-medium tabular-nums ${t.amount > 0 ? "text-accent" : "text-muted"}`}
             >
-              {number.format(t.amount)} {BRAND.currency.symbol}
+              {number.format(t.amount)} <CurrencyIcon />
             </p>
             {showBalance && (
               <p className="text-muted text-xs tabular-nums">= {plain.format(t.balanceAfter)}</p>

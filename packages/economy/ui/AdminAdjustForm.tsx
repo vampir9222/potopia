@@ -1,8 +1,8 @@
 "use client";
 
-import { BRAND } from "@app/config/brand";
 import { Button, Input, Label, Select } from "@app/ui";
 import { useActionState, useState } from "react";
+import { CurrencyIcon } from "./CurrencyIcon";
 
 export type AdjustState =
   { status: "idle" } | { status: "ok"; message: string } | { status: "error"; message: string };
@@ -53,7 +53,9 @@ export function AdminAdjustForm({ members, defaultUserId, action }: Props) {
           </Select>
         </Label>
         <Label className="flex-1">
-          Montant ({BRAND.currency.symbol})
+          <span>
+            Montant <CurrencyIcon />
+          </span>
           <Input name="amount" type="number" min={1} step={1} required />
         </Label>
       </div>

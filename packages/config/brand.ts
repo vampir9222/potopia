@@ -9,6 +9,8 @@ export const BRAND = {
     name: "PotoCoin",
     plural: "PotoCoins",
     symbol: "PC",
+    /** Pièce affichée à côté des montants (fichier servi par apps/web/public). */
+    icon: "/brand/currency.svg",
   },
   locale: "fr-FR",
 } as const;

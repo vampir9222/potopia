@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BRAND } from "@app/config/brand";
 import { getUser, listUsers } from "@app/core";
 import { getBalances, getHistory } from "@app/economy";
-import { AdminAdjustForm, TransactionList } from "@app/economy/ui";
+import { AdminAdjustForm, CurrencyIcon, TransactionList } from "@app/economy/ui";
 import { Avatar, buttonClasses, Card, cx } from "@app/ui";
 import type { Metadata } from "next";
 import { getCurrentAdmin } from "@/lib/session";
@@ -44,7 +44,7 @@ export default async function AdminEconomyPage({
                     <Avatar name={member.name} src={member.image} size={28} />
                     <span className="text-text min-w-0 flex-1 truncate text-sm">{member.name}</span>
                     <span className="text-text text-sm tabular-nums">
-                      {number.format(balances.get(member.id) ?? 0)} {BRAND.currency.symbol}
+                      {number.format(balances.get(member.id) ?? 0)} <CurrencyIcon />
                     </span>
                   </Link>
                 </li>
