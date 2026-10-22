@@ -24,6 +24,11 @@ export default defineConfig({
       DISCORD_CLIENT_SECRET: "test-client-secret",
       DISCORD_GUILD_ID: "123456789012345678",
       ADMIN_DISCORD_IDS: "100000000000000001",
+      // Stockage : seules des URLs présignées sont calculées, sans appel réseau.
+      R2_ENDPOINT: "http://localhost:9000",
+      R2_ACCESS_KEY_ID: "localaccess",
+      R2_SECRET_ACCESS_KEY: "localsecret",
+      R2_BUCKET: "app-test",
     },
   },
 });

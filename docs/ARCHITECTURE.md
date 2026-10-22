@@ -110,7 +110,8 @@ actions aux composants en props.
   - Les contrôles d'admin lisent toujours l'env directement, ce qui rend une révocation immédiate.
   - Le champ `role` en base est un simple miroir, mis à jour à chaque connexion.
 - **Contrôles côté serveur** : chaque layout, server action et route handler appelle
-  `requireMember()` ou `requireAdmin()`. `proxy.ts` ne fait qu'un contrôle optimiste du cookie.
+  `requireMember()` ou `requireAdmin()`. `proxy.ts` ne fait qu'un contrôle optimiste du cookie
+  (redirection vers `/login`, ou 401 JSON pour `/api/*`).
   - Dans `apps/web`, les layouts et pages passent par `getCurrentMember()` / `getCurrentAdmin()`
     (`lib/session.ts`) : redirection vers `/login` sans session, vers `/refused` si la session
     vient d'être révoquée, `forbidden()` (403, `app/forbidden.tsx`) pour un non-admin. Les server
@@ -177,10 +178,13 @@ Pour l'instant, aucune app ne crédite de monnaie : seul l'admin le fait, avec u
 1. `POST /api/ideas/upload-url` : validation zod (jpeg, png ou webp, 5 Mo max) et rate-limit.
 2. Le serveur génère la clé `ideas/<uuid>.<ext>`, crée la ligne `IdeaUpload`, puis renvoie une URL
    PUT présignée valable 5 min, qui signe `ContentType` et `ContentLength`.
-3. À la soumission de l'idée, le serveur fait un `HeadObject` (l'objet existe-t-il, et sa taille
-   est-elle conforme ?) puis marque l'upload comme utilisé.
+3. À la soumission de l'idée, le serveur verrouille la ligne `IdeaUpload` (`FOR UPDATE`), vérifie
+   qu'elle a été émise pour ce membre et jamais utilisée, fait un `HeadObject` (l'objet existe-t-il,
+   et sa taille est-elle celle annoncée ?) puis marque l'upload comme utilisé. Toute anomalie lève
+   `InvalidImageError` et annule la soumission.
 
-En base, on stocke la clé, jamais une URL.
+En base, on stocke la clé, jamais une URL. Le CORS du bucket n'autorise que le PUT et le GET depuis
+l'origine de l'app (`pnpm storage:init` en local, dashboard R2 en prod).
 
 **Lecture d'image.** `GET /api/admin/ideas/[id]/image` exécute `requireAdmin()` puis redirige (302)
 vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
@@ -188,7 +192,9 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 **Boîte noire.**
 
 - L'action de soumission renvoie seulement `{ ok: true }`.
-- Aucune API de lecture n'est ouverte aux membres.
+- Aucune API de lecture n'est ouverte aux membres : `listIdeas`, `getIdea` et `getIdeaImageUrl`
+  prennent le lecteur en premier argument et lèvent `ForbiddenError` s'il n'est pas admin, en plus
+  des contrôles de l'app.
 - Le seul événement d'activité émis est `ideas / idea_submitted`, avec un payload vide.
 
 **Rate-limit des idées.**

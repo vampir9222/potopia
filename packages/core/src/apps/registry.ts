@@ -1,7 +1,7 @@
 import type { Role } from "../users";
 
 /** Icônes lucide disponibles pour les tuiles (la correspondance est dans ui/AppGrid). */
-export type AppIconName = "shield";
+export type AppIconName = "lightbulb" | "shield";
 
 export type AppEntry = {
   id: string;
@@ -13,6 +13,13 @@ export type AppEntry = {
 
 /** Apps de la plateforme, dans l'ordre d'affichage des tuiles. */
 export const apps: readonly AppEntry[] = [
+  {
+    id: "ideas",
+    name: "Boîte à idées",
+    icon: "lightbulb",
+    route: "/ideas",
+    requiredRole: "member",
+  },
   { id: "admin", name: "Administration", icon: "shield", route: "/admin", requiredRole: "admin" },
 ];
 

@@ -1,28 +1,36 @@
 import Link from "next/link";
 import { BRAND } from "@app/config/brand";
 import { Card } from "@app/ui";
-import { Coins } from "lucide-react";
+import { countIdeas } from "@app/ideas";
+import { Coins, Lightbulb } from "lucide-react";
 import type { Metadata } from "next";
 import { getCurrentAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Administration" };
 
-const SECTIONS = [
+const SECTIONS = (ideasCount: number) => [
   {
     href: "/admin/economy",
     title: "Monnaie",
     description: `Soldes des membres, crédits et débits de ${BRAND.currency.plural}.`,
     icon: Coins,
   },
+  {
+    href: "/admin/ideas",
+    title: "Boîte à idées",
+    description: `${ideasCount} idée${ideasCount > 1 ? "s" : ""} reçue${ideasCount > 1 ? "s" : ""}.`,
+    icon: Lightbulb,
+  },
 ];
 
 export default async function AdminPage() {
   // Le layout vérifie déjà, mais une page peut être rendue sans lui : on revérifie.
   await getCurrentAdmin();
+  const sections = SECTIONS(await countIdeas());
   return (
     <Card title="Administration">
       <ul className="grid gap-3 sm:grid-cols-2">
-        {SECTIONS.map(({ href, title, description, icon: Icon }) => (
+        {sections.map(({ href, title, description, icon: Icon }) => (
           <li key={href}>
             <Link
               href={href}

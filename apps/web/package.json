@@ -16,6 +16,7 @@
     "@app/core": "workspace:*",
     "@app/db": "workspace:*",
     "@app/economy": "workspace:*",
+    "@app/ideas": "workspace:*",
     "@app/ui": "workspace:*",
     "better-auth": "1.7.12",
     "lucide-react": "1.61.0",

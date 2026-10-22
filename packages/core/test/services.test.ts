@@ -32,8 +32,8 @@ beforeEach(truncateTestDb);
 
 describe("registre des apps", () => {
   it("getVisibleApps filtre par rôle", () => {
-    expect(getVisibleApps({ role: "member" }).map((a) => a.id)).not.toContain("admin");
-    expect(getVisibleApps({ role: "admin" }).map((a) => a.id)).toContain("admin");
+    expect(getVisibleApps({ role: "member" }).map((a) => a.id)).toEqual(["ideas"]);
+    expect(getVisibleApps({ role: "admin" }).map((a) => a.id)).toEqual(["ideas", "admin"]);
   });
 });
 

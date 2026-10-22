@@ -10,7 +10,15 @@ try {
 
 const nextConfig: NextConfig = {
   // Les packages du monorepo exportent du TypeScript brut : Next les compile.
-  transpilePackages: ["@app/config", "@app/core", "@app/db", "@app/economy", "@app/ui"],
+  transpilePackages: [
+    "@app/config",
+    "@app/core",
+    "@app/db",
+    "@app/economy",
+    "@app/ideas",
+    "@app/storage",
+    "@app/ui",
+  ],
   experimental: {
     // forbidden() → 403 sur les pages admin (convention forbidden.tsx).
     authInterrupts: true,

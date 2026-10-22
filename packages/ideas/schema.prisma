@@ -1,0 +1,48 @@
+// Domaine ideas : boîte à idées. Boîte noire : seuls les admins lisent les idées.
+// `authorId` / `userId` référencent core.users sans relation.
+
+enum Rarity {
+  common
+  uncommon
+  rare
+  legendary
+
+  @@schema("ideas")
+}
+
+model Idea {
+  id              String   @id @default(uuid(7))
+  authorId        String   @map("author_id")
+  title           String
+  description     String
+  concernedPeople String?  @map("concerned_people")
+  suggestedRarity Rarity?  @map("suggested_rarity")
+  effectIdea      String?  @map("effect_idea")
+  // Clé de l'objet dans le stockage (jamais une URL), émise par createUploadUrl.
+  imageKey        String?  @unique @map("image_key")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  image IdeaUpload? @relation(fields: [imageKey], references: [key])
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([authorId, createdAt])
+  @@map("ideas")
+  @@schema("ideas")
+}
+
+// Upload autorisé par le serveur : une idée ne peut référencer qu'une clé émise pour son auteur,
+// et une seule fois (usedAt).
+model IdeaUpload {
+  key         String    @id
+  userId      String    @map("user_id")
+  contentType String    @map("content_type")
+  size        Int
+  createdAt   DateTime  @default(now()) @map("created_at")
+  usedAt      DateTime? @map("used_at")
+
+  idea Idea?
+
+  @@index([userId, createdAt])
+  @@map("idea_uploads")
+  @@schema("ideas")
+}

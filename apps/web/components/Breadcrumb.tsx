@@ -9,6 +9,12 @@ import { Fragment } from "react";
 const LABELS: Record<string, string> = {
   admin: "Administration",
   economy: "Monnaie",
+  ideas: "Boîte à idées",
+};
+
+/** Libellé d'un segment dynamique (identifiant), selon la section qui le précède. */
+const ITEM_LABELS: Record<string, string> = {
+  ideas: "Idée",
 };
 
 /** Fil d'Ariane avec un bouton retour vers le niveau parent : Accueil › Administration › Monnaie. */
@@ -18,7 +24,7 @@ export function Breadcrumb() {
     { href: "/", label: "Accueil" },
     ...segments.map((segment, i) => ({
       href: `/${segments.slice(0, i + 1).join("/")}`,
-      label: LABELS[segment] ?? segment,
+      label: LABELS[segment] ?? ITEM_LABELS[segments[i - 1] ?? ""] ?? segment,
     })),
   ];
   const parent = crumbs.at(-2);
