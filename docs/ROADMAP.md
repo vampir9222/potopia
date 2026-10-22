@@ -165,7 +165,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 
 ---
 
-## Étape 6 : `apps/web`
+## Étape 6 : `apps/web` ✅
 
 **Tâches**
 

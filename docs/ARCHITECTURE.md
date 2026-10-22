@@ -239,7 +239,7 @@ depuis ce seul fichier.
       registre, activité, notifications, et leurs tests.
 - [x] 4. `packages/economy` : ledger, wallets, et leurs tests.
 - [x] 5. `packages/storage` et `packages/ui` : client R2, presign, thème sombre, primitives.
-- [ ] 6. `apps/web` : login, `/refused`, header avec cloche, dashboard façon Odoo responsive, page
+- [x] 6. `apps/web` : login, `/refused`, header avec cloche, dashboard façon Odoo responsive, page
       admin de la monnaie.
 - [ ] 7. `packages/ideas` : formulaire, upload, pages admin, et leurs tests.
 - [ ] 8. Finitions : `check:boundaries`, CI GitHub Actions, README complet.
