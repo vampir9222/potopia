@@ -35,7 +35,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 - `prisma.config.ts` : la migration utilise `DIRECT_URL`.
 - Client partagé : `createDb(url)` avec `@prisma/adapter-pg` et un singleton `db`.
   - Exports : les types `Db` et `DbTx`, et `withTx(fn)`.
-- Scripts : `db:generate`, `db:migrate` (dev), `db:deploy` (prod), `db:seed`, `db:reset:test`.
+- Scripts : `db:generate`, `db:migrate` (dev), `db:deploy` (prod), `db:reset:test`.
 - Migration initiale, avec les schémas Postgres `core`, `economy` et `ideas` déclarés vides pour
   l'instant.
 - Helper de test : `resetTestDb()`, qui applique les migrations sur `TEST_DATABASE_URL` puis vide
@@ -278,7 +278,9 @@ jeu du portail. Détails du jeu : [games/trois/README.md](../games/trois/README.
 
 - Script `pnpm check:boundaries` : il lit les `.prisma` pour associer chaque modèle à son domaine,
   puis signale tout `db.<modèle>` utilisé hors de son domaine.
-- Seed fictif : quelques users inventés, des transactions et des événements.
+- Seed fictif : quelques users inventés, des transactions et des événements. Décision : script
+  local non versionné (`*.local.ts`, ignoré par git), qui passe par les fonctions des modules
+  (`createFakeMember` de `@app/core/testing`, mots du jour via `@app/trois/testing`).
 - CI GitHub Actions : install, lint, typecheck, check:boundaries, test (service Postgres) et build.
 - README :
   - lancer le projet ;
