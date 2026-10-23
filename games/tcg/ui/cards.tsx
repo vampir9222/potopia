@@ -16,6 +16,8 @@ export type CardData = {
   imageUrl: string | null;
   /** Auteur de l'idée, affiché par certains designs. */
   author?: string;
+  /** Numéro dans la série (« 07/18 »), affiché par certains designs. */
+  serial?: string;
 };
 
 export const RARITY_LABELS: Record<CardRarity, string> = {
@@ -28,15 +30,16 @@ export const RARITY_LABELS: Record<CardRarity, string> = {
 /**
  * Polices des designs, fournies par la page sous forme de variables CSS (next/font côté app) :
  * --font-pixel, --font-pixel-text, --font-comic, --font-comic-text, --font-fantasy,
- * --font-fantasy-text, --font-grotesk, --font-hand, --font-round.
+ * --font-fantasy-text, --font-grotesk, --font-hand, --font-round, et pour les designs premium
+ * --font-snap, --font-franklin, --font-magic, --font-poke.
  */
-const font = (name: string, fallback: string) => `var(--font-${name}), ${fallback}`;
+export const font = (name: string, fallback: string) => `var(--font-${name}), ${fallback}`;
 
 const W = 300;
 const H = 420;
 
 /** Illustration de la carte, ou un nuage pixel quand l'idée n'a pas d'image. */
-function Art({
+export function Art({
   card,
   height,
   style,

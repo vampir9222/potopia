@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { DesignId } from "../src/designs";
 import {
   Board,
@@ -10,6 +11,7 @@ import {
   PixelLocationCard,
   PolaroidCard,
 } from "./cards";
+import { HearthCard, MagicCard, PokeCard, PremiumDefs, SnapCard } from "./premium";
 
 const ORDER: DesignId[] = [
   "pixel",
@@ -19,7 +21,26 @@ const ORDER: DesignId[] = [
   "polaroid",
   "speciales",
   "raretes",
+  "snap",
+  "hearth",
+  "poke",
+  "magic",
 ];
+
+/** Les designs premium montrent 3 finitions : peu commune, rare, légendaire. */
+const SHOWCASE = ["uncommon", "rare", "legendary"] as const;
+
+function showcase(cards: CardData[], designId: DesignId): CardData[] {
+  return trio(cards, designId).map((c, i) => ({ ...c, rarity: SHOWCASE[i] ?? c.rarity }));
+}
+
+function PremiumBoard({ children }: { children: ReactNode }) {
+  return (
+    <Board background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)">
+      {children}
+    </Board>
+  );
+}
 
 /** Carte n° i du lot, en boucle. */
 function pick(cards: CardData[], i: number): CardData {
@@ -95,6 +116,42 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
         </Board>
       );
     }
+    case "snap":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <SnapCard key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "hearth":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <HearthCard key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "poke":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          {showcase(cards, designId).map((c, i) => (
+            <PokeCard key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "magic":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          {showcase(cards, designId).map((c, i) => (
+            <MagicCard key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
     case "raretes": {
       const card = pick(pictured, 0);
       return (

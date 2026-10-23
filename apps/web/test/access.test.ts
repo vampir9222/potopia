@@ -36,8 +36,9 @@ vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 // next/font est transformé à la compilation par Next : hors Next, une police factice suffit.
 vi.mock("next/font/google", () => {
   const font = () => ({ className: "", variable: "", style: { fontFamily: "" } });
-  const names = ["Bangers", "Caveat", "Cinzel", "Comic_Neue", "EB_Garamond", "Nunito"];
-  names.push("Orbitron", "Press_Start_2P", "Space_Grotesk", "VT323");
+  const names = ["Anton", "Bangers", "Caveat", "Cinzel", "Comic_Neue", "EB_Garamond", "Lato"];
+  names.push("Libre_Franklin", "Nunito", "Orbitron", "Press_Start_2P", "Space_Grotesk");
+  names.push("Spectral", "VT323");
   return Object.fromEntries(names.map((name) => [name, font]));
 });
 
