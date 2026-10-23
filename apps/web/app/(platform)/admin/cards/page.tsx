@@ -112,7 +112,9 @@ export default async function AdminCardsPage() {
           Coût et puissance sont provisoires ; la rareté ne change que le look. Note chaque
           proposition de 1 à 5 étoiles, avec un commentaire si tu veux : les notes orienteront les
           prochaines propositions. Les designs 8 à 11 montrent trois finitions (peu commune, rare,
-          légendaire) : passe la souris sur une carte pour l'incliner et voir le holo.
+          légendaire) : passe la souris sur une carte pour l'incliner et voir le holo. Les designs
+          12 à 17 sont des variantes Snap : l'effet s'affiche au survol, et la planche 17 montre les
+          finitions jusqu'aux raretés Secrète (SR) et Super secrète (SSR).
         </p>
       </Card>
 
