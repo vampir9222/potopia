@@ -5,8 +5,11 @@ import { type CardData, DesignPreview, DesignRating } from "@app/tcg/ui";
 import { buttonClasses, Card } from "@app/ui";
 import { Star } from "lucide-react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getCurrentAdmin } from "@/lib/session";
 import { rateDesignAction } from "./actions";
+import { CardPicker } from "./CardPicker";
+import { CARD_COOKIE } from "./constants";
 import { designFonts } from "./fonts";
 
 export const metadata: Metadata = { title: "Carte design" };
@@ -69,11 +72,26 @@ const SAMPLES: CardData[] = [
   },
 ];
 
-export default async function AdminCardsPage() {
+/** Moyenne des notes (0 étoile = commentaire sans note, ignoré), ou null sans note. */
+function average(stars: number[]): number | null {
+  const rated = stars.filter((n) => n > 0);
+  return rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : null;
+}
+
+/** En dessous de ce seuil (moyenne), un design est écarté de la page. */
+const DISCARD_AT = 2;
+
+export default async function AdminCardsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ carte?: string }>;
+}) {
   const admin = await getCurrentAdmin();
-  const [{ items: ideas }, votes] = await Promise.all([
+  const [{ items: ideas }, votes, params, jar] = await Promise.all([
     listIdeas(admin, { limit: 100 }),
     listDesignVotes(admin),
+    searchParams,
+    cookies(),
   ]);
   const users = await getUsersByIds([
     ...new Set([...ideas.map((i) => i.authorId), ...votes.map((v) => v.userId)]),
@@ -81,17 +99,37 @@ export default async function AdminCardsPage() {
   const names = new Map(users.map((u) => [u.id, u.name]));
   const name = (id: string) => names.get(id) ?? "Membre inconnu";
 
-  // Les idées avec une image d'abord : ce sont les plus parlantes pour juger un design.
   // Numéro de série dans l'ordre d'envoi (la plus ancienne idée est la n° 01).
   const pad = (n: number) => String(n).padStart(2, "0");
   const serials = new Map(
     ideas.map((idea, i) => [idea.id, `${pad(ideas.length - i)}/${pad(ideas.length)}`]),
   );
-  const cards = ideas.length
-    ? [...ideas]
-        .sort((a, b) => Number(Boolean(b.imageKey)) - Number(Boolean(a.imageKey)))
-        .map((idea) => ({ ...toCard(idea, name(idea.authorId)), serial: serials.get(idea.id) }))
+  // Une seule carte remplit tous les designs : celle choisie (URL, puis cookie), sinon la
+  // première idée avec une image.
+  const wanted = params.carte ?? jar.get(CARD_COOKIE)?.value;
+  const sample = ideas.find((i) => i.id === wanted) ?? ideas.find((i) => i.imageKey) ?? ideas[0];
+  const cards = sample
+    ? [{ ...toCard(sample, name(sample.authorId)), serial: serials.get(sample.id) }]
     : SAMPLES;
+
+  // Designs notés 2 ou moins écartés ; ceux que l'admin n'a pas encore notés d'abord (les
+  // nouveaux), puis les mieux notés.
+  const rows = DESIGNS.map((design, i) => {
+    const forDesign = votes.filter((v) => v.designId === design.id);
+    return {
+      design,
+      number: i + 1,
+      avg: average(forDesign.map((v) => v.stars)),
+      mine: forDesign.find((v) => v.userId === admin.id),
+      others: forDesign.filter((v) => v.userId !== admin.id),
+    };
+  });
+  const discarded = rows.filter((r) => r.avg !== null && r.avg <= DISCARD_AT);
+  const shown = rows
+    .filter((r) => !discarded.includes(r))
+    .sort(
+      (a, b) => Number(Boolean(a.mine)) - Number(Boolean(b.mine)) || (b.avg ?? 0) - (a.avg ?? 0),
+    );
 
   return (
     <div className={`${designFonts} flex flex-col gap-4`}>
@@ -107,49 +145,85 @@ export default async function AdminCardsPage() {
           </a>
         }
       >
-        <p className="text-muted text-sm">
-          Propositions de design pour le futur jeu de cartes, remplies avec les idées de la boîte.
-          Coût et puissance sont provisoires ; la rareté ne change que le look. Note chaque
-          proposition de 1 à 5 étoiles, avec un commentaire si tu veux : les notes orienteront les
-          prochaines propositions. Les designs 8 à 11 montrent trois finitions (peu commune, rare,
-          légendaire) : passe la souris sur une carte pour l'incliner et voir le holo. Les designs
-          12 à 17 sont des variantes Snap : l'effet s'affiche au survol, et la planche 17 montre les
-          finitions jusqu'aux raretés Secrète (SR) et Super secrète (SSR). Les designs 18 à 27 sont
-          dix autres styles Snap, du plus classique (or massif) au plus inattendu (croquis, glitch).
-        </p>
+        <div className="flex flex-col gap-3">
+          <p className="text-muted text-sm">
+            Propositions de design pour le futur jeu de cartes. Coût et puissance sont provisoires ;
+            la rareté ne change que le look. Passe la souris sur une carte pour l&apos;incliner et
+            voir son effet. Les propositions pas encore notées sont en haut ; celles notées 2 ou
+            moins sont écartées (liste en bas de page).
+          </p>
+          {ideas.length > 0 && sample && (
+            <CardPicker
+              ideas={ideas.map((i) => ({ id: i.id, title: i.title }))}
+              current={sample.id}
+            />
+          )}
+        </div>
       </Card>
 
-      {DESIGNS.map((design, i) => {
-        const mine = votes.find((v) => v.designId === design.id && v.userId === admin.id);
-        const others = votes.filter((v) => v.designId === design.id && v.userId !== admin.id);
-        return (
-          <Card key={design.id} title={`${i + 1} · ${design.title}`}>
-            <p className="text-muted mb-3 text-sm">{design.summary}</p>
+      {shown.map(({ design, number, avg, mine, others }) => (
+        <Card
+          key={design.id}
+          title={`${number} · ${design.title}`}
+          action={
+            !mine ? (
+              <span className="bg-accent/15 text-accent rounded-full px-2 py-0.5 text-xs font-semibold">
+                Nouveau
+              </span>
+            ) : avg !== null ? (
+              <span className="text-muted inline-flex items-center gap-1 text-xs">
+                moyenne {Math.round(avg * 10) / 10}
+                <Star size={12} className="fill-accent text-accent" aria-hidden />
+              </span>
+            ) : undefined
+          }
+        >
+          <p className="text-muted mb-3 text-sm">{design.summary}</p>
+          {/* Cartes réduites pour voir une planche entière d'un coup d'œil. */}
+          <div style={{ zoom: 0.72 }}>
             <DesignPreview designId={design.id} cards={cards} />
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <DesignRating
-                designId={design.id}
-                initial={mine ? { stars: mine.stars, comment: mine.comment } : null}
-                action={rateDesignAction}
-              />
-              {others.length > 0 && (
-                <ul className="flex flex-col gap-2 text-sm">
-                  {others.map((v) => (
-                    <li key={v.userId} className="border-border rounded-md border p-2">
-                      <span className="text-text font-medium">{name(v.userId)}</span>{" "}
-                      <span className="text-accent inline-flex items-center gap-0.5 align-middle">
-                        {v.stars}
-                        <Star size={14} className="fill-accent" aria-label="étoiles" />
-                      </span>
-                      {v.comment && <p className="text-muted mt-1">{v.comment}</p>}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </Card>
-        );
-      })}
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <DesignRating
+              designId={design.id}
+              initial={mine ? { stars: mine.stars, comment: mine.comment } : null}
+              action={rateDesignAction}
+            />
+            {others.length > 0 && (
+              <ul className="flex flex-col gap-2 text-sm">
+                {others.map((v) => (
+                  <li key={v.userId} className="border-border rounded-md border p-2">
+                    <span className="text-text font-medium">{name(v.userId)}</span>{" "}
+                    <span className="text-accent inline-flex items-center gap-0.5 align-middle">
+                      {v.stars > 0 ? (
+                        <>
+                          {v.stars}
+                          <Star size={14} className="fill-accent" aria-label="étoiles" />
+                        </>
+                      ) : (
+                        <span className="text-muted">sans note</span>
+                      )}
+                    </span>
+                    {v.comment && <p className="text-muted mt-1">{v.comment}</p>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Card>
+      ))}
+
+      {discarded.length > 0 && (
+        <Card title="Designs écartés (2 étoiles ou moins)">
+          <ul className="text-muted flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {discarded.map(({ design, number, avg }) => (
+              <li key={design.id}>
+                {number} · {design.title} ({Math.round((avg ?? 0) * 10) / 10} ★)
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </div>
   );
 }

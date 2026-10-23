@@ -193,7 +193,7 @@ const adminPages: Record<string, () => Promise<unknown>> = {
   "admin/economy/page": () => AdminEconomyPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/page": () => AdminIdeasPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/[id]/page": () => AdminIdeaPage({ params: Promise.resolve({ id: ideaId }) }),
-  "admin/cards/page": () => AdminCardsPage(),
+  "admin/cards/page": () => AdminCardsPage({ searchParams: Promise.resolve({}) }),
 };
 
 async function signIn(discordId: string): Promise<string> {
@@ -265,7 +265,7 @@ describe("server actions", () => {
     await signIn(ADMIN_ID);
     expect((await rateDesignAction({ status: "idle" }, rateForm())).status).toBe("ok");
     const invalid = await rateDesignAction({ status: "idle" }, rateForm("9"));
-    expect(invalid).toMatchObject({ status: "error", message: "Note de 1 à 5 étoiles." });
+    expect(invalid).toMatchObject({ status: "error", message: "Note de 0 à 5 étoiles." });
 
     const res = await cardVotesRoute.GET(withCookie("/api/admin/cards/votes"));
     expect(res.status).toBe(200);

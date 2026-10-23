@@ -42,6 +42,14 @@ const ORDER: DesignId[] = [
   "snap-borderless",
   "snap-stained",
   "snap-theme",
+  "snap-edition",
+  "snap-raretes-v2",
+  "snap-gold-spot",
+  "snap-cosmic-frame",
+  "snap-watercolor-frame",
+  "snap-variantes",
+  "hearth-snap",
+  "magic-snap",
 ];
 
 const SNAP_STYLES: Partial<Record<DesignId, SnapStyle>> = {
@@ -60,7 +68,11 @@ const SNAP_STYLES: Partial<Record<DesignId, SnapStyle>> = {
   "snap-borderless": "borderless",
   "snap-stained": "stained",
   "snap-theme": "theme",
+  "snap-gold-spot": "goldspot",
+  "snap-cosmic-frame": "cosmicframe",
+  "snap-watercolor-frame": "watercolorframe",
 };
+const VARIANTS: SnapStyle[] = ["neon", "glitch", "prism", "goldspot"];
 const LADDER: SnapFinish[] = ["common", "uncommon", "rare", "legendary", "sr", "ssr"];
 
 /** Les designs premium montrent 3 finitions : peu commune, rare, légendaire. */
@@ -203,11 +215,71 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
     case "snap-borderless":
     case "snap-stained":
     case "snap-theme":
+    case "snap-gold-spot":
+    case "snap-cosmic-frame":
+    case "snap-watercolor-frame":
       return (
         <PremiumBoard>
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
             <SnapVariant key={i} card={c} style={SNAP_STYLES[designId]} />
+          ))}
+        </PremiumBoard>
+      );
+    case "snap-edition":
+      return (
+        <PremiumBoard>
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <SnapVariant key={i} card={c} edition />
+          ))}
+        </PremiumBoard>
+      );
+    case "snap-raretes-v2": {
+      const card = pick(pictured, 0);
+      return (
+        <Board
+          wrap
+          background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)"
+        >
+          <SnapDefs />
+          {LADDER.map((finish) => (
+            <SnapVariant key={finish} card={card} finish={finish} edition />
+          ))}
+        </Board>
+      );
+    }
+    case "snap-variantes": {
+      const card = pick(pictured, 0);
+      return (
+        <Board
+          wrap
+          background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)"
+        >
+          <SnapDefs />
+          {VARIANTS.map((style) => (
+            <SnapVariant key={style} card={card} style={style} finish="rare" edition />
+          ))}
+        </Board>
+      );
+    }
+    case "hearth-snap":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <HearthCard key={i} card={c} snapBadges />
+          ))}
+        </PremiumBoard>
+      );
+    case "magic-snap":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(cards, designId).map((c, i) => (
+            <MagicCard key={i} card={c} snapBadges />
           ))}
         </PremiumBoard>
       );

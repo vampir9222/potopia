@@ -2,74 +2,83 @@
 
 import { Label, Textarea } from "@app/ui";
 import { Star } from "lucide-react";
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useRef, useState, useTransition } from "react";
 
 export type RateState =
   { status: "idle" } | { status: "ok"; message: string } | { status: "error"; message: string };
 
 type Props = {
   designId: string;
-  /** Note déjà donnée par l'admin connecté, s'il y en a une. */
+  /** Note déjà donnée par l'admin connecté, s'il y en a une (0 = commentaire sans note). */
   initial: { stars: number; comment: string | null } | null;
   /**
    * Server action passée par l'app : elle fait requireAdmin puis rateDesign.
-   * Champs envoyés : designId, stars (1 à 5), comment.
+   * Champs envoyés : designId, stars (0 à 5, 0 = sans note), comment.
    */
   action: (state: RateState, formData: FormData) => Promise<RateState>;
 };
 
 /**
- * Note de 1 à 5 étoiles et commentaire facultatif sur une proposition de design. Pas de bouton :
- * un clic sur une étoile enregistre, le commentaire s'enregistre en quittant le champ.
+ * Note de 0 à 5 étoiles et commentaire facultatif sur une proposition de design. Pas de bouton :
+ * un clic sur une étoile enregistre (un second clic sur la même retire la note), le commentaire
+ * s'enregistre en quittant le champ.
+ *
+ * L'envoi part de l'état React et non d'un <form> : React réinitialise un formulaire après chaque
+ * action, ce qui effaçait le commentaire et décochait les étoiles.
  */
 export function DesignRating({ designId, initial, action }: Props) {
-  const [state, formAction, pending] = useActionState(action, { status: "idle" });
+  const [state, dispatch, pending] = useActionState(action, { status: "idle" });
+  const [, startTransition] = useTransition();
   const [stars, setStars] = useState(initial?.stars ?? 0);
+  const [comment, setComment] = useState(initial?.comment ?? "");
   const [hover, setHover] = useState(0);
-  const savedComment = useRef(initial?.comment ?? "");
-  const formRef = useRef<HTMLFormElement>(null);
+  const saved = useRef({ stars: initial?.stars ?? 0, comment: (initial?.comment ?? "").trim() });
   const shown = hover || stars;
 
-  function save() {
-    formRef.current?.requestSubmit();
+  function save(next: { stars: number; comment: string }) {
+    const trimmed = next.comment.trim();
+    if (next.stars === saved.current.stars && trimmed === saved.current.comment) return;
+    saved.current = { stars: next.stars, comment: trimmed };
+    const data = new FormData();
+    data.set("designId", designId);
+    data.set("stars", String(next.stars));
+    data.set("comment", trimmed);
+    startTransition(() => dispatch(data));
+  }
+
+  function pick(n: number) {
+    const next = stars === n ? 0 : n;
+    setStars(next);
+    save({ stars: next, comment });
   }
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-3">
-      <input type="hidden" name="designId" value={designId} />
-      <fieldset className="flex items-center gap-3">
-        <legend className="sr-only">Note sur 5</legend>
-        <div className="flex" onMouseLeave={() => setHover(0)}>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <div
+          className="flex"
+          role="radiogroup"
+          aria-label="Note sur 5"
+          onMouseLeave={() => setHover(0)}
+        >
           {[1, 2, 3, 4, 5].map((n) => (
-            <label
+            <button
               key={n}
-              className="cursor-pointer p-0.5"
+              type="button"
+              role="radio"
+              aria-checked={stars === n}
+              aria-label={`${n} étoile${n > 1 ? "s" : ""}${stars === n ? " (cliquer pour retirer)" : ""}`}
+              title={stars === n ? "Retirer la note" : `${n} étoile${n > 1 ? "s" : ""}`}
               onMouseEnter={() => setHover(n)}
-              title={`${n} étoile${n > 1 ? "s" : ""}`}
+              onClick={() => pick(n)}
+              className="focus-visible:outline-accent cursor-pointer rounded-sm p-0.5 focus-visible:outline-2"
             >
-              <input
-                type="radio"
-                name="stars"
-                value={n}
-                checked={stars === n}
-                onChange={() => {
-                  setStars(n);
-                  // Le bouton radio est déjà coché dans le DOM : le formulaire part avec la bonne note.
-                  save();
-                }}
-                className="peer sr-only"
-              />
               <Star
                 size={28}
                 aria-hidden
-                className={`peer-focus-visible:outline-accent rounded-sm transition-colors peer-focus-visible:outline-2 ${
-                  n <= shown ? "fill-accent text-accent" : "text-muted"
-                }`}
+                className={`transition-colors ${n <= shown ? "fill-accent text-accent" : "text-muted"}`}
               />
-              <span className="sr-only">
-                {n} étoile{n > 1 ? "s" : ""}
-              </span>
-            </label>
+            </button>
           ))}
         </div>
         <span className="text-muted text-sm tabular-nums" aria-live="polite">
@@ -77,27 +86,18 @@ export function DesignRating({ designId, initial, action }: Props) {
             ? "Enregistrement…"
             : state.status === "error"
               ? ""
-              : stars
-                ? state.status === "ok"
-                  ? `${stars}/5 · enregistré`
-                  : `${stars}/5`
-                : "Clique sur une étoile pour noter"}
+              : `${stars ? `${stars}/5` : "Pas de note"}${state.status === "ok" ? " · enregistré" : ""}`}
         </span>
-      </fieldset>
-      <Label hint={stars ? "Enregistré en quittant le champ." : "Note d'abord avec les étoiles."}>
+      </div>
+      <Label hint="Enregistré en quittant le champ, avec ou sans note.">
         Commentaire (facultatif)
         <Textarea
           name="comment"
           maxLength={1000}
-          defaultValue={initial?.comment ?? ""}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          onBlur={() => save({ stars, comment })}
           placeholder="Ce qui te plaît, ce que tu changerais…"
-          onBlur={(e) => {
-            const value = e.currentTarget.value.trim();
-            if (stars && value !== savedComment.current.trim()) {
-              savedComment.current = value;
-              save();
-            }
-          }}
         />
       </Label>
       {state.status === "error" && (
@@ -105,6 +105,6 @@ export function DesignRating({ designId, initial, action }: Props) {
           {state.message}
         </p>
       )}
-    </form>
+    </div>
   );
 }

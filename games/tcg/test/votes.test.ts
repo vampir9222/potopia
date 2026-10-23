@@ -36,8 +36,13 @@ describe("rateDesign", () => {
     expect(vote.comment).toBe("Trop chargé");
   });
 
-  it("refuse une note hors de 1 à 5 et un design inconnu", async () => {
-    await expect(rateDesign(ADMIN, { designId: "pixel", stars: 0 })).rejects.toBeInstanceOf(
+  it("accepte 0 étoile : commentaire sans note, ou note retirée", async () => {
+    const vote = await rateDesign(ADMIN, { designId: "pixel", stars: 0, comment: "À revoir" });
+    expect(vote).toMatchObject({ stars: 0, comment: "À revoir" });
+  });
+
+  it("refuse une note hors de 0 à 5 et un design inconnu", async () => {
+    await expect(rateDesign(ADMIN, { designId: "pixel", stars: -1 })).rejects.toBeInstanceOf(
       ZodError,
     );
     await expect(rateDesign(ADMIN, { designId: "pixel", stars: 6 })).rejects.toBeInstanceOf(
