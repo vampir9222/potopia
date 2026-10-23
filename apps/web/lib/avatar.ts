@@ -46,7 +46,7 @@ export async function getPlaceSnapshot(since?: Date): Promise<PlaceSnapshot> {
 /**
  * Avatar du membre connecté, créé à sa première visite (ou recomposé après un import). Une panne
  * du stockage ne doit pas bloquer la plateforme : on retombe alors sur l'avatar existant.
- * Dédupliqué sur la requête (layout et dashboard).
+ * Dédupliqué sur la requête.
  */
 export const getOwnAvatar = cache(async (userId: string): Promise<Avatar | null> => {
   try {

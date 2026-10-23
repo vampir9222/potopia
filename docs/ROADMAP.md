@@ -314,7 +314,7 @@ Détails : section « Avatars et place » de [ARCHITECTURE.md](ARCHITECTURE.md).
 - core : `Avatar` et `UserAvatarItem`, `validateAvatarConfig`, `saveAvatar` (R2 + événement
   `avatar/updated`), `ensureAvatar`, `ensureMissingAvatars`, `listPlaceMembers`,
   `listEventsSince`. storage : `putObject` et `deleteObject`.
-- Web : personnage dans la colonne de gauche, page `/avatar`, routes `/api/avatars/[userId]/[hash]`
+- Web : page `/avatar` (lien « Mon avatar » du menu), routes `/api/avatars/[userId]/[hash]`
   et `/api/place`, place sous la grille des apps, page `/credits`.
 
 **Tests**
@@ -328,5 +328,5 @@ Détails : section « Avatars et place » de [ARCHITECTURE.md](ARCHITECTURE.md).
 
 **Fini quand**
 
-- Un membre personnalise son avatar, le voit dans la colonne de gauche et se promener sur la place,
+- Un membre personnalise son avatar, le voit se promener sur la place,
   et les autres le voient changer au rafraîchissement suivant (30 s).

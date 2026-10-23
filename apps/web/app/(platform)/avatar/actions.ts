@@ -15,7 +15,7 @@ export async function saveAvatarAction(config: unknown): Promise<AvatarSaveState
     if (error instanceof AvatarConfigError) return { status: "error", message: error.message };
     throw error;
   }
-  // Colonne de gauche et place : nouvelle planche.
+  // Place du dashboard : nouvelle planche.
   revalidatePath("/", "layout");
   return { status: "ok" };
 }
