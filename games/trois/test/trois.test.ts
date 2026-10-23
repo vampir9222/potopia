@@ -60,15 +60,28 @@ describe("evaluate", () => {
     ]);
   });
 
-  it("gère les lettres en double sans en compter trop", () => {
-    // un seul E dans la réponse : seul le premier E mal placé est signalé
-    expect(evaluate("eeeee", "temps")).toEqual(["absent", "correct", "absent", "absent", "absent"]);
+  it("signale chaque occurrence d'une lettre en double", () => {
+    // un seul N dans la réponse : le N bien placé est vert, les deux autres orange
+    expect(evaluate("nonne", "noirs")).toEqual([
+      "correct",
+      "correct",
+      "present",
+      "present",
+      "absent",
+    ]);
+    expect(evaluate("eeeee", "temps")).toEqual([
+      "present",
+      "correct",
+      "present",
+      "present",
+      "present",
+    ]);
     expect(evaluate("aabbb", "baaaa")).toEqual([
       "present",
       "correct",
       "present",
-      "absent",
-      "absent",
+      "present",
+      "present",
     ]);
   });
 });

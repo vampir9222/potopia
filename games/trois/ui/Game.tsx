@@ -456,7 +456,14 @@ function Key({
       onClick={onClick}
       className={`h-14 rounded-md text-sm font-bold uppercase transition active:scale-95 ${
         wide ? "flex-[1.6] px-1 text-xs" : "max-w-11 flex-1"
-      } ${mark ? TILE[mark] + " text-white" : "bg-zinc-700 text-zinc-100"} ${mark === "absent" ? "opacity-50" : ""}`}
+      } ${
+        // lettre absente : nettement plus sombre qu'une touche pas encore jouée
+        mark === "absent"
+          ? "border-zinc-900 bg-zinc-900 text-zinc-600"
+          : mark
+            ? TILE[mark] + " text-white"
+            : "bg-zinc-700 text-zinc-100"
+      }`}
     >
       {children}
     </button>
