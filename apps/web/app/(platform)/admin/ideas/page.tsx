@@ -4,6 +4,7 @@ import { IdeasAdminList } from "@app/ideas/ui";
 import { buttonClasses, Card } from "@app/ui";
 import type { Metadata } from "next";
 import { getCurrentAdmin } from "@/lib/session";
+import { loadMoreIdeas } from "./actions";
 
 export const metadata: Metadata = { title: "Boîte à idées" };
 
@@ -14,14 +15,14 @@ function asRarity(value: string | undefined): Rarity | undefined {
 export default async function AdminIdeasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ author?: string; rarity?: string; cursor?: string }>;
+  searchParams: Promise<{ author?: string; rarity?: string }>;
 }) {
   const admin = await getCurrentAdmin();
   const params = await searchParams;
   const filters = { authorId: params.author || undefined, rarity: asRarity(params.rarity) };
 
   const [{ items, nextCursor }, authorIds] = await Promise.all([
-    listIdeas(admin, { ...filters, cursor: params.cursor || undefined }),
+    listIdeas(admin, filters),
     listIdeaAuthorIds(admin),
   ]);
   const authors = await getUsersByIds([...authorIds, ...items.map((i) => i.authorId)]);
@@ -44,19 +45,22 @@ export default async function AdminIdeasPage({
       <IdeasAdminList
         basePath="/admin/ideas"
         filters={filters}
-        nextCursor={nextCursor}
+        loadMore={loadMoreIdeas.bind(null, filters)}
         authors={authors
           .filter((u) => authorIds.includes(u.id))
           .map((u) => ({ id: u.id, name: u.name }))
           .sort((a, b) => a.name.localeCompare(b.name))}
-        items={items.map((idea) => ({
-          id: idea.id,
-          title: idea.title,
-          authorName: names.get(idea.authorId) ?? "Membre inconnu",
-          rarity: idea.suggestedRarity,
-          hasImage: Boolean(idea.imageKey),
-          createdAt: idea.createdAt,
-        }))}
+        initial={{
+          nextCursor,
+          items: items.map((idea) => ({
+            id: idea.id,
+            title: idea.title,
+            authorName: names.get(idea.authorId) ?? "Membre inconnu",
+            rarity: idea.suggestedRarity,
+            hasImage: Boolean(idea.imageKey),
+            createdAt: idea.createdAt,
+          })),
+        }}
       />
     </Card>
   );
