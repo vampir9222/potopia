@@ -17,7 +17,7 @@ notifications) et boîte à idées. Aucun jeu pour l'instant.
 | Stockage    | Cloudflare R2 privé (`@aws-sdk/client-s3`, `s3-request-presigner`) ; RustFS en local |
 | Validation  | zod 4                                                                                |
 | Tests       | Vitest 5, Postgres et stockage S3 locaux via Docker (`docker compose`)               |
-| Hébergement | Vercel, repo GitHub public                                                           |
+| Hébergement | Vercel, repo GitHub public ; migrations appliquées par le build de production        |
 
 Notes de versions :
 

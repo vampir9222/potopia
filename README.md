@@ -101,12 +101,13 @@ serveur à la connexion, puis toutes les 6 heures.
 | `pnpm db:up`            | Lance Postgres et le stockage S3 locaux (Docker)                          |
 | `pnpm storage:init`     | Crée le bucket local et son CORS                                          |
 | `pnpm db:migrate`       | Crée une migration à partir des `schema.prisma` et l'applique (dev)       |
-| `pnpm db:deploy`        | Applique les migrations existantes (prod)                                 |
+| `pnpm db:deploy`        | Applique les migrations existantes (prod, fait par le build Vercel)       |
 | `pnpm db:reset:test`    | Remet à zéro la base de test                                              |
 
 La CI GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lance format, lint,
 typecheck, frontières et tests (avec Postgres et stockage réels) sur chaque pull request vers `main`,
-qui est protégée. Le build est fait par Vercel au déploiement.
+qui est protégée. Le build est fait par Vercel au déploiement : en production, il applique d'abord
+les migrations (voir « Déployer »).
 
 ---
 
@@ -206,8 +207,14 @@ propose aussitôt.
 ## Déployer (Vercel + Neon + R2)
 
 1. **Base Neon** : créer un projet, récupérer l'URL **poolée** (`DATABASE_URL`) et l'URL **directe**
-   (`DIRECT_URL`). Appliquer les migrations depuis un poste, avec `DIRECT_URL` pointant sur Neon :
-   `pnpm db:deploy`. À refaire à chaque nouvelle migration, avant de déployer le code qui en dépend.
+   (`DIRECT_URL`, ou `DATABASE_URL_UNPOOLED` fourni par l'intégration Neon de Vercel).
+   **Migrations automatiques** : à chaque déploiement de **production**, la tâche `build` de
+   `@app/db` ([scripts/deploy-production.ts](packages/db/scripts/deploy-production.ts)) lance
+   `prisma migrate deploy` avant de construire l'app. Fusionner une PR qui contient une migration
+   l'applique donc en prod, y compris les changements de tables existantes (colonne ajoutée,
+   renommée, supprimée…). Si une migration échoue, le build échoue et la version en ligne reste en
+   place. Les previews Vercel, la CI et le local n'appliquent rien. À la main si besoin, depuis un
+   poste avec `DIRECT_URL` pointant sur Neon : `pnpm db:deploy`.
 2. **Bucket R2 privé** : créer le bucket, puis un token API avec les droits « Object Read & Write »
    sur ce bucket (`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ACCOUNT_ID`, `R2_BUCKET`). Laisser
    `R2_ENDPOINT` vide. Dans les réglages CORS du bucket :

@@ -13,6 +13,7 @@
     "db:migrate": "tsx scripts/assemble.ts && prisma migrate dev",
     "db:deploy": "tsx scripts/assemble.ts && prisma migrate deploy",
     "db:reset:test": "tsx scripts/reset-test.ts",
+    "build": "tsx scripts/deploy-production.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
