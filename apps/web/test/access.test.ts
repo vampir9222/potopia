@@ -48,6 +48,7 @@ const { default: AdminIdeasPage } = await import("@/app/(platform)/admin/ideas/p
 const { default: AdminIdeaPage } = await import("@/app/(platform)/admin/ideas/[id]/page");
 const uploadUrlRoute = await import("@/app/api/ideas/upload-url/route");
 const ideaImageRoute = await import("@/app/api/admin/ideas/[id]/image/route");
+const ideasExportRoute = await import("@/app/api/admin/ideas/export/route");
 const troisGameRoute = await import("@/app/api/trois/game/route");
 const troisGuessRoute = await import("@/app/api/trois/guess/route");
 const troisPracticeRoute = await import("@/app/api/trois/practice/route");
@@ -109,6 +110,7 @@ const requestIdeaImage = () =>
 const routes: Record<string, () => Promise<Response>> = {
   "POST /api/ideas/upload-url": requestUploadUrl,
   "GET /api/admin/ideas/[id]/image": requestIdeaImage,
+  "GET /api/admin/ideas/export": () => ideasExportRoute.GET(withCookie("/api/admin/ideas/export")),
   "GET /api/trois/game": () => troisGameRoute.GET(withCookie("/api/trois/game")),
   "POST /api/trois/guess": () =>
     troisGuessRoute.POST(withCookie("/api/trois/guess", { guess: "faire" })),
@@ -293,5 +295,27 @@ describe("route handlers", () => {
   it("l'image d'une idée sans image renvoie 404 à un admin", async () => {
     await signIn(ADMIN_ID);
     expect((await requestIdeaImage()).status).toBe(404);
+  });
+
+  it("l'export des idées est refusé à un membre non admin (403)", async () => {
+    await signIn(MEMBER_ID);
+    expect((await ideasExportRoute.GET(withCookie("/api/admin/ideas/export"))).status).toBe(403);
+  });
+
+  it("l'export des idées renvoie un fichier JSON à un admin, jamais mis en cache", async () => {
+    await signIn(ADMIN_ID);
+    const res = await ideasExportRoute.GET(withCookie("/api/admin/ideas/export"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-disposition")).toMatch(/^attachment; filename="idees-/);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    const body = await res.json();
+    expect(body.count).toBe(1);
+    expect(body.ideas[0]).toMatchObject({
+      id: ideaId,
+      title: "Titre",
+      description: "Texte",
+      author: "Membre inconnu",
+      imageUrl: null,
+    });
   });
 });
