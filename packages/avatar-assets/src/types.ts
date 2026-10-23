@@ -26,10 +26,7 @@ export const CATEGORIES = [
   "legs",
   "feet",
   "hat",
-  "neck",
   "cape",
-  "shoulders",
-  "arms",
   "backpack",
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -80,6 +77,11 @@ export type CatalogItem = {
   headPaths?: Record<string, string>;
   /** Têtes compatibles par morphologie, pour un élément qui dépend de la tête. */
   heads?: Partial<Record<Morph, string[]>>;
+  /**
+   * Animations absentes chez LPC, remplacées par une autre (`emote` → `idle`) ou non dessinées
+   * (`null`). Seules certaines catégories y ont droit (capes).
+   */
+  fallbacks?: Partial<Record<Animation, Animation | null>>;
   /** "free" : disponible pour tous. Plus tard : élément à débloquer (UserAvatarItem). */
   unlock: "free" | { item: string };
 };

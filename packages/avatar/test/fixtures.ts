@@ -80,6 +80,12 @@ export const catalog: Catalog = {
       heads: { male: ["head_human"], female: ["head_human"] },
     }),
     item({ id: "crown", category: "hat", unlock: { item: "crown" } }),
+    item({
+      id: "cloak",
+      category: "cape",
+      layers: [{ zPos: 5, dirs: { male: "cloak/", female: "cloak/" } }],
+      fallbacks: { emote: "idle", sit: null, jump: null },
+    }),
   ],
 };
 

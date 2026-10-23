@@ -75,14 +75,60 @@ describe("import LPC", () => {
   });
 
   it("écarte un élément dont la définition ne déclare pas les 5 animations", () => {
+    const dress: DefinitionFile = {
+      path: "torso/dress",
+      def: {
+        type_name: "dress",
+        animations: ["walk", "idle"],
+        layer_1: { zPos: 9, male: "dress/" },
+      },
+    };
+    const result = run([dress], probeFor(["body/male/", "body/female/", "dress/"]));
+    expect(result.rejected).toContainEqual({
+      id: "dress",
+      reason: "animation non déclarée : sit, jump, emote",
+    });
+  });
+
+  it("admet une cape sans sit, jump ni emote, avec ses animations de remplacement", () => {
     const cape: DefinitionFile = {
       path: "torso/cape",
       def: { type_name: "cape", animations: ["walk", "idle"], layer_1: { zPos: 9, male: "cape/" } },
     };
-    const result = run([cape], probeFor(["body/male/", "body/female/", "cape/"]));
+    const probe = probeFor(["body/male/", "body/female/"], {
+      "cape/idle.png": { width: 128, height: 256 },
+      "cape/walk.png": { width: 576, height: 256 },
+    });
+    const result = run([cape], probe);
+    const item = result.catalog.items.find((i) => i.id === "cape");
+    expect(item?.fallbacks).toEqual({ emote: "idle", sit: null, jump: null });
+    expect(result.files.filter((f) => f.startsWith("cape/"))).toEqual([
+      "cape/idle.png",
+      "cape/walk.png",
+    ]);
+    // Sans walk, la cape reste écartée.
+    const noWalk = run(
+      [cape],
+      probeFor(["body/male/", "body/female/"], { "cape/idle.png": { width: 128, height: 256 } }),
+    );
+    expect(noWalk.rejected.map((r) => r.id)).toContain("cape");
+  });
+
+  it("ne garde que les têtes humaines masculine et féminine", () => {
+    const head = (name: string): DefinitionFile => ({
+      path: `head/${name}`,
+      def: { name, type_name: "head", layer_1: { zPos: 100, male: `${name}/` } },
+    });
+    const result = run(
+      [head("heads_human_male"), head("heads_wolf_male")],
+      probeFor(["body/male/", "body/female/", "heads_human_male/", "heads_wolf_male/"]),
+    );
+    expect(result.catalog.items.filter((i) => i.category === "head").map((i) => i.id)).toEqual([
+      "heads_human_male",
+    ]);
     expect(result.rejected).toContainEqual({
-      id: "cape",
-      reason: "animation non déclarée : sit, jump, emote",
+      id: "heads_wolf_male",
+      reason: expect.stringContaining("tête non retenue"),
     });
   });
 

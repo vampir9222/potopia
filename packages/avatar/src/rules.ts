@@ -15,6 +15,14 @@ import type { AvatarConfig } from "./config";
 /** Catégories obligatoires : sans corps ni tête, pas de personnage. */
 export const REQUIRED_CATEGORIES: readonly Category[] = ["body", "head"];
 
+/** Tête proposée d'abord pour une silhouette (après un changement de morphologie). */
+export const PREFERRED_HEADS: Partial<Record<Morph, string>> = {
+  male: "heads_human_male",
+  muscular: "heads_human_male",
+  female: "heads_human_female",
+  pregnant: "heads_human_female",
+};
+
 /** Une robe se porte sans pantalon : choisir `dress` retire `legs`. */
 export const EXCLUSIONS: Partial<Record<Category, Category[]>> = { dress: ["legs"] };
 
@@ -172,7 +180,9 @@ export function fitConfig(config: AvatarConfig, catalog: Catalog): AvatarConfig 
   for (const cat of REQUIRED_CATEGORIES) {
     const current = index.get(next.items[cat]?.id ?? "");
     if (!current || !isCompatible(current, next, catalog)) {
-      const first = optionsFor(catalog, next, cat)[0];
+      const options = optionsFor(catalog, next, cat);
+      const preferred = cat === "head" ? PREFERRED_HEADS[next.morph] : undefined;
+      const first = options.find((o) => o.id === preferred) ?? options[0];
       if (first) next.items[cat] = { id: first.id };
       else next.items = withoutCategory(next.items, cat);
     }

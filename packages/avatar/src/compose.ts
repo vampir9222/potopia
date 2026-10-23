@@ -25,6 +25,8 @@ export type ResolvedLayer = {
   zPos: number;
   dir: string;
   swap: Map<number, number>;
+  /** Animations remplacées par une autre, ou non dessinées (`null`). */
+  fallbacks?: Partial<Record<Animation, Animation | null>>;
 };
 
 /** Disposition de la planche composée : 4 lignes (directions) par animation, dans l'ordre. */
@@ -99,12 +101,16 @@ export function resolveLayers(
         zPos: layer.zPos,
         dir: dir.replaceAll("${head}", segment),
         swap,
+        ...(item.fallbacks ? { fallbacks: item.fallbacks } : {}),
       });
     }
   }
   // Tri stable : l'ordre d'insertion départage les zPos égaux.
   return layers.sort((a, b) => a.zPos - b.zPos);
 }
+
+/** Zone source d'un dessin (par défaut : toute l'image). */
+type Region = { x: number; y: number; width: number; height: number };
 
 /** Dessine `src` sur `dst` en (dx, dy), avec remplacement de couleurs et mélange alpha. */
 export function blit(
@@ -113,12 +119,13 @@ export function blit(
   dx: number,
   dy: number,
   swap?: ReadonlyMap<number, number>,
+  region: Region = { x: 0, y: 0, width: src.width, height: src.height },
 ): void {
-  const width = Math.min(src.width, dst.width - dx);
-  const height = Math.min(src.height, dst.height - dy);
+  const width = Math.min(region.width, src.width - region.x, dst.width - dx);
+  const height = Math.min(region.height, src.height - region.y, dst.height - dy);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const s = (y * src.width + x) * 4;
+      const s = ((y + region.y) * src.width + x + region.x) * 4;
       const sa = src.data[s + 3] ?? 0;
       if (sa === 0) continue;
       let r = src.data[s] ?? 0;
@@ -170,13 +177,38 @@ export async function composeSheet(
   const layout = sheetLayout(catalog);
   const sheet = createImage(layout.width, layout.height);
   const layers = resolveLayers(config, catalog, palettes);
+  // Planche à lire pour chaque animation : la sienne, celle qui la remplace, ou aucune.
+  const sourceOf = (layer: ResolvedLayer, anim: Animation) => {
+    const fallback = layer.fallbacks?.[anim];
+    return fallback === undefined ? anim : fallback;
+  };
   const images = await Promise.all(
-    layers.flatMap((layer) => ANIMATIONS.map((anim) => load(spriteFile(layer.dir, anim)))),
+    layers.flatMap((layer) =>
+      ANIMATIONS.map((anim) => {
+        const source = sourceOf(layer, anim);
+        return source ? load(spriteFile(layer.dir, source)) : null;
+      }),
+    ),
   );
   layers.forEach((layer, i) => {
     ANIMATIONS.forEach((anim, j) => {
       const image = images[i * ANIMATIONS.length + j];
-      if (image) blit(sheet, image, 0, layout.rows[anim] * FRAME_SIZE, layer.swap);
+      if (!image) return;
+      const top = layout.rows[anim] * FRAME_SIZE;
+      if (sourceOf(layer, anim) === anim) {
+        blit(sheet, image, 0, top, layer.swap);
+        return;
+      }
+      // Frames d'une autre animation, reprises en boucle sur toute la durée de celle-ci.
+      const sourceFrames = Math.max(1, Math.floor(image.width / FRAME_SIZE));
+      for (let frame = 0; frame < layout.frames[anim]; frame++) {
+        blit(sheet, image, frame * FRAME_SIZE, top, layer.swap, {
+          x: (frame % sourceFrames) * FRAME_SIZE,
+          y: 0,
+          width: FRAME_SIZE,
+          height: image.height,
+        });
+      }
     });
   });
   return sheet;

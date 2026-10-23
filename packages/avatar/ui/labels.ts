@@ -21,9 +21,12 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   legs: "Bas",
   feet: "Chaussures",
   hat: "Chapeau",
-  neck: "Cou",
   cape: "Cape",
-  shoulders: "Épaules",
-  arms: "Bras",
   backpack: "Sac",
+};
+
+/** Têtes proposées (humaines, masculine et féminine). */
+export const HEAD_LABELS: Record<string, string> = {
+  heads_human_male: "Masculine",
+  heads_human_female: "Féminine",
 };

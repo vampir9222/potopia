@@ -40,14 +40,13 @@ const NATURAL_HAIR = [
   "ulpc.gray",
   "ulpc.platinum",
 ];
-/** Têtes humaines par silhouette : un avatar aléatoire reste humain. */
-const HUMAN_HEADS: Partial<Record<Morph, string[]>> = {
-  male: ["heads_human_male", "heads_human_male_plump", "heads_human_male_gaunt"],
+/** Tête par silhouette (seules les têtes humaines masculine et féminine sont importées). */
+const HEADS: Partial<Record<Morph, string[]>> = {
+  male: ["heads_human_male"],
   muscular: ["heads_human_male"],
-  female: ["heads_human_female", "heads_human_female_small"],
+  female: ["heads_human_female"],
   pregnant: ["heads_human_female"],
-  teen: ["heads_human_male_small", "heads_human_female_small"],
-  child: ["heads_human_child"],
+  teen: ["heads_human_male", "heads_human_female"],
 };
 const MORPH_WEIGHTS: Partial<Record<Morph, number>> = { male: 4, female: 4, teen: 1 };
 
@@ -122,9 +121,8 @@ export function randomConfig(
   };
 
   choose("body");
-  const heads = HUMAN_HEADS[morph] ?? [];
+  const heads = HEADS[morph] ?? [];
   choose("head", (item) => heads.includes(item.id));
-  if (!config.items.head) choose("head", (item) => item.tags.includes("human"));
   if (!config.items.head) choose("head");
 
   const chance = (p: number) => rng() < p;
@@ -138,7 +136,7 @@ export function randomConfig(
   }
   if (chance(0.85)) choose("feet");
   if (chance(0.15)) choose("hat");
-  if (chance(0.15)) choose("neck");
+  if (chance(0.12)) choose("cape");
   config = fitConfig(config, catalog);
   return config;
 }

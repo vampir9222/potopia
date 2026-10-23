@@ -14,7 +14,7 @@ import {
   type Material,
   type Morph,
 } from "@app/avatar-assets";
-import { Button, Card, cx, Label, Select } from "@app/ui";
+import { Button, Card, cx } from "@app/ui";
 import { CircleCheck, Dices, Save, Undo2 } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
 import { composeSheet, sheetLayout } from "../src/compose";
@@ -30,6 +30,7 @@ import {
   itemIndex,
   optionsFor,
   ownColorSlots,
+  PREFERRED_HEADS,
   REQUIRED_CATEGORIES,
   skinChoices,
   withoutCategory,
@@ -37,7 +38,7 @@ import {
 import { ANIMATION_LABELS, DIRECTION_LABELS } from "./animation";
 import { AvatarSprite } from "./AvatarSprite";
 import { browserSpriteLoader, toBitmap } from "./browser";
-import { CATEGORY_LABELS, MORPH_LABELS } from "./labels";
+import { CATEGORY_LABELS, HEAD_LABELS, MORPH_LABELS } from "./labels";
 
 export type AvatarSaveState = { status: "ok" } | { status: "error"; message: string };
 
@@ -111,7 +112,7 @@ export function AvatarEditor({ initialConfig, save }: Props) {
   const [config, setConfig] = useState(initialConfig);
   const [animation, setAnimation] = useState<Animation>("walk");
   const [direction, setDirection] = useState<Direction>("down");
-  const [category, setCategory] = useState<Category>("hair");
+  const [category, setCategory] = useState<Category>("body");
   const [preview, setPreview] = useState<ImageBitmap | null>(null);
   const [state, setState] = useState<AvatarSaveState | null>(null);
   const [saving, startSaving] = useTransition();
@@ -148,6 +149,15 @@ export function AvatarEditor({ initialConfig, save }: Props) {
     if (item) items[cat] = { id: item.id, colors: keptColors(item, config.items[cat]?.colors) };
     else items = withoutCategory(items, cat);
     update({ ...config, items });
+  };
+  // Nouvelle silhouette : la tête assortie, sauf pour l'ado (au choix).
+  const setMorph = (morph: Morph) => {
+    const head = PREFERRED_HEADS[morph];
+    update({
+      ...config,
+      morph,
+      items: head ? { ...config.items, head: { id: head } } : config.items,
+    });
   };
   const setItemColor = (slot: string, color: ColorId) => {
     if (!choice) return;
@@ -235,21 +245,8 @@ export function AvatarEditor({ initialConfig, save }: Props) {
       </Card>
 
       <div className="flex min-w-0 flex-col gap-4">
-        <Card title="Silhouette">
+        <Card title="Couleurs">
           <div className="flex flex-col gap-4">
-            <Label>
-              Morphologie
-              <Select
-                value={config.morph}
-                onChange={(e) => update({ ...config, morph: e.target.value as Morph })}
-              >
-                {morphs.map((m) => (
-                  <option key={m} value={m}>
-                    {MORPH_LABELS[m]}
-                  </option>
-                ))}
-              </Select>
-            </Label>
             <div className="flex flex-col gap-1.5">
               <span className="text-muted text-sm">Peau</span>
               <Swatches
@@ -280,6 +277,8 @@ export function AvatarEditor({ initialConfig, save }: Props) {
             className="-mx-1 mb-4 flex flex-wrap gap-1.5 px-1"
           >
             {CATEGORIES.map((cat) => {
+              // La tête se choisit dans l'onglet Corps, avec la morphologie.
+              if (cat === "head") return null;
               const count = optionsFor(catalog, config, cat).length;
               if (count === 0) return null;
               return (
@@ -304,7 +303,37 @@ export function AvatarEditor({ initialConfig, save }: Props) {
           </div>
 
           <div role="tabpanel" className="flex flex-col gap-4">
-            {excluded.has(category) ? (
+            {category === "body" ? (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-muted text-sm">Morphologie</span>
+                  <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                    {morphs.map((m) => (
+                      <li key={m}>
+                        <OptionButton active={config.morph === m} onClick={() => setMorph(m)}>
+                          {MORPH_LABELS[m]}
+                        </OptionButton>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-muted text-sm">Tête</span>
+                  <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                    {optionsFor(catalog, config, "head").map((item) => (
+                      <li key={item.id}>
+                        <OptionButton
+                          active={config.items.head?.id === item.id}
+                          onClick={() => setItem("head", item)}
+                        >
+                          {HEAD_LABELS[item.id] ?? item.name}
+                        </OptionButton>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
+            ) : excluded.has(category) ? (
               <p className="text-muted text-sm">
                 Retiré par la robe : enlève-la pour choisir un bas.
               </p>

@@ -253,15 +253,17 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
   (`idle`, `walk`, `sit`, `jump`, `emote`). Les variantes de couleur précalculées, rangées dans des
   sous-dossiers `<animation>/`, ne sont pas prises.
 - La catégorie vient du `type_name` de chaque définition, traduit par `TYPE_TO_CATEGORY`
-  (`packages/avatar-assets/import/lpc.ts`). Armes, boucliers, carquois, outils, et les pièces
-  secondaires (liserés, surcouches, accessoires de chapeau) sont écartés.
+  (`packages/avatar-assets/import/lpc.ts`). Armes, boucliers, carquois, outils, bijoux, épaules,
+  bras et les pièces secondaires (liserés, surcouches, accessoires de chapeau) sont écartés. Seules
+  les têtes humaines masculine et féminine sont gardées (`ALLOWED_HEADS`).
 - Un élément n'est proposé pour une morphologie que si chacun de ses calques y existe avec les 5
   animations, au même nombre de frames que le corps de référence. Le script affiche chaque élément
   écarté avec sa raison.
 - Sortie versionnée dans `packages/avatar-assets` : `sprites/` (les PNG retenus, à leur chemin LPC)
   et `data/` (`catalog.json`, `palettes.json`, `credits.json`, ignorés par Prettier).
-- Au commit importé, aucune cape, robe ni sac à dos ne remplit la règle des 5 animations, et les
-  corps `child` et `muscular` n'ont pas d'`emote` : l'éditeur ne propose que les morphologies qui
+- Les capes n'ont ni `sit`, ni `jump`, ni `emote` : elles sont admises par `ANIMATION_FALLBACKS`
+  (`emote` reprend les frames d'`idle`, `sit` et `jump` ne les dessinent pas, comme le générateur
+  LPC). Aucune robe ni aucun sac à dos ne remplit la règle des 5 animations, et les corps `child` et `muscular` n'ont pas d'`emote` : l'éditeur ne propose que les morphologies qui
   ont un corps et une tête (`availableMorphs`).
 
 **Compositeur** (`packages/avatar`, même code dans le navigateur et sur le serveur).

@@ -15,7 +15,7 @@ export function AvatarFigure({
   hash: string | null;
 }) {
   return (
-    <div className="bg-surface-hover/50 relative flex h-36 items-end justify-center overflow-hidden rounded-md border border-(--frame)">
+    <div className="relative flex h-32 items-end justify-center">
       {hash && (
         <AvatarSprite
           sheet={avatarSheetUrl(userId, hash)}
@@ -29,7 +29,7 @@ export function AvatarFigure({
         className={buttonClasses({
           variant: "secondary",
           size: "sm",
-          className: "absolute right-2 bottom-2",
+          className: "absolute right-0 bottom-1",
         })}
       >
         <Shirt size={14} aria-hidden /> Avatar

@@ -148,8 +148,8 @@ export async function saveAvatar(
 /**
  * Garantit qu'un membre a un avatar à jour, appelé à chaque affichage du dashboard :
  * - première visite : avatar aléatoire mais cohérent (sans événement d'activité) ;
- * - catalogue réimporté (empreinte différente) : la planche est recomposée, la config ajustée si
- *   un élément a disparu.
+ * - catalogue réimporté (empreinte différente) ou élément retiré du catalogue : la planche est
+ *   recomposée, la config ajustée (avatar aléatoire si elle ne peut pas l'être).
  */
 export async function ensureAvatar(
   input: { userId: string; sprites: SpriteLoader },
@@ -158,12 +158,16 @@ export async function ensureAvatar(
   const { userId, sprites } = input;
   const client = opts?.tx ?? db;
   const current = await client.avatar.findUnique({ where: { userId } });
+  const owned = await listOwnedAvatarItems(userId, opts);
   if (current) {
     const config = current.config as AvatarConfig;
-    if (current.configHash === (await configHash(config, catalog))) return toAvatar(current);
+    // À jour si la planche correspond et si chaque élément est encore au catalogue.
+    const valid = checkConfig(config, catalog, palettes, owned).length === 0;
+    if (valid && current.configHash === (await configHash(config, catalog))) {
+      return toAvatar(current);
+    }
   }
 
-  const owned = await listOwnedAvatarItems(userId, opts);
   let config = current ? fitConfig(current.config as AvatarConfig, catalog) : undefined;
   if (!config || checkConfig(config, catalog, palettes, owned).length > 0) {
     config = randomConfig(catalog, palettes);

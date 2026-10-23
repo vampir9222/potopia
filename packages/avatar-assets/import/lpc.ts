@@ -42,17 +42,22 @@ export const TYPE_TO_CATEGORY: Record<string, Category> = {
   hat: "hat",
   headcover: "hat",
   bandana: "hat",
-  neck: "neck",
-  necklace: "neck",
-  charm: "neck",
   cape: "cape",
-  shoulders: "shoulders",
-  bauldron: "shoulders",
-  arms: "arms",
-  gloves: "arms",
-  bracers: "arms",
-  wrists: "arms",
   backpack: "backpack",
+};
+
+/** Têtes proposées : humaines, masculine et féminine. Les autres (animaux, monstres…) sont écartées. */
+export const ALLOWED_HEADS: readonly string[] = ["heads_human_male", "heads_human_female"];
+
+/**
+ * Catégories admises malgré des animations absentes chez LPC : animation dont on reprend les
+ * frames, ou null pour ne pas dessiner l'élément (comme le générateur LPC).
+ */
+export const ANIMATION_FALLBACKS: Partial<
+  Record<Category, Partial<Record<Animation, Animation | null>>>
+> = {
+  // Les capes n'ont ni sit, ni jump, ni emote : immobile derrière le corps pendant l'émotion.
+  cape: { emote: "idle", sit: null, jump: null },
 };
 
 const MATERIALS: readonly Material[] = ["body", "hair", "cloth", "eye", "metal", "wood"];
@@ -170,8 +175,13 @@ function framesOf(probe: Probe, file: string): number | string {
 }
 
 /** Vérifie les 5 planches d'un dossier : renvoie null si tout va bien, sinon le motif. */
-function checkDir(probe: Probe, dir: string, frames: Record<Animation, number>): string | null {
-  for (const anim of ANIMATIONS) {
+function checkDir(
+  probe: Probe,
+  dir: string,
+  frames: Record<Animation, number>,
+  animations: readonly Animation[],
+): string | null {
+  for (const anim of animations) {
     const result = framesOf(probe, `${dir}${anim}.png`);
     if (typeof result === "string") return `${anim} : ${result}`;
     if (result !== frames[anim]) return `${anim} : ${result} frames au lieu de ${frames[anim]}`;
@@ -239,8 +249,14 @@ export function buildCatalog(input: {
       reject("aucun calque");
       continue;
     }
+    if (cat === "head" && !ALLOWED_HEADS.includes(id)) {
+      reject("tête non retenue (humaines masculine et féminine seulement)");
+      continue;
+    }
+    const fallbacks = ANIMATION_FALLBACKS[cat];
+    const animations = ANIMATIONS.filter((a) => fallbacks?.[a] === undefined);
     if (def.animations) {
-      const missing = ANIMATIONS.filter((a) => !def.animations?.includes(a));
+      const missing = animations.filter((a) => !def.animations?.includes(a));
       if (missing.length > 0) {
         reject(`animation non déclarée : ${missing.join(", ")}`);
         continue;
@@ -279,7 +295,7 @@ export function buildCatalog(input: {
 
       if (!templated) {
         const dirs = dirsFor();
-        const problem = dirs.map((d) => checkDir(probe, d, frames)).find(Boolean);
+        const problem = dirs.map((d) => checkDir(probe, d, frames, animations)).find(Boolean);
         if (problem) {
           reasons.push(`${morph} : ${problem}`);
           continue;
@@ -296,7 +312,7 @@ export function buildCatalog(input: {
         const head = headByName.get(headName);
         if (!head?.morphs.includes(morph)) continue;
         const dirs = dirsFor(segment);
-        const problem = dirs.map((d) => checkDir(probe, d, frames)).find(Boolean);
+        const problem = dirs.map((d) => checkDir(probe, d, frames, animations)).find(Boolean);
         if (problem) {
           lastProblem = problem;
           continue;
@@ -319,7 +335,7 @@ export function buildCatalog(input: {
     }
     if (reasons.length > 0) partial.push({ id, reason: reasons.join(" ; ") });
 
-    for (const dir of used) for (const anim of ANIMATIONS) files.add(`${dir}${anim}.png`);
+    for (const dir of used) for (const anim of animations) files.add(`${dir}${anim}.png`);
     const item: CatalogItem = {
       id,
       category: cat,
@@ -331,6 +347,7 @@ export function buildCatalog(input: {
       tags: def.tags ?? [],
       requiredTags: def.required_tags ?? [],
       ...(templated ? { headPaths, heads } : {}),
+      ...(fallbacks ? { fallbacks } : {}),
       unlock: "free",
     };
     items.push(item);

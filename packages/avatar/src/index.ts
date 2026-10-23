@@ -29,6 +29,7 @@ export {
   itemIndex,
   optionsFor,
   ownColorSlots,
+  PREFERRED_HEADS,
   REQUIRED_CATEGORIES,
   skinChoices,
   withoutCategory,

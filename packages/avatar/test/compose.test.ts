@@ -112,6 +112,20 @@ describe("compositeur", () => {
     );
   });
 
+  it("reprend les frames d'une autre animation, ou ne dessine pas, pour une cape incomplète", async () => {
+    const config = baseConfig({
+      items: { body: { id: "body" }, head: { id: "head_human" }, cape: { id: "cloak" } },
+    });
+    const load = fakeLoader({ "cloak/": pixel("#336699") });
+    const sheet = await composeSheet(config, catalog, palettes, load);
+    const cloakFiles = load.calls.filter((f) => f.startsWith("cloak/"));
+    expect(cloakFiles.sort()).toEqual(["cloak/idle.png", "cloak/idle.png", "cloak/walk.png"]);
+    // emote (ligne 16) : frame de idle ; sit (ligne 8) et jump (ligne 12) : rien.
+    expect(rgbaAt(sheet, 0, 16 * 64)).toEqual([0x33, 0x66, 0x99, 255]);
+    expect(rgbaAt(sheet, 0, 8 * 64)[3]).toBe(0);
+    expect(rgbaAt(sheet, 0, 12 * 64)[3]).toBe(0);
+  });
+
   it("mélange un pixel semi-transparent avec le dessous", async () => {
     const config = baseConfig({ items: { body: { id: "body" }, head: { id: "head_human" } } });
     const load = fakeLoader({ "body/": pixel("#000000"), "head/": pixel("#ffffff", 128) });
