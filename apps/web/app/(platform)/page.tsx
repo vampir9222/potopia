@@ -19,7 +19,8 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    // La place prend toute la hauteur restante de la fenêtre (sur grand écran, la page y tient).
+    <div className="flex min-h-[calc(100dvh-6.5rem)] flex-col gap-4 lg:h-[calc(100dvh-6.5rem)]">
       <Card title="Apps">
         {apps.length > 0 ? (
           <AppGrid apps={apps} />
@@ -29,13 +30,14 @@ export default async function DashboardPage() {
       </Card>
       <Card
         title="La place"
+        className="flex min-h-0 flex-1 flex-col"
         action={
           <Link href="/credits" className="text-muted hover:text-text text-xs">
             Crédits des graphismes
           </Link>
         }
       >
-        <Place initial={place} layout={avatarLayout} />
+        <Place initial={place} layout={avatarLayout} className="flex-1" />
       </Card>
     </div>
   );

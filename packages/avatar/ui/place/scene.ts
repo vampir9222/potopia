@@ -1,12 +1,16 @@
 /** Décor de la place, dessiné en code : herbe, chemin, fontaine, arbres, bancs, fleurs. */
 import type { Rect, Rng, World } from "./sim";
 
-export const SCENE_HEIGHT = 280;
+/** Hauteur minimale de la scène ; elle grandit avec la place disponible. */
+export const MIN_SCENE_HEIGHT = 280;
+/** Bande du fond (arbres), au-dessus de la zone de marche. */
+const BACK = 112;
 
 /** Élément de décor trié avec les personnages selon `y` (le bas de l'objet). */
 export type Prop = { kind: "tree" | "fountain" | "bench"; x: number; y: number };
 
-export type Scene = { world: World; props: Prop[] };
+/** `plaza` : centre de la fontaine, autour duquel se placent le chemin et les bancs. */
+export type Scene = { world: World; props: Prop[]; plaza: { x: number; y: number } };
 
 /** Générateur pseudo-aléatoire déterministe : le décor ne change pas d'un rafraîchissement à l'autre. */
 export function seeded(seed: number): Rng {
@@ -14,11 +18,13 @@ export function seeded(seed: number): Rng {
   return () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
 }
 
-export function buildScene(width: number): Scene {
-  const height = SCENE_HEIGHT;
-  const cx = Math.round(width / 2);
-  const fountain: Rect = { x: cx - 38, y: 168, w: 76, h: 34 };
-  const props: Prop[] = [{ kind: "fountain", x: cx, y: fountain.y + fountain.h }];
+export function buildScene(width: number, rawHeight: number): Scene {
+  const height = Math.max(MIN_SCENE_HEIGHT, Math.round(rawHeight));
+  const walk: Rect = { x: 24, y: BACK, w: Math.max(0, width - 48), h: height - BACK - 12 };
+  // Fontaine un peu au-dessus du milieu de la zone de marche (185 px pour 280 px de haut).
+  const plaza = { x: Math.round(width / 2), y: Math.round(BACK + walk.h * 0.47) };
+  const fountain: Rect = { x: plaza.x - 38, y: plaza.y - 17, w: 76, h: 34 };
+  const props: Prop[] = [{ kind: "fountain", x: plaza.x, y: fountain.y + fountain.h }];
   const obstacles: Rect[] = [fountain];
 
   // Arbres au fond, espacés régulièrement, sans gêner la marche.
@@ -26,22 +32,24 @@ export function buildScene(width: number): Scene {
   for (let x = 40; x < width - 20; x += 150 + Math.floor(rng() * 60)) {
     props.push({ kind: "tree", x, y: 92 + Math.floor(rng() * 10) });
   }
-  // Deux bancs de part et d'autre de la fontaine, si la place est assez large.
-  if (width > 420) {
-    for (const bx of [cx - 150, cx + 150]) {
-      props.push({ kind: "bench", x: bx, y: 150 });
-      obstacles.push({ x: bx - 22, y: 138, w: 44, h: 12 });
+  // Scène haute : quelques arbres en bas, sur les côtés (le tronc gêne la marche).
+  if (height >= 400) {
+    for (const x of [60, width - 70, Math.round(width * 0.28), Math.round(width * 0.74)]) {
+      const y = height - 18 - Math.floor(rng() * 24);
+      if (Math.abs(x - plaza.x) < 140) continue;
+      props.push({ kind: "tree", x, y });
+      obstacles.push({ x: x - 8, y: y - 10, w: 16, h: 12 });
     }
   }
-  return {
-    world: {
-      width,
-      height,
-      walk: { x: 24, y: 112, w: Math.max(0, width - 48), h: height - 124 },
-      obstacles,
-    },
-    props,
-  };
+  // Deux bancs de part et d'autre de la fontaine, si la place est assez large.
+  if (width > 420) {
+    for (const bx of [plaza.x - 150, plaza.x + 150]) {
+      const by = plaza.y - 35;
+      props.push({ kind: "bench", x: bx, y: by });
+      obstacles.push({ x: bx - 22, y: by - 12, w: 44, h: 12 });
+    }
+  }
+  return { world: { width, height, walk, obstacles }, props, plaza };
 }
 
 type Ctx = CanvasRenderingContext2D;
@@ -56,35 +64,36 @@ const STONE_DARK = "#6f7882";
 const WATER = "#5fb3e0";
 
 /** Sol (fond fixe, dessiné une fois par taille de scène). */
-export function drawGround(ctx: Ctx, width: number): void {
-  const height = SCENE_HEIGHT;
+export function drawGround(ctx: Ctx, scene: Scene): void {
+  const { width, height } = scene.world;
+  const { x: cx, y: cy } = scene.plaza;
   ctx.fillStyle = GRASS;
   ctx.fillRect(0, 0, width, height);
   // Bande plus sombre au fond, pour la profondeur.
   ctx.fillStyle = GRASS_DARK;
   ctx.fillRect(0, 0, width, 70);
 
-  const cx = Math.round(width / 2);
   // Chemin horizontal et dalle ronde autour de la fontaine.
+  const pathTop = cy + 20;
   ctx.fillStyle = PATH_EDGE;
-  ctx.fillRect(0, 205, width, 30);
+  ctx.fillRect(0, pathTop, width, 30);
   ctx.fillStyle = PATH;
-  ctx.fillRect(0, 207, width, 26);
+  ctx.fillRect(0, pathTop + 2, width, 26);
   ctx.beginPath();
-  ctx.ellipse(cx, 192, 100, 44, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy + 7, 100, 44, 0, 0, Math.PI * 2);
   ctx.fillStyle = PATH_EDGE;
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(cx, 192, 96, 41, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy + 7, 96, 41, 0, 0, Math.PI * 2);
   ctx.fillStyle = PATH;
   ctx.fill();
 
   // Touffes d'herbe et fleurs, en pixels.
-  const rng = seeded(width);
-  for (let i = 0; i < width / 6; i++) {
+  const rng = seeded(width + height);
+  for (let i = 0; i < (width * height) / 1700; i++) {
     const x = Math.floor(rng() * width);
     const y = 70 + Math.floor(rng() * (height - 70));
-    if (y > 200 && y < 240) continue;
+    if (y > pathTop - 5 && y < pathTop + 35) continue;
     ctx.fillStyle = rng() < 0.5 ? GRASS_DARK : GRASS_LIGHT;
     ctx.fillRect(x, y, 2, 1);
     ctx.fillRect(x + 1, y - 1, 1, 1);

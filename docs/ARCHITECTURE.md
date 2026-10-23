@@ -312,7 +312,7 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 
 **La place** (sous la grille des apps).
 
-- Scène canvas de 280 px de haut, vue de dessus, décor dessiné en code (arbres, fontaine, bancs,
+- Scène canvas qui remplit la hauteur restante de l'écran (280 px au moins), vue de dessus, décor dessiné en code (arbres, fontaine, bancs,
   chemin). Simulation 100 % locale (`ui/place/sim.ts`) : chaque navigateur a sa propre scène.
 - Errance : marcher vers un point (horizontale puis verticale, donc 4 directions), pause, repartir.
   Tri d'affichage par position verticale, décor compris.

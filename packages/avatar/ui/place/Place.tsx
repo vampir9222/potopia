@@ -6,7 +6,15 @@ import type { SheetLayout } from "../../src/compose";
 import { drawFrame, frameAt, prefersReducedMotion } from "../animation";
 import { loadSheet } from "../browser";
 import { CLICK_LINES, reactionsFor, type PlaceEvent } from "./reactions";
-import { buildScene, drawBubble, drawGround, drawProp, SCENE_HEIGHT, type Scene } from "./scene";
+import { cx } from "@app/ui";
+import {
+  buildScene,
+  drawBubble,
+  drawGround,
+  drawProp,
+  MIN_SCENE_HEIGHT,
+  type Scene,
+} from "./scene";
 import { act, animationOf, createWalker, INACTIVE_AFTER_MS, say, step, type Walker } from "./sim";
 
 export type PlaceMemberView = {
@@ -25,6 +33,8 @@ type Props = {
   /** Route qui renvoie un `PlaceSnapshot` (`?since=` : événements depuis cette date). */
   endpoint?: string;
   pollMs?: number;
+  /** Taille du cadre (`flex-1`…) : la scène remplit sa hauteur, 280 px au moins. */
+  className?: string;
 };
 
 type Confetti = { x: number; y: number; vx: number; vy: number; color: string; until: number };
@@ -36,7 +46,13 @@ const CONFETTI_COLORS = ["#f4d35e", "#ee6c9a", "#5fb3e0", "#7fca86", "#9b7bf0"];
  * La place : les avatars des membres se promènent sous la grille des apps. Scène décorative
  * (aria-hidden) : les mêmes informations restent accessibles dans le fil d'activité.
  */
-export function Place({ initial, layout, endpoint = "/api/place", pollMs = 30_000 }: Props) {
+export function Place({
+  initial,
+  layout,
+  endpoint = "/api/place",
+  pollMs = 30_000,
+  className,
+}: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -50,7 +66,7 @@ export function Place({ initial, layout, endpoint = "/api/place", pollMs = 30_00
     const rng = Math.random;
     const entries = new Map<string, Entry>();
     let confetti: Confetti[] = [];
-    let scene: Scene = buildScene(wrap.clientWidth || 600);
+    let scene: Scene = buildScene(wrap.clientWidth || 600, wrap.clientHeight);
     let ground: HTMLCanvasElement | null = null;
     let since = initial.now;
     let hovered: string | null = null;
@@ -117,22 +133,22 @@ export function Place({ initial, layout, endpoint = "/api/place", pollMs = 30_00
 
     const resize = () => {
       const width = Math.max(200, Math.floor(wrap.clientWidth));
+      scene = buildScene(width, wrap.clientHeight);
+      const { height, walk } = scene.world;
       const dpr = window.devicePixelRatio || 1;
       canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(SCENE_HEIGHT * dpr);
+      canvas.height = Math.round(height * dpr);
       canvas.style.width = `${width}px`;
-      scene = buildScene(width);
+      canvas.style.height = `${height}px`;
       ground = document.createElement("canvas");
       ground.width = width;
-      ground.height = SCENE_HEIGHT;
+      ground.height = height;
       const g = ground.getContext("2d");
-      if (g) drawGround(g, width);
+      if (g) drawGround(g, scene);
       // Personnages hors de la nouvelle zone : replacés.
       for (const { walker } of entries.values()) {
-        walker.x = Math.min(
-          Math.max(walker.x, scene.world.walk.x),
-          scene.world.walk.x + scene.world.walk.w,
-        );
+        walker.x = Math.min(Math.max(walker.x, walk.x), walk.x + walk.w);
+        walker.y = Math.min(Math.max(walker.y, walk.y), walk.y + walk.h);
         walker.target = null;
       }
     };
@@ -288,13 +304,15 @@ export function Place({ initial, layout, endpoint = "/api/place", pollMs = 30_00
     <div
       ref={wrapRef}
       aria-hidden
-      className="rounded-theme overflow-hidden border border-(--frame)"
+      style={{ minHeight: MIN_SCENE_HEIGHT }}
+      className={cx("rounded-theme relative overflow-hidden border border-(--frame)", className)}
     >
+      {/* En absolu : le canvas ne pousse pas son cadre, qui garde la hauteur que lui donne la page. */}
       <canvas
         ref={canvasRef}
-        height={SCENE_HEIGHT}
-        className="block w-full"
-        style={{ height: SCENE_HEIGHT, imageRendering: "pixelated" }}
+        height={MIN_SCENE_HEIGHT}
+        className="absolute inset-0 block"
+        style={{ imageRendering: "pixelated" }}
       />
     </div>
   );
