@@ -1,7 +1,7 @@
 import { getUsersByIds } from "@app/core";
 import { listIdeaAuthorIds, listIdeas, RARITIES, type Rarity } from "@app/ideas";
 import { IdeasAdminList } from "@app/ideas/ui";
-import { Card } from "@app/ui";
+import { buttonClasses, Card } from "@app/ui";
 import type { Metadata } from "next";
 import { getCurrentAdmin } from "@/lib/session";
 
@@ -28,7 +28,19 @@ export default async function AdminIdeasPage({
   const names = new Map(authors.map((u) => [u.id, u.name]));
 
   return (
-    <Card title="Boîte à idées">
+    <Card
+      title="Boîte à idées"
+      action={
+        // Téléchargement de fichier : un vrai <a>, pas <Link> (pas de navigation côté client).
+        <a
+          href="/api/admin/ideas/export"
+          download
+          className={buttonClasses({ variant: "secondary", size: "sm" })}
+        >
+          Exporter (JSON)
+        </a>
+      }
+    >
       <IdeasAdminList
         basePath="/admin/ideas"
         filters={filters}

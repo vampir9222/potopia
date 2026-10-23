@@ -1,6 +1,6 @@
 import { ForbiddenError, isAdmin } from "@app/core";
 import { db } from "@app/db";
-import { presignGet } from "@app/storage";
+import { MAX_EXPIRES_IN, presignGet } from "@app/storage";
 import { z } from "zod";
 import { RARITIES, type Rarity } from "./validation";
 
@@ -65,4 +65,23 @@ export async function listIdeaAuthorIds(reader: Reader): Promise<string[]> {
   assertAdmin(reader);
   const rows = await db.idea.findMany({ distinct: ["authorId"], select: { authorId: true } });
   return rows.map((r) => r.authorId);
+}
+
+export type ExportedIdea = Idea & { imageUrl: string | null };
+
+/**
+ * Toutes les idées, pour l'export admin, avec une URL présignée de leur image (15 min, le maximum).
+ * Lève ForbiddenError pour un non-admin.
+ */
+export async function exportIdeas(reader: Reader): Promise<ExportedIdea[]> {
+  assertAdmin(reader);
+  const rows = await db.idea.findMany({ orderBy: [{ createdAt: "desc" }, { id: "desc" }] });
+  return Promise.all(
+    rows.map(async (idea) => ({
+      ...idea,
+      imageUrl: idea.imageKey
+        ? await presignGet({ key: idea.imageKey, expiresIn: MAX_EXPIRES_IN })
+        : null,
+    })),
+  );
 }

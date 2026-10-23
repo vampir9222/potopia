@@ -1,4 +1,12 @@
-export { getIdea, getIdeaImageUrl, listIdeaAuthorIds, listIdeas, type Idea } from "./admin";
+export {
+  exportIdeas,
+  getIdea,
+  getIdeaImageUrl,
+  listIdeaAuthorIds,
+  listIdeas,
+  type ExportedIdea,
+  type Idea,
+} from "./admin";
 export { InvalidImageError } from "./errors";
 export { countIdeas, createUploadUrl, submitIdea } from "./submit";
 export {
