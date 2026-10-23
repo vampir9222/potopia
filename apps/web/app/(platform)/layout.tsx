@@ -23,15 +23,19 @@ export default async function PlatformLayout({ children }: { children: ReactNode
     getActivityFeed(),
   ]);
 
-  // Colonne de gauche (compte puis activité) : fixe sur grand écran, dans le menu latéral sur mobile.
-  const sidePanels = (
-    <div className="flex flex-col gap-4">
+  // Colonne de gauche (compte puis activité) : fixe sur grand écran, où l'activité prend la hauteur
+  // restante de l'écran ; dans le menu latéral sur mobile, où elle garde ses 10 lignes.
+  const sidePanels = (fill: boolean) => (
+    <div className={fill ? "flex h-full flex-col gap-4" : "flex flex-col gap-4"}>
       <AccountPanel user={user}>
         <BalanceCard balance={balance} />
         <SideNav isAdmin={user.role === "admin"} />
       </AccountPanel>
-      <Card title="Activité récente">
-        <ActivityFeed items={feed} />
+      <Card
+        title="Activité récente"
+        className={fill ? "flex min-h-40 flex-1 flex-col overflow-hidden" : undefined}
+      >
+        <ActivityFeed items={feed} fill={fill} />
       </Card>
     </div>
   );
@@ -41,7 +45,7 @@ export default async function PlatformLayout({ children }: { children: ReactNode
       <Header
         user={user}
         signOut={signOut}
-        menuButton={<MobileMenu>{sidePanels}</MobileMenu>}
+        menuButton={<MobileMenu>{sidePanels(false)}</MobileMenu>}
         actions={
           <>
             <VolumeControl />
@@ -58,8 +62,8 @@ export default async function PlatformLayout({ children }: { children: ReactNode
       />
       {/* Plein écran : la colonne de gauche reste en place au défilement, le reste pour les apps. */}
       <div className="flex gap-6 px-4 py-6 lg:px-6">
-        <aside className="animate-rise sticky top-20 hidden max-h-[calc(100dvh-6.5rem)] w-80 shrink-0 self-start overflow-y-auto lg:block">
-          {sidePanels}
+        <aside className="animate-rise sticky top-20 hidden h-[calc(100dvh-6.5rem)] w-80 shrink-0 self-start overflow-y-auto lg:block">
+          {sidePanels(true)}
         </aside>
         <main className="page-stagger min-w-0 flex-1">{children}</main>
       </div>
