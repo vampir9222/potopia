@@ -21,6 +21,7 @@
     "@app/economy": "workspace:*",
     "@app/ideas": "workspace:*",
     "@app/storage": "workspace:*",
+    "@app/tcg": "workspace:*",
     "@app/trois": "workspace:*",
     "@app/ui": "workspace:*",
     "better-auth": "1.7.12",

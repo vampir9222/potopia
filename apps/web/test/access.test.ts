@@ -44,6 +44,14 @@ vi.mock("next/navigation", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 // Tâches après la réponse (avatars manquants) : ignorées en test.
 vi.mock("next/server", () => ({ after: () => undefined }));
+// next/font est transformé à la compilation par Next : hors Next, une police factice suffit.
+vi.mock("next/font/google", () => {
+  const font = () => ({ className: "", variable: "", style: { fontFamily: "" } });
+  const names = ["Anton", "Bangers", "Caveat", "Cinzel", "Comic_Neue", "EB_Garamond", "Lato"];
+  names.push("Libre_Franklin", "Nunito", "Orbitron", "Press_Start_2P", "Space_Grotesk");
+  names.push("Spectral", "VT323");
+  return Object.fromEntries(names.map((name) => [name, font]));
+});
 
 const { markAllNotificationsAsRead, markNotificationAsRead } =
   await import("@/app/actions/notifications");
@@ -59,6 +67,10 @@ const { default: AdminIdeasPage } = await import("@/app/(platform)/admin/ideas/p
 const { default: AdminIdeaPage } = await import("@/app/(platform)/admin/ideas/[id]/page");
 const uploadUrlRoute = await import("@/app/api/ideas/upload-url/route");
 const ideaImageRoute = await import("@/app/api/admin/ideas/[id]/image/route");
+const ideasExportRoute = await import("@/app/api/admin/ideas/export/route");
+const cardVotesRoute = await import("@/app/api/admin/cards/votes/route");
+const { default: AdminCardsPage } = await import("@/app/(platform)/admin/cards/page");
+const { rateDesignAction } = await import("@/app/(platform)/admin/cards/actions");
 const troisGameRoute = await import("@/app/api/trois/game/route");
 const troisGuessRoute = await import("@/app/api/trois/guess/route");
 const troisPracticeRoute = await import("@/app/api/trois/practice/route");
@@ -76,6 +88,14 @@ const ADMIN_ID = "100000000000000001";
 const MEMBER_ID = "100000000000000002";
 const discord = new FakeDiscord();
 
+function rateForm(stars = "4"): FormData {
+  const form = new FormData();
+  form.set("designId", "pixel");
+  form.set("stars", stars);
+  form.set("comment", "Sympa");
+  return form;
+}
+
 function adjustForm(userId: string, amount = 100): FormData {
   const form = new FormData();
   form.set("userId", userId);
@@ -90,6 +110,7 @@ function adjustForm(userId: string, amount = 100): FormData {
 const actions: Record<string, () => Promise<unknown>> = {
   markNotificationAsRead: () => markNotificationAsRead("inconnue"),
   markAllNotificationsAsRead: () => markAllNotificationsAsRead(),
+  rateDesignAction: () => rateDesignAction({ status: "idle" }, rateForm()),
   adjustBalance: () => adjustBalance({ status: "idle" }, adjustForm("inconnu")),
   sendIdea: () => sendIdea({ status: "idle" }, ideaForm()),
   saveAvatarAction: () => saveAvatarAction({}),
@@ -127,6 +148,8 @@ const requestIdeaImage = () =>
 const routes: Record<string, () => Promise<Response>> = {
   "POST /api/ideas/upload-url": requestUploadUrl,
   "GET /api/admin/ideas/[id]/image": requestIdeaImage,
+  "GET /api/admin/ideas/export": () => ideasExportRoute.GET(withCookie("/api/admin/ideas/export")),
+  "GET /api/admin/cards/votes": () => cardVotesRoute.GET(withCookie("/api/admin/cards/votes")),
   "GET /api/trois/game": () => troisGameRoute.GET(withCookie("/api/trois/game")),
   "POST /api/trois/guess": () =>
     troisGuessRoute.POST(withCookie("/api/trois/guess", { guess: "faire" })),
@@ -170,6 +193,7 @@ const adminPages: Record<string, () => Promise<unknown>> = {
   "admin/economy/page": () => AdminEconomyPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/page": () => AdminIdeasPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/[id]/page": () => AdminIdeaPage({ params: Promise.resolve({ id: ideaId }) }),
+  "admin/cards/page": () => AdminCardsPage(),
 };
 
 async function signIn(discordId: string): Promise<string> {
@@ -228,6 +252,29 @@ describe("server actions", () => {
     expect(state.status).toBe("ok");
     expect(await getBalance(memberId)).toBe(250);
     expect(await countUnread(memberId)).toBe(1);
+  });
+
+  it("rateDesignAction refuse un membre non admin (403)", async () => {
+    await signIn(MEMBER_ID);
+    await expect(rateDesignAction({ status: "idle" }, rateForm())).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+  });
+
+  it("rateDesignAction enregistre la note de l'admin, et refuse une note invalide", async () => {
+    await signIn(ADMIN_ID);
+    expect((await rateDesignAction({ status: "idle" }, rateForm())).status).toBe("ok");
+    const invalid = await rateDesignAction({ status: "idle" }, rateForm("9"));
+    expect(invalid).toMatchObject({ status: "error", message: "Note de 1 à 5 étoiles." });
+
+    const res = await cardVotesRoute.GET(withCookie("/api/admin/cards/votes"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    const body = await res.json();
+    expect(body.designs.find((d: { id: string }) => d.id === "pixel")).toMatchObject({
+      average: 4,
+      votes: [{ stars: 4, comment: "Sympa" }],
+    });
   });
 
   it("adjustBalance renvoie une erreur lisible pour un débit trop élevé", async () => {
@@ -356,5 +403,27 @@ describe("route handlers", () => {
     const next = { ...config, eyes: config.eyes === "ulpc.green" ? "ulpc.blue" : "ulpc.green" };
     expect(await saveAvatarAction(next)).toEqual({ status: "ok" });
     expect((await getAvatar(userId))?.config).toEqual(next);
+  });
+
+  it("l'export des idées est refusé à un membre non admin (403)", async () => {
+    await signIn(MEMBER_ID);
+    expect((await ideasExportRoute.GET(withCookie("/api/admin/ideas/export"))).status).toBe(403);
+  });
+
+  it("l'export des idées renvoie un fichier JSON à un admin, jamais mis en cache", async () => {
+    await signIn(ADMIN_ID);
+    const res = await ideasExportRoute.GET(withCookie("/api/admin/ideas/export"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-disposition")).toMatch(/^attachment; filename="idees-/);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    const body = await res.json();
+    expect(body.count).toBe(1);
+    expect(body.ideas[0]).toMatchObject({
+      id: ideaId,
+      title: "Titre",
+      description: "Texte",
+      author: "Membre inconnu",
+      imageUrl: null,
+    });
   });
 });

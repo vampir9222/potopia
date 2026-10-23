@@ -10,6 +10,7 @@ const LABELS: Record<string, string> = {
   admin: "Administration",
   avatar: "Mon avatar",
   credits: "Crédits",
+  cards: "Carte design",
   economy: "Monnaie",
   ideas: "Boîte à idées",
   trois: "TROIS",
