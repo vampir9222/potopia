@@ -7,6 +7,7 @@
 @source "../../../packages/core/ui";
 @source "../../../packages/economy/ui";
 @source "../../../packages/ideas/ui";
+@source "../../../games/tcg/ui";
 @source "../../../games/trois/ui";
 
 /* Boule de musique (SpinOrb) : halo vert pendant la lecture. */
