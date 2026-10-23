@@ -1,12 +1,22 @@
 import type { CSSProperties, ReactNode } from "react";
 import { type CardData, font } from "./cards";
 import { faction, PremiumArt } from "./premium";
+import {
+  ExtraArt,
+  ExtraDefs,
+  ExtraFrame,
+  type ExtraStyle,
+  extraName,
+  isExtraStyle,
+  isPaperStyle,
+} from "./snap-styles";
 import { Tilt } from "./Tilt";
 
 /*
  * Variantes « Snap » : illustration plein cadre, coût dans un rond bleu, puissance dans un hexagone
- * jaune, effet révélé au survol. Cinq styles (classique, encre, néon, pixel, prisme) et une échelle
- * de finitions qui va jusqu'aux raretés Secrète (SR) et Super secrète (SSR).
+ * jaune, effet révélé au survol. Cinq styles ici (classique, encre, néon, pixel, prisme), dix de plus
+ * dans snap-styles.tsx, et une échelle de finitions jusqu'aux raretés Secrète (SR) et Super secrète
+ * (SSR).
  * La finition ne change que le look, jamais les stats.
  */
 
@@ -14,7 +24,7 @@ const W = 300;
 const H = 420;
 const R = 22;
 
-export type SnapStyle = "classic" | "ink" | "neon" | "pixel" | "prism";
+export type SnapStyle = "classic" | "ink" | "neon" | "pixel" | "prism" | ExtraStyle;
 export type SnapFinish = "common" | "uncommon" | "rare" | "legendary" | "sr" | "ssr";
 
 export const SNAP_FINISH_LABELS: Record<SnapFinish, string> = {
@@ -55,6 +65,7 @@ export function SnapDefs() {
           <feMorphology operator="dilate" radius="4" />
         </filter>
       </defs>
+      <ExtraDefs />
     </svg>
   );
 }
@@ -137,7 +148,7 @@ function Power({ value }: { value: number }) {
 }
 
 /** Anneau de cadre : n'importe quel fond (dégradé, or…) découpé en bordure. */
-function Ring({
+export function Ring({
   background,
   width = 8,
   style,
@@ -165,7 +176,7 @@ function Ring({
   );
 }
 
-const GOLD =
+export const GOLD =
   "linear-gradient(155deg, #fff7d1 0%, #f2c84b 18%, #9c6a12 36%, #ffe9a3 52%, #c38a24 70%, #fff3c0 86%, #8a5a10 100%)";
 const PEARL =
   "linear-gradient(155deg, #ffffff 0%, #ffd6ec 20%, #d7b8ff 40%, #b8ecff 60%, #fff4d6 80%, #ffffff 100%)";
@@ -188,6 +199,7 @@ const FINISH_ACCENT: Record<SnapFinish, string> = {
 
 /** Illustration selon le style : photo, encre, néon ou mosaïque de pixels. */
 function StyledArt({ card, style }: { card: CardData; style: SnapStyle }) {
+  if (isExtraStyle(style)) return <ExtraArt card={card} style={style} />;
   const f = faction(card.tag);
   if (style === "ink") {
     return (
@@ -441,6 +453,7 @@ function Frame({ style, finish, card }: { style: SnapStyle; finish: SnapFinish; 
       </>
     );
   }
+  if (isExtraStyle(style)) return <ExtraFrame style={style} finish={finish} card={card} />;
   if (style === "ink") {
     return (
       <>
@@ -509,6 +522,7 @@ function nameStyle(
   finish: SnapFinish,
   len: number,
 ): { className?: string; css: CSSProperties } {
+  if (isExtraStyle(style)) return extraName(style, finish, len);
   const size = len > 16 ? 23 : 29;
   if (style === "pixel") {
     return {
@@ -575,7 +589,8 @@ export function SnapCard({
 }) {
   const name = nameStyle(style, finish, card.title.length);
   const accent = FINISH_ACCENT[finish];
-  const radius = style === "pixel" ? 4 : R;
+  const radius = style === "pixel" ? 4 : style === "kawaii" ? 30 : R;
+  const paper = isPaperStyle(style);
   return (
     <Tilt radius={radius}>
       <div
@@ -616,8 +631,9 @@ export function SnapCard({
             inset: 0,
             borderRadius: radius,
             pointerEvents: "none",
-            background:
-              "linear-gradient(to top, rgb(6 7 18 / 0.92) 0%, rgb(6 7 18 / 0.55) 22%, transparent 42%)",
+            background: paper
+              ? "linear-gradient(to top, rgb(246 240 228 / 0.96) 0%, rgb(246 240 228 / 0.6) 18%, transparent 34%)"
+              : "linear-gradient(to top, rgb(6 7 18 / 0.92) 0%, rgb(6 7 18 / 0.55) 22%, transparent 42%)",
           }}
         />
         {(finish === "rare" || finish === "sr" || finish === "ssr") && <div className="tcg-holo" />}
@@ -662,12 +678,14 @@ export function SnapCard({
             } as CSSProperties
           }
         >
-          <div
-            className={name.className}
-            style={{ lineHeight: 1.02, textTransform: "uppercase", ...name.css }}
-          >
-            {card.title}
-          </div>
+          {style !== "borderless" && (
+            <div
+              className={name.className}
+              style={{ lineHeight: 1.02, textTransform: "uppercase", ...name.css }}
+            >
+              {card.title}
+            </div>
+          )}
           <div
             style={{
               marginTop: 7,
@@ -675,14 +693,45 @@ export function SnapCard({
               fontSize: 10,
               fontWeight: 700,
               letterSpacing: 2.4,
-              color: accent,
+              color: paper ? "#5a4632" : accent,
               textTransform: "uppercase",
-              textShadow: "0 1px 2px #000",
+              textShadow: paper ? "none" : "0 1px 2px #000",
             }}
           >
             {card.tag} · {SNAP_FINISH_LABELS[finish]}
           </div>
         </div>
+        {style === "borderless" && (
+          <div
+            className="tcg-layer tcg-hide-on-reveal"
+            style={
+              {
+                "--z": "48px",
+                position: "absolute",
+                left: 6,
+                top: 80,
+                bottom: 52,
+                display: "flex",
+                alignItems: "flex-end",
+                pointerEvents: "none",
+              } as CSSProperties
+            }
+          >
+            <div
+              className={name.className}
+              style={{
+                writingMode: "vertical-rl",
+                transform: "rotate(180deg)",
+                lineHeight: 1,
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+                ...name.css,
+              }}
+            >
+              {card.title}
+            </div>
+          </div>
+        )}
         <div
           className="tcg-layer tcg-reveal"
           style={

@@ -89,6 +89,56 @@ export const DESIGNS = [
     summary:
       "Les 6 finitions : la légendaire brille d'un éclat doré, la SR sort du cadre, la SSR vole en éclats au survol.",
   },
+  {
+    id: "snap-gold",
+    title: "Snap · Or massif",
+    summary: "Tout en or : illustration dorée, cadre et nom en or massif.",
+  },
+  {
+    id: "snap-kawaii",
+    title: "Snap · Kawaii",
+    summary: "Cadre pastel arrondi, autocollants étoiles et cœurs, nom tout rond.",
+  },
+  {
+    id: "snap-popart",
+    title: "Snap · Pop art",
+    summary: "Couleurs postérisées, trame rouge, cadre jaune et noir façon BD pop.",
+  },
+  {
+    id: "snap-glitch",
+    title: "Snap · Glitch",
+    summary: "Couches rouge et cyan décalées ; au survol, des tranches de l'image sautent.",
+  },
+  {
+    id: "snap-watercolor",
+    title: "Snap · Aquarelle",
+    summary: "Illustration aux bords qui bavent sur papier, nom manuscrit.",
+  },
+  {
+    id: "snap-sketch",
+    title: "Snap · Croquis",
+    summary: "Photo transformée en dessin au crayon sur papier ligné.",
+  },
+  {
+    id: "snap-cosmic",
+    title: "Snap · Cosmique",
+    summary: "Le sujet flotte dans l'espace, nébuleuse et étoiles, cadre violet lumineux.",
+  },
+  {
+    id: "snap-borderless",
+    title: "Snap · Sans bordure",
+    summary: "Aucun cadre : l'image d'abord, nom géant à la verticale.",
+  },
+  {
+    id: "snap-stained",
+    title: "Snap · Vitrail",
+    summary: "Couleurs en aplats et plombs noirs, cadre en verre coloré.",
+  },
+  {
+    id: "snap-theme",
+    title: "Snap · Thème du site",
+    summary: "Cadre et nom aux couleurs du thème choisi (Classique, Fantasy, RGB…).",
+  },
 ] as const;
 
 export type DesignId = (typeof DESIGNS)[number]["id"];

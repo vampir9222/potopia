@@ -32,6 +32,16 @@ const ORDER: DesignId[] = [
   "snap-pixel",
   "snap-prism",
   "snap-raretes",
+  "snap-gold",
+  "snap-kawaii",
+  "snap-popart",
+  "snap-glitch",
+  "snap-watercolor",
+  "snap-sketch",
+  "snap-cosmic",
+  "snap-borderless",
+  "snap-stained",
+  "snap-theme",
 ];
 
 const SNAP_STYLES: Partial<Record<DesignId, SnapStyle>> = {
@@ -40,6 +50,16 @@ const SNAP_STYLES: Partial<Record<DesignId, SnapStyle>> = {
   "snap-neon": "neon",
   "snap-pixel": "pixel",
   "snap-prism": "prism",
+  "snap-gold": "gold",
+  "snap-kawaii": "kawaii",
+  "snap-popart": "popart",
+  "snap-glitch": "glitch",
+  "snap-watercolor": "watercolor",
+  "snap-sketch": "sketch",
+  "snap-cosmic": "cosmic",
+  "snap-borderless": "borderless",
+  "snap-stained": "stained",
+  "snap-theme": "theme",
 };
 const LADDER: SnapFinish[] = ["common", "uncommon", "rare", "legendary", "sr", "ssr"];
 
@@ -173,6 +193,16 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
     case "snap-neon":
     case "snap-pixel":
     case "snap-prism":
+    case "snap-gold":
+    case "snap-kawaii":
+    case "snap-popart":
+    case "snap-glitch":
+    case "snap-watercolor":
+    case "snap-sketch":
+    case "snap-cosmic":
+    case "snap-borderless":
+    case "snap-stained":
+    case "snap-theme":
       return (
         <PremiumBoard>
           <SnapDefs />
