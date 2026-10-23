@@ -1,15 +1,13 @@
 import { getUsersByIds } from "@app/core";
-import { type Idea, listIdeas } from "@app/ideas";
-import { DESIGNS, listDesignVotes } from "@app/tcg";
+import { getIdea, type Idea, listIdeas } from "@app/ideas";
+import { DESIGNS, type DesignVote, listDesignVotes } from "@app/tcg";
 import { type CardData, DesignPreview, DesignRating } from "@app/tcg/ui";
 import { buttonClasses, Card } from "@app/ui";
 import { Star } from "lucide-react";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { getCurrentAdmin } from "@/lib/session";
 import { rateDesignAction } from "./actions";
-import { CardPicker } from "./CardPicker";
-import { CARD_COOKIE } from "./constants";
+import { SAMPLE_IDEA_ID } from "./constants";
 import { designFonts } from "./fonts";
 
 export const metadata: Metadata = { title: "Carte design" };
@@ -38,98 +36,66 @@ function toCard(idea: Idea, author: string): CardData {
   };
 }
 
-/** Cartes fictives quand la boîte est vide (développement local). */
-const SAMPLES: CardData[] = [
-  {
-    title: "Carte exemple",
-    flavor: "Une idée de la boîte.",
-    effect: "À la révélation : +2 puissance à une de tes cartes ici.",
-    tag: "Exemple",
-    rarity: "common",
-    cost: 2,
-    power: 4,
-    imageUrl: null,
-  },
-  {
-    title: "Autre exemple",
-    flavor: null,
-    effect: "Permanent : +1 puissance à tes autres cartes ici.",
-    tag: "Exemple",
-    rarity: "rare",
-    cost: 3,
-    power: 6,
-    imageUrl: null,
-  },
-  {
-    title: "Le lieu",
-    flavor: "Un endroit.",
-    effect: "Les cartes ici coûtent 1 de moins.",
-    tag: "Lieu",
-    rarity: "uncommon",
-    cost: 1,
-    power: 2,
-    imageUrl: null,
-  },
-];
+/** Carte fictive quand l'idée d'exemple n'existe pas (développement local). */
+const FALLBACK: CardData = {
+  title: "Carte exemple",
+  flavor: "Une idée de la boîte.",
+  effect: "À la révélation : −2 puissance à la carte adverse la plus forte ici.",
+  tag: "Exemple",
+  rarity: "common",
+  cost: 2,
+  power: 4,
+  imageUrl: null,
+  author: "Potopia",
+  serial: "01/01",
+};
 
 /** Moyenne des notes (0 étoile = commentaire sans note, ignoré), ou null sans note. */
-function average(stars: number[]): number | null {
-  const rated = stars.filter((n) => n > 0);
+function average(votes: DesignVote[]): number | null {
+  const rated = votes.filter((v) => v.stars > 0).map((v) => v.stars);
   return rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : null;
 }
 
-/** En dessous de ce seuil (moyenne), un design est écarté de la page. */
+/** En dessous de ce seuil (moyenne), un design est écarté de la liste principale. */
 const DISCARD_AT = 2;
 
-export default async function AdminCardsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ carte?: string }>;
-}) {
+export default async function AdminCardsPage() {
   const admin = await getCurrentAdmin();
-  const [{ items: ideas }, votes, params, jar] = await Promise.all([
+  const [sample, { items: ideas }, votes] = await Promise.all([
+    getIdea(admin, SAMPLE_IDEA_ID),
+    // Seulement pour le numéro de série de la carte ; aucune autre idée n'est envoyée à la page.
     listIdeas(admin, { limit: 100 }),
     listDesignVotes(admin),
-    searchParams,
-    cookies(),
   ]);
   const users = await getUsersByIds([
-    ...new Set([...ideas.map((i) => i.authorId), ...votes.map((v) => v.userId)]),
+    ...new Set([...(sample ? [sample.authorId] : []), ...votes.map((v) => v.userId)]),
   ]);
   const names = new Map(users.map((u) => [u.id, u.name]));
   const name = (id: string) => names.get(id) ?? "Membre inconnu";
 
-  // Numéro de série dans l'ordre d'envoi (la plus ancienne idée est la n° 01).
   const pad = (n: number) => String(n).padStart(2, "0");
-  const serials = new Map(
-    ideas.map((idea, i) => [idea.id, `${pad(ideas.length - i)}/${pad(ideas.length)}`]),
-  );
-  // Une seule carte remplit tous les designs : celle choisie (URL, puis cookie), sinon la
-  // première idée avec une image.
-  const wanted = params.carte ?? jar.get(CARD_COOKIE)?.value;
-  const sample = ideas.find((i) => i.id === wanted) ?? ideas.find((i) => i.imageKey) ?? ideas[0];
-  const cards = sample
-    ? [{ ...toCard(sample, name(sample.authorId)), serial: serials.get(sample.id) }]
-    : SAMPLES;
+  const rank = sample ? ideas.findIndex((i) => i.id === sample.id) : -1;
+  const card: CardData = sample
+    ? {
+        ...toCard(sample, name(sample.authorId)),
+        serial: rank >= 0 ? `${pad(ideas.length - rank)}/${pad(ideas.length)}` : undefined,
+      }
+    : FALLBACK;
+  const cards = [card];
 
-  // Designs notés 2 ou moins écartés ; ceux que l'admin n'a pas encore notés d'abord (les
-  // nouveaux), puis les mieux notés.
+  // Ordre fixe (les plus récentes en haut) : rien ne bouge quand on note.
   const rows = DESIGNS.map((design, i) => {
     const forDesign = votes.filter((v) => v.designId === design.id);
     return {
       design,
       number: i + 1,
-      avg: average(forDesign.map((v) => v.stars)),
+      avg: average(forDesign),
       mine: forDesign.find((v) => v.userId === admin.id),
       others: forDesign.filter((v) => v.userId !== admin.id),
     };
-  });
+  }).reverse();
   const discarded = rows.filter((r) => r.avg !== null && r.avg <= DISCARD_AT);
-  const shown = rows
-    .filter((r) => !discarded.includes(r))
-    .sort(
-      (a, b) => Number(Boolean(a.mine)) - Number(Boolean(b.mine)) || (b.avg ?? 0) - (a.avg ?? 0),
-    );
+  const shown = rows.filter((r) => !discarded.includes(r));
 
   return (
     <div className={`${designFonts} flex flex-col gap-4`}>
@@ -145,20 +111,13 @@ export default async function AdminCardsPage({
           </a>
         }
       >
-        <div className="flex flex-col gap-3">
-          <p className="text-muted text-sm">
-            Propositions de design pour le futur jeu de cartes. Coût et puissance sont provisoires ;
-            la rareté ne change que le look. Passe la souris sur une carte pour l&apos;incliner et
-            voir son effet. Les propositions pas encore notées sont en haut ; celles notées 2 ou
-            moins sont écartées (liste en bas de page).
-          </p>
-          {ideas.length > 0 && sample && (
-            <CardPicker
-              ideas={ideas.map((i) => ({ id: i.id, title: i.title }))}
-              current={sample.id}
-            />
-          )}
-        </div>
+        <p className="text-muted text-sm">
+          Propositions de design pour le futur jeu de cartes, toutes avec la même carte. Coût et
+          puissance sont provisoires ; la rareté ne change que le look. Passe la souris sur une
+          carte pour l&apos;incliner et voir son effet. Les plus récentes sont en haut ; celles
+          notées 2 ou moins sont rangées en bas de page (clique sur un nom pour revoir
+          l&apos;exemple).
+        </p>
       </Card>
 
       {shown.map(({ design, number, avg, mine, others }) => (
@@ -166,16 +125,19 @@ export default async function AdminCardsPage({
           key={design.id}
           title={`${number} · ${design.title}`}
           action={
-            !mine ? (
-              <span className="bg-accent/15 text-accent rounded-full px-2 py-0.5 text-xs font-semibold">
-                Nouveau
-              </span>
-            ) : avg !== null ? (
-              <span className="text-muted inline-flex items-center gap-1 text-xs">
-                moyenne {Math.round(avg * 10) / 10}
-                <Star size={12} className="fill-accent text-accent" aria-hidden />
-              </span>
-            ) : undefined
+            <span className="flex items-center gap-2 text-xs">
+              {!mine && (
+                <span className="bg-accent/15 text-accent rounded-full px-2 py-0.5 font-semibold">
+                  À noter
+                </span>
+              )}
+              {avg !== null && (
+                <span className="text-muted inline-flex items-center gap-1">
+                  moyenne {Math.round(avg * 10) / 10}
+                  <Star size={12} className="fill-accent text-accent" aria-hidden />
+                </span>
+              )}
+            </span>
           }
         >
           <p className="text-muted mb-3 text-sm">{design.summary}</p>
@@ -184,44 +146,57 @@ export default async function AdminCardsPage({
             <DesignPreview designId={design.id} cards={cards} />
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <DesignRating
-              designId={design.id}
-              initial={mine ? { stars: mine.stars, comment: mine.comment } : null}
-              action={rateDesignAction}
-            />
-            {others.length > 0 && (
-              <ul className="flex flex-col gap-2 text-sm">
-                {others.map((v) => (
-                  <li key={v.userId} className="border-border rounded-md border p-2">
-                    <span className="text-text font-medium">{name(v.userId)}</span>{" "}
-                    <span className="text-accent inline-flex items-center gap-0.5 align-middle">
-                      {v.stars > 0 ? (
-                        <>
-                          {v.stars}
-                          <Star size={14} className="fill-accent" aria-label="étoiles" />
-                        </>
-                      ) : (
-                        <span className="text-muted">sans note</span>
-                      )}
-                    </span>
-                    {v.comment && <p className="text-muted mt-1">{v.comment}</p>}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="flex flex-col gap-2">
+              <p className="text-text text-sm font-medium">Ton avis</p>
+              <DesignRating
+                designId={design.id}
+                initial={mine ? { stars: mine.stars, comment: mine.comment } : null}
+                action={rateDesignAction}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-text text-sm font-medium">Avis des autres</p>
+              {others.length === 0 ? (
+                <p className="text-muted text-sm">Pas encore d&apos;avis.</p>
+              ) : (
+                <ul className="flex flex-col gap-2 text-sm">
+                  {others.map((v) => (
+                    <li key={v.userId} className="border-border rounded-md border p-2">
+                      <span className="text-text font-medium">{name(v.userId)}</span>{" "}
+                      <span className="text-accent inline-flex items-center gap-0.5 align-middle">
+                        {v.stars > 0 ? (
+                          <>
+                            {v.stars}
+                            <Star size={14} className="fill-accent" aria-label="étoiles" />
+                          </>
+                        ) : (
+                          <span className="text-muted">sans note</span>
+                        )}
+                      </span>
+                      {v.comment && <p className="text-muted mt-1">{v.comment}</p>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </Card>
       ))}
 
       {discarded.length > 0 && (
         <Card title="Designs écartés (2 étoiles ou moins)">
-          <ul className="text-muted flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <div className="flex flex-col gap-2">
             {discarded.map(({ design, number, avg }) => (
-              <li key={design.id}>
-                {number} · {design.title} ({Math.round((avg ?? 0) * 10) / 10} ★)
-              </li>
+              <details key={design.id} className="border-border rounded-md border px-3 py-2">
+                <summary className="text-muted cursor-pointer text-sm">
+                  {number} · {design.title} ({Math.round((avg ?? 0) * 10) / 10} ★)
+                </summary>
+                <div className="mt-3" style={{ zoom: 0.6 }}>
+                  <DesignPreview designId={design.id} cards={cards} />
+                </div>
+              </details>
             ))}
-          </ul>
+          </div>
         </Card>
       )}
     </div>

@@ -179,7 +179,7 @@ export function Ring({
 
 export const GOLD =
   "linear-gradient(155deg, #fff7d1 0%, #f2c84b 18%, #9c6a12 36%, #ffe9a3 52%, #c38a24 70%, #fff3c0 86%, #8a5a10 100%)";
-const PEARL =
+export const PEARL =
   "linear-gradient(155deg, #ffffff 0%, #ffd6ec 20%, #d7b8ff 40%, #b8ecff 60%, #fff4d6 80%, #ffffff 100%)";
 const FINISH_RING: Record<SnapFinish, string> = {
   common: "linear-gradient(160deg, #d9dde5 0%, #7a8190 40%, #353a44 100%)",

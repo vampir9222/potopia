@@ -184,6 +184,74 @@ export const DESIGNS = [
     title: "Arcanes · badges Snap",
     summary: "Cadre des Arcanes (numéro, rareté, auteur), coût et puissance façon Snap.",
   },
+  {
+    id: "snap-v2-sculpte",
+    title: "Snap V2 · Cadre sculpté",
+    summary: "Cadre épais en relief et biseauté, badges sertis de métal, plaque de nom gravée.",
+  },
+  {
+    id: "snap-v3-infini",
+    title: "Snap V3 · Infini",
+    summary: "Un liseré d'énergie court sans fin autour de la carte, halo intérieur qui respire.",
+  },
+  {
+    id: "snap-v4-profondeur",
+    title: "Snap V4 · Profondeur",
+    summary:
+      "Trois plans : fond flou loin derrière, cadre, sujet net devant. Penche la carte : il se détache.",
+  },
+  {
+    id: "arcanes-v2",
+    title: "Arcanes V2 · Plein cadre",
+    summary:
+      "Illustration plein cadre façon Snap, barres et texte des Arcanes en verre fumé, numéro et auteur.",
+  },
+  {
+    id: "taverne-v2",
+    title: "Taverne V2 · Arche",
+    summary: "Portrait en arche dorée, pierre sculptée, torches qui vacillent, badges Snap.",
+  },
+  {
+    id: "potomon",
+    title: "Poké V2 · Potomon",
+    summary:
+      "Les PV et les énergies, dans un style à nous : bord blanc, bandeau en biais, photo scotchée.",
+  },
+  {
+    id: "cosmique-v3",
+    title: "Cosmique V3 · Aurore",
+    summary:
+      "L'image reste intacte ; une aurore et des étoiles dansent derrière et autour de la carte.",
+  },
+  {
+    id: "neon-v2",
+    title: "Néon V2 · Enseigne",
+    summary: "Tube de néon en cadre sur mur de briques, nom manuscrit qui grésille.",
+  },
+  {
+    id: "raretes-v3",
+    title: "Raretés V3 · Signées",
+    summary:
+      "Le cadre sculpté de commune à SSR ; SR et SSR signées par l'auteur de l'idée, SSR lenticulaire.",
+  },
+  {
+    id: "essai-duel",
+    title: "Essai · Duel",
+    summary:
+      "Façon carte de duel : nom en haut, étoiles de niveau pour le coût, encadré de type, puissance en bas.",
+  },
+  {
+    id: "essai-tarot",
+    title: "Essai · Tarot",
+    summary:
+      "Lame de tarot : ivoire, double filet, fenêtre en ogive, chiffre romain, médaillons gravés.",
+  },
+  {
+    id: "essai-balatro",
+    title: "Essai · Balatro",
+    summary:
+      "La carte se balance, bord blanc épais, image pixelisée en écran cathodique, jetons bleu et rouge.",
+  },
 ] as const;
 
 export type DesignId = (typeof DESIGNS)[number]["id"];
