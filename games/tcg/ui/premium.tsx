@@ -157,6 +157,7 @@ export function PremiumDefs() {
     </svg>
   );
 }
+PremiumDefs.tcgDefs = true;
 
 /** Chiffre en SVG avec contour sombre, lisible sur n'importe quel fond. */
 function Num({

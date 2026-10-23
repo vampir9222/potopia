@@ -70,6 +70,7 @@ export function SnapDefs() {
     </svg>
   );
 }
+SnapDefs.tcgDefs = true;
 
 function Num({
   x,

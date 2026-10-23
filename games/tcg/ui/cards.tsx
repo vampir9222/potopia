@@ -1,4 +1,5 @@
-import { Children, type CSSProperties, type ReactNode } from "react";
+import { Children, type CSSProperties, Fragment, isValidElement, type ReactNode } from "react";
+import { Zoomable } from "./Zoomable";
 
 export type CardRarity = "common" | "uncommon" | "rare" | "legendary";
 
@@ -748,9 +749,17 @@ export function Board({
         borderRadius: 12,
       }}
     >
-      {Children.map(children, (child) => (
-        <div style={{ flexShrink: 0 }}>{child}</div>
-      ))}
+      {Children.map(children, (child) =>
+        // Les définitions SVG (marquées `tcgDefs`, sans rendu) ne sont pas des cartes : pas de zoom.
+        isValidElement(child) &&
+        typeof child.type !== "string" &&
+        child.type !== Fragment &&
+        !(child.type as { tcgDefs?: boolean }).tcgDefs ? (
+          <Zoomable>{child}</Zoomable>
+        ) : (
+          child
+        ),
+      )}
     </div>
   );
 }
