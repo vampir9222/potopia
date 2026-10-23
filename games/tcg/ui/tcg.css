@@ -343,6 +343,130 @@
   mix-blend-mode: overlay;
 }
 
+/* ───────────── Deuxième vague (v2.tsx) ───────────── */
+
+/* Liseré d'énergie qui court autour de la carte (couleurs dans --flow). */
+.tcg-flow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 4px;
+  pointer-events: none;
+  background: conic-gradient(from var(--tcg-angle), var(--flow, #9aa7ff, #fff, #9aa7ff));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  filter: drop-shadow(0 0 6px rgb(255 255 255 / 0.5));
+  animation: tcg-orbit 3.2s linear infinite;
+}
+
+/* Halo intérieur qui respire. */
+.tcg-breathe {
+  animation: tcg-breathe 3s ease-in-out infinite;
+}
+@keyframes tcg-breathe {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Torche qui vacille. */
+.tcg-torch {
+  animation: tcg-torch 1.6s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+}
+@keyframes tcg-torch {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.95);
+  }
+  35% {
+    opacity: 0.9;
+  }
+  60% {
+    opacity: 0.65;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aurore derrière la carte, qui déborde de ses bords. */
+.tcg-aurora {
+  background:
+    radial-gradient(ellipse 45% 35% at 20% 30%, rgb(120 70 255 / 0.75), transparent 70%),
+    radial-gradient(ellipse 40% 35% at 80% 70%, rgb(30 200 210 / 0.65), transparent 70%),
+    radial-gradient(ellipse 35% 30% at 70% 15%, rgb(255 90 200 / 0.5), transparent 70%);
+  filter: blur(14px);
+  animation: tcg-aurora 9s ease-in-out infinite alternate;
+}
+@keyframes tcg-aurora {
+  to {
+    transform: rotate(8deg) scale(1.06);
+    opacity: 0.75;
+  }
+}
+
+/* Étoiles qui dérivent autour de la carte. */
+.tcg-stars {
+  background-image:
+    radial-gradient(1.5px 1.5px at 5% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 95% 20%, #fff, transparent),
+    radial-gradient(2px 2px at 3% 70%, #cfe, transparent),
+    radial-gradient(1px 1px at 97% 85%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 50% 2%, #fde, transparent),
+    radial-gradient(1px 1px at 30% 98%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 75% 97%, #fff, transparent);
+  animation: tcg-stars 6s ease-in-out infinite alternate;
+}
+@keyframes tcg-stars {
+  to {
+    transform: translateY(-8px);
+    opacity: 0.6;
+  }
+}
+
+/* Néon qui grésille. */
+.tcg-flicker {
+  animation: tcg-flicker 4s linear infinite;
+}
+@keyframes tcg-flicker {
+  0%,
+  18%,
+  22%,
+  25%,
+  53%,
+  57%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  24%,
+  55% {
+    opacity: 0.45;
+  }
+}
+
+/* Carte qui se balance doucement (Balatro). */
+.tcg-sway {
+  animation: tcg-sway 3.4s ease-in-out infinite;
+}
+@keyframes tcg-sway {
+  0%,
+  100% {
+    transform: rotate(-1.6deg) translateY(0);
+  }
+  50% {
+    transform: rotate(1.6deg) translateY(-4px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tcg-tilt {
     transform: none;
@@ -352,6 +476,13 @@
   .tcg-orbit,
   .tcg-prism,
   .tcg-glitch-slice,
+  .tcg-flow,
+  .tcg-breathe,
+  .tcg-torch,
+  .tcg-aurora,
+  .tcg-stars,
+  .tcg-flicker,
+  .tcg-sway,
   .tcg-shine::before {
     animation: none;
   }

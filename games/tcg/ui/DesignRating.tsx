@@ -81,7 +81,7 @@ export function DesignRating({ designId, initial, action }: Props) {
             </button>
           ))}
         </div>
-        <span className="text-muted text-sm tabular-nums" aria-live="polite">
+        <span className="text-muted min-w-44 text-sm tabular-nums" aria-live="polite">
           {pending
             ? "Enregistrement…"
             : state.status === "error"

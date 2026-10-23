@@ -13,6 +13,19 @@ import {
 } from "./cards";
 import { HearthCard, MagicCard, PokeCard, PremiumDefs, SnapCard } from "./premium";
 import { SnapCard as SnapVariant, SnapDefs, type SnapFinish, type SnapStyle } from "./snap";
+import {
+  ArcanesFull,
+  BalatroCard,
+  CosmicAurora,
+  DuelCard,
+  NeonSign,
+  Potomon,
+  SnapDepth,
+  SnapInfinity,
+  SnapSculpted,
+  TarotCard,
+  TaverneArch,
+} from "./v2";
 
 const ORDER: DesignId[] = [
   "pixel",
@@ -50,6 +63,18 @@ const ORDER: DesignId[] = [
   "snap-variantes",
   "hearth-snap",
   "magic-snap",
+  "snap-v2-sculpte",
+  "snap-v3-infini",
+  "snap-v4-profondeur",
+  "arcanes-v2",
+  "taverne-v2",
+  "potomon",
+  "cosmique-v3",
+  "neon-v2",
+  "raretes-v3",
+  "essai-duel",
+  "essai-tarot",
+  "essai-balatro",
 ];
 
 const SNAP_STYLES: Partial<Record<DesignId, SnapStyle>> = {
@@ -283,6 +308,135 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
           ))}
         </PremiumBoard>
       );
+    case "snap-v2-sculpte":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <SnapSculpted key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "snap-v3-infini":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <SnapInfinity key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "snap-v4-profondeur":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <SnapDepth key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "arcanes-v2":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <ArcanesFull key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "taverne-v2":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <TaverneArch key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "potomon":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <Potomon key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "cosmique-v3":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <CosmicAurora key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "neon-v2":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <NeonSign key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "essai-duel":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <DuelCard key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "essai-tarot":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <TarotCard key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "essai-balatro":
+      return (
+        <PremiumBoard>
+          <PremiumDefs />
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <BalatroCard key={i} card={c} />
+          ))}
+        </PremiumBoard>
+      );
+    case "raretes-v3": {
+      const card = pick(pictured, 0);
+      return (
+        <Board
+          wrap
+          background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)"
+        >
+          <SnapDefs />
+          {LADDER.map((finish) => (
+            <SnapSculpted
+              key={finish}
+              card={card}
+              finish={finish}
+              signed={finish === "sr" || finish === "ssr"}
+            />
+          ))}
+        </Board>
+      );
+    }
     case "snap-raretes": {
       const card = pick(pictured, 0);
       return (

@@ -193,7 +193,7 @@ const adminPages: Record<string, () => Promise<unknown>> = {
   "admin/economy/page": () => AdminEconomyPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/page": () => AdminIdeasPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/[id]/page": () => AdminIdeaPage({ params: Promise.resolve({ id: ideaId }) }),
-  "admin/cards/page": () => AdminCardsPage({ searchParams: Promise.resolve({}) }),
+  "admin/cards/page": () => AdminCardsPage(),
 };
 
 async function signIn(discordId: string): Promise<string> {

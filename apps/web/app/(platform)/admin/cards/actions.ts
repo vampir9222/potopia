@@ -2,7 +2,6 @@
 
 import { rateDesign } from "@app/tcg";
 import type { RateState } from "@app/tcg/ui";
-import { revalidatePath } from "next/cache";
 import { ZodError } from "zod";
 import { actionAdmin } from "@/lib/session";
 
@@ -20,6 +19,6 @@ export async function rateDesignAction(_prev: RateState, formData: FormData): Pr
     }
     throw error;
   }
-  revalidatePath("/admin/cards");
+  // Pas de revalidatePath : la page ne se recharge pas, rien ne bouge quand on note.
   return { status: "ok", message: "Note enregistrée." };
 }
