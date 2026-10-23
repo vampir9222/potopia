@@ -1,3 +1,4 @@
 export { IdeaDetail } from "./IdeaDetail";
 export { IdeaForm, type IdeaFormState } from "./IdeaForm";
-export { IdeasAdminList, type IdeaListItem } from "./IdeasAdminList";
+export { IdeasAdminList } from "./IdeasAdminList";
+export { type IdeaListItem, type IdeaPage, IdeasFeed } from "./IdeasFeed";

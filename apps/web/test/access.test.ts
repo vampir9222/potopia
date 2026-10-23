@@ -56,6 +56,7 @@ vi.mock("next/font/google", () => {
 const { markAllNotificationsAsRead, markNotificationAsRead } =
   await import("@/app/actions/notifications");
 const { adjustBalance } = await import("@/app/(platform)/admin/economy/actions");
+const { loadMoreIdeas } = await import("@/app/(platform)/admin/ideas/actions");
 const { default: PlatformLayout } = await import("@/app/(platform)/layout");
 const { default: DashboardPage } = await import("@/app/(platform)/page");
 const { default: AdminLayout } = await import("@/app/(platform)/admin/layout");
@@ -111,6 +112,7 @@ const actions: Record<string, () => Promise<unknown>> = {
   markNotificationAsRead: () => markNotificationAsRead("inconnue"),
   markAllNotificationsAsRead: () => markAllNotificationsAsRead(),
   rateDesignAction: () => rateDesignAction({ status: "idle" }, rateForm()),
+  loadMoreIdeas: () => loadMoreIdeas({}, ideaId),
   adjustBalance: () => adjustBalance({ status: "idle" }, adjustForm("inconnu")),
   sendIdea: () => sendIdea({ status: "idle" }, ideaForm()),
   saveAvatarAction: () => saveAvatarAction({}),
@@ -252,6 +254,31 @@ describe("server actions", () => {
     expect(state.status).toBe("ok");
     expect(await getBalance(memberId)).toBe(250);
     expect(await countUnread(memberId)).toBe(1);
+  });
+
+  it("loadMoreIdeas refuse un membre non admin (403)", async () => {
+    await signIn(MEMBER_ID);
+    await expect(loadMoreIdeas({}, ideaId)).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("loadMoreIdeas renvoie la page suivante à un admin, au défilement", async () => {
+    await db.idea.createMany({
+      data: Array.from({ length: 24 }, (_, i) => ({
+        authorId: "auteur-fictif",
+        title: `Idée ${i}`,
+        description: "Texte",
+        createdAt: new Date(Date.UTC(2020, 0, 1, 0, i)),
+      })),
+    });
+    await signIn(ADMIN_ID);
+    const first = await db.idea.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 20,
+    });
+    const page = await loadMoreIdeas({}, first.at(-1)?.id ?? "");
+    expect(page.items).toHaveLength(5);
+    expect(page.nextCursor).toBeNull();
+    expect(page.items.map((i) => i.id)).not.toContain(first[0]?.id);
   });
 
   it("rateDesignAction refuse un membre non admin (403)", async () => {
