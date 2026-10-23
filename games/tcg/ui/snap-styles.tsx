@@ -20,11 +20,17 @@ export const EXTRA_STYLES = [
   "borderless",
   "stained",
   "theme",
+  "goldspot",
+  "cosmicframe",
+  "watercolorframe",
 ] as const;
 export type ExtraStyle = (typeof EXTRA_STYLES)[number];
 
 export const isExtraStyle = (s: string): s is ExtraStyle =>
   (EXTRA_STYLES as readonly string[]).includes(s);
+
+/** Styles qui gardent le cadre et le nom du Snap classique (seule l'illustration change). */
+export const hasClassicChrome = (s: string) => s === "watercolorframe";
 
 /** Styles sur fond clair (papier) : texte sombre en bas de carte. */
 export const isPaperStyle = (s: string) => s === "watercolor" || s === "sketch";
@@ -319,7 +325,51 @@ export function ExtraArt({ card, style }: { card: CardData; style: ExtraStyle })
           />
         </div>
       );
+    case "goldspot":
+      // Or partout sauf au centre, où le sujet est le plus souvent : il garde ses couleurs.
+      return (
+        <div style={fill}>
+          <PremiumArt card={card} />
+          <div
+            aria-hidden
+            style={{
+              ...fill,
+              WebkitMaskImage:
+                "radial-gradient(ellipse 34% 30% at 50% 44%, transparent 55%, #000 100%)",
+              maskImage: "radial-gradient(ellipse 34% 30% at 50% 44%, transparent 55%, #000 100%)",
+            }}
+          >
+            <div style={{ ...fill, filter: "grayscale(1) contrast(1.3) brightness(1.05)" }}>
+              <PremiumArt card={card} />
+            </div>
+            <div style={{ ...fill, background: GOLD, mixBlendMode: "multiply" }} />
+          </div>
+        </div>
+      );
+    case "watercolorframe":
+      return (
+        <div style={{ ...fill, background: "#f6f0e4" }}>
+          <div
+            style={{
+              ...fill,
+              filter: "url(#tcg-watercolor) saturate(1.3) contrast(0.95) brightness(1.04)",
+            }}
+          >
+            <PremiumArt card={card} />
+          </div>
+          <div className="tcg-grain" style={{ opacity: 0.35, mixBlendMode: "multiply" }} />
+          <div
+            aria-hidden
+            style={{
+              ...fill,
+              background: `radial-gradient(ellipse at 25% 20%, ${f.light}44, transparent 50%)`,
+              mixBlendMode: "multiply",
+            }}
+          />
+        </div>
+      );
     case "borderless":
+    case "cosmicframe":
     default:
       return (
         <div style={fill}>
@@ -522,6 +572,60 @@ export function ExtraFrame({
           )}
         </>
       );
+    case "goldspot":
+      return (
+        <>
+          <Ring background={GOLD} width={10} />
+          <Ring
+            background="linear-gradient(#3a2604 0 0)"
+            width={1.5}
+            style={{ inset: 10, borderRadius: R - 9 }}
+          />
+        </>
+      );
+    case "cosmicframe":
+      // Bordure épaisse en nébuleuse étoilée, qui déborde de la carte en halo.
+      return (
+        <>
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: -14,
+              borderRadius: R + 14,
+              padding: 26,
+              background: `${STARS}, radial-gradient(ellipse at 20% 20%, #8a4dff 0%, transparent 55%), radial-gradient(ellipse at 80% 85%, #19b5c7 0%, transparent 55%), #0b0820`,
+              WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+              WebkitMaskComposite: "xor",
+              mask: "linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)",
+              filter: `drop-shadow(0 0 10px ${legendary ? "#ffd56a" : "#9b6bff"})`,
+              opacity: 0.95,
+            }}
+          />
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: -14,
+              borderRadius: R + 14,
+              background:
+                "radial-gradient(ellipse at 50% 50%, transparent 62%, rgb(7 5 22 / 0.9) 100%)",
+              WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+              WebkitMaskComposite: "xor",
+              mask: "linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)",
+              padding: 14,
+              opacity: 0.6,
+            }}
+          />
+          <Ring
+            background={legendary ? GOLD : "linear-gradient(160deg, #d8c6ff, #6c3fd6)"}
+            width={2}
+            style={{ inset: 12, borderRadius: R - 10 }}
+          />
+        </>
+      );
+    case "watercolorframe":
+      return null;
     case "theme":
       return (
         <>
@@ -554,7 +658,19 @@ export function extraName(
   };
   switch (style) {
     case "gold":
+    case "goldspot":
       return { className: "tcg-gold-text", css: snap };
+    case "cosmicframe":
+      return { className: legendary ? "tcg-gold-text" : "tcg-chrome-text", css: snap };
+    case "watercolorframe":
+      return {
+        css: {
+          ...snap,
+          color: "#fff",
+          filter: undefined,
+          textShadow: "0 3px 0 #000, 0 0 16px rgb(0 0 0 / 0.9)",
+        },
+      };
     case "cosmic":
       return { className: legendary ? "tcg-gold-text" : "tcg-chrome-text", css: snap };
     case "kawaii":

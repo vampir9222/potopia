@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Art, type CardData, type CardRarity, font, RARITY_LABELS } from "./cards";
+import { Cost, Power } from "./snap";
 import { Tilt } from "./Tilt";
 
 /*
@@ -343,7 +344,14 @@ const HEARTH_GEM: Record<CardRarity, string> = {
   legendary: "#ff8a1e",
 };
 
-export function HearthCard({ card }: { card: CardData }) {
+export function HearthCard({
+  card,
+  snapBadges = false,
+}: {
+  card: CardData;
+  /** Rond bleu et hexagone jaune façon Snap à la place du cristal et de la goutte. */
+  snapBadges?: boolean;
+}) {
   const gem = HEARTH_GEM[card.rarity];
   const legendary = card.rarity === "legendary";
   return (
@@ -417,28 +425,34 @@ export function HearthCard({ card }: { card: CardData }) {
             <circle cx="85" cy="22" r="6" fill="#ff8a1e" stroke="#3a2708" strokeWidth="2" />
           </svg>
         )}
-        {/* Cristal de mana. */}
-        <svg
-          width="70"
-          height="78"
-          viewBox="0 0 70 78"
-          style={{ position: "absolute", left: 2, top: 2 }}
-          role="img"
-          aria-label={`Coût ${card.cost}`}
-        >
-          <polygon
-            points="35,3 64,22 58,62 35,75 12,62 6,22"
-            fill="url(#tcg-g-mana)"
-            stroke="#0b1b45"
-            strokeWidth="3"
-          />
-          <polygon points="35,3 64,22 35,30 6,22" fill="rgb(255 255 255 / 0.35)" />
-          <polygon points="6,22 35,30 12,62" fill="rgb(255 255 255 / 0.12)" />
-          <polygon points="35,30 58,62 35,75" fill="rgb(0 0 0 / 0.22)" />
-          <Num x={35} y={42} size={32} family={font("fantasy", "serif")}>
-            {card.cost}
-          </Num>
-        </svg>
+        {/* Cristal de mana (ou rond bleu façon Snap). */}
+        {snapBadges ? (
+          <div style={{ position: "absolute", left: 0, top: 0 }}>
+            <Cost value={card.cost} />
+          </div>
+        ) : (
+          <svg
+            width="70"
+            height="78"
+            viewBox="0 0 70 78"
+            style={{ position: "absolute", left: 2, top: 2 }}
+            role="img"
+            aria-label={`Coût ${card.cost}`}
+          >
+            <polygon
+              points="35,3 64,22 58,62 35,75 12,62 6,22"
+              fill="url(#tcg-g-mana)"
+              stroke="#0b1b45"
+              strokeWidth="3"
+            />
+            <polygon points="35,3 64,22 35,30 6,22" fill="rgb(255 255 255 / 0.35)" />
+            <polygon points="6,22 35,30 12,62" fill="rgb(255 255 255 / 0.12)" />
+            <polygon points="35,30 58,62 35,75" fill="rgb(0 0 0 / 0.22)" />
+            <Num x={35} y={42} size={32} family={font("fantasy", "serif")}>
+              {card.cost}
+            </Num>
+          </svg>
+        )}
         {/* Ruban du nom, texte courbé. */}
         <svg
           width={W}
@@ -540,26 +554,32 @@ export function HearthCard({ card }: { card: CardData }) {
         >
           {card.tag}
         </div>
-        {/* Puissance dans une goutte de sang. */}
-        <svg
-          width="66"
-          height="74"
-          viewBox="0 0 66 74"
-          style={{ position: "absolute", right: 0, bottom: 0 }}
-          role="img"
-          aria-label={`Puissance ${card.power}`}
-        >
-          <path
-            d="M33 4 C46 22 60 34 60 48 C60 63 48 71 33 71 C18 71 6 63 6 48 C6 34 20 22 33 4 Z"
-            fill="url(#tcg-g-blood)"
-            stroke="#2a0503"
-            strokeWidth="3"
-          />
-          <ellipse cx="24" cy="42" rx="6" ry="10" fill="rgb(255 255 255 / 0.3)" />
-          <Num x={33} y={50} size={30} family={font("fantasy", "serif")}>
-            {card.power}
-          </Num>
-        </svg>
+        {/* Puissance dans une goutte de sang (ou hexagone jaune façon Snap). */}
+        {snapBadges ? (
+          <div style={{ position: "absolute", right: 0, bottom: 2 }}>
+            <Power value={card.power} />
+          </div>
+        ) : (
+          <svg
+            width="66"
+            height="74"
+            viewBox="0 0 66 74"
+            style={{ position: "absolute", right: 0, bottom: 0 }}
+            role="img"
+            aria-label={`Puissance ${card.power}`}
+          >
+            <path
+              d="M33 4 C46 22 60 34 60 48 C60 63 48 71 33 71 C18 71 6 63 6 48 C6 34 20 22 33 4 Z"
+              fill="url(#tcg-g-blood)"
+              stroke="#2a0503"
+              strokeWidth="3"
+            />
+            <ellipse cx="24" cy="42" rx="6" ry="10" fill="rgb(255 255 255 / 0.3)" />
+            <Num x={33} y={50} size={30} family={font("fantasy", "serif")}>
+              {card.power}
+            </Num>
+          </svg>
+        )}
         <Finish rarity={card.rarity} orbit={gem} holo={false} />
       </div>
     </Tilt>
@@ -835,7 +855,14 @@ function Plate({ children, style }: { children: ReactNode; style?: CSSProperties
   );
 }
 
-export function MagicCard({ card }: { card: CardData }) {
+export function MagicCard({
+  card,
+  snapBadges = false,
+}: {
+  card: CardData;
+  /** Rond bleu et hexagone jaune façon Snap à la place des symboles de mana et du P/T. */
+  snapBadges?: boolean;
+}) {
   const f = faction(card.tag);
   return (
     <Tilt radius={15}>
@@ -867,7 +894,7 @@ export function MagicCard({ card }: { card: CardData }) {
           }}
         >
           <div className="tcg-grain" style={{ opacity: 0.25 }} />
-          <Plate style={{ height: 28, position: "relative" }}>
+          <Plate style={{ height: 28, position: "relative", paddingLeft: snapBadges ? 46 : 10 }}>
             <span
               style={{
                 flex: 1,
@@ -881,34 +908,36 @@ export function MagicCard({ card }: { card: CardData }) {
             >
               {card.title}
             </span>
-            <span aria-label={`Coût ${card.cost}`} style={{ display: "flex", gap: 2 }}>
-              <span
-                style={{
-                  width: 17,
-                  height: 17,
-                  borderRadius: "50%",
-                  background: "radial-gradient(circle at 35% 30%, #f3f0ea, #b8b2a8)",
-                  boxShadow: "0 1px 1px rgb(0 0 0 / 0.6)",
-                  fontSize: 11,
-                  fontWeight: 800,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: font("magic", "serif"),
-                }}
-              >
-                {Math.max(card.cost - 1, 0)}
+            {!snapBadges && (
+              <span aria-label={`Coût ${card.cost}`} style={{ display: "flex", gap: 2 }}>
+                <span
+                  style={{
+                    width: 17,
+                    height: 17,
+                    borderRadius: "50%",
+                    background: "radial-gradient(circle at 35% 30%, #f3f0ea, #b8b2a8)",
+                    boxShadow: "0 1px 1px rgb(0 0 0 / 0.6)",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontFamily: font("magic", "serif"),
+                  }}
+                >
+                  {Math.max(card.cost - 1, 0)}
+                </span>
+                <span
+                  style={{
+                    width: 17,
+                    height: 17,
+                    borderRadius: "50%",
+                    background: `radial-gradient(circle at 35% 30%, ${f.light}, ${f.base})`,
+                    boxShadow: "0 1px 1px rgb(0 0 0 / 0.6)",
+                  }}
+                />
               </span>
-              <span
-                style={{
-                  width: 17,
-                  height: 17,
-                  borderRadius: "50%",
-                  background: `radial-gradient(circle at 35% 30%, ${f.light}, ${f.base})`,
-                  boxShadow: "0 1px 1px rgb(0 0 0 / 0.6)",
-                }}
-              />
-            </span>
+            )}
           </Plate>
           <div
             style={{
@@ -986,23 +1015,37 @@ export function MagicCard({ card }: { card: CardData }) {
               </div>
             )}
           </div>
-          <Plate
-            style={{
-              position: "absolute",
-              right: 12,
-              bottom: -10,
-              height: 26,
-              padding: "0 12px",
-              borderRadius: 8,
-            }}
-          >
-            <span
-              aria-label={`Puissance ${card.power}`}
-              style={{ fontFamily: font("magic", "serif"), fontWeight: 800, fontSize: 16 }}
+          {snapBadges ? (
+            <div
+              style={{
+                position: "absolute",
+                right: -6,
+                bottom: -14,
+                transform: "scale(0.85)",
+                transformOrigin: "100% 100%",
+              }}
             >
-              {card.power}
-            </span>
-          </Plate>
+              <Power value={card.power} />
+            </div>
+          ) : (
+            <Plate
+              style={{
+                position: "absolute",
+                right: 12,
+                bottom: -10,
+                height: 26,
+                padding: "0 12px",
+                borderRadius: 8,
+              }}
+            >
+              <span
+                aria-label={`Puissance ${card.power}`}
+                style={{ fontFamily: font("magic", "serif"), fontWeight: 800, fontSize: 16 }}
+              >
+                {card.power}
+              </span>
+            </Plate>
+          )}
         </div>
         <div
           style={{
@@ -1024,6 +1067,19 @@ export function MagicCard({ card }: { card: CardData }) {
           </span>
           <span>™ & © Potopia</span>
         </div>
+        {snapBadges && (
+          <div
+            style={{
+              position: "absolute",
+              left: -4,
+              top: -4,
+              transform: "scale(0.85)",
+              transformOrigin: "0 0",
+            }}
+          >
+            <Cost value={card.cost} />
+          </div>
+        )}
         <Finish rarity={card.rarity} orbit={f.light} />
       </div>
     </Tilt>

@@ -20,11 +20,12 @@ function assertAdmin(reader: Admin): void {
 
 const rateInput = z.object({
   designId: z.enum(DESIGN_IDS, "Design inconnu."),
+  // 0 = pas de note (commentaire seul, ou note retirée).
   stars: z.coerce
     .number()
     .int("Note entière attendue.")
-    .min(1, "Note de 1 à 5 étoiles.")
-    .max(5, "Note de 1 à 5 étoiles."),
+    .min(0, "Note de 0 à 5 étoiles.")
+    .max(5, "Note de 0 à 5 étoiles."),
   comment: z
     .string()
     .trim()

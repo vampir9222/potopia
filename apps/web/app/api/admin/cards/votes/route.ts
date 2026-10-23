@@ -15,9 +15,10 @@ export async function GET(request: Request): Promise<Response> {
       exportedAt: exportedAt.toISOString(),
       designs: DESIGNS.map((design) => {
         const forDesign = votes.filter((v) => v.designId === design.id);
-        const average = forDesign.length
-          ? Math.round((forDesign.reduce((sum, v) => sum + v.stars, 0) / forDesign.length) * 10) /
-            10
+        // 0 étoile = commentaire sans note : il ne compte pas dans la moyenne.
+        const rated = forDesign.filter((v) => v.stars > 0);
+        const average = rated.length
+          ? Math.round((rated.reduce((sum, v) => sum + v.stars, 0) / rated.length) * 10) / 10
           : null;
         return {
           id: design.id,

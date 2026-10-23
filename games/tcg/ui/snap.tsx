@@ -7,6 +7,7 @@ import {
   ExtraFrame,
   type ExtraStyle,
   extraName,
+  hasClassicChrome,
   isExtraStyle,
   isPaperStyle,
 } from "./snap-styles";
@@ -103,7 +104,7 @@ function Num({
 }
 
 /** Coût : rond bleu brillant. */
-function Cost({ value }: { value: number }) {
+export function Cost({ value }: { value: number }) {
   return (
     <svg width="68" height="68" viewBox="0 0 68 68" role="img" aria-label={`Coût ${value}`}>
       <circle cx="34" cy="35" r="29" fill="rgb(0 0 0 / 0.45)" />
@@ -124,7 +125,7 @@ function Cost({ value }: { value: number }) {
 }
 
 /** Puissance : hexagone jaune brillant. */
-function Power({ value }: { value: number }) {
+export function Power({ value }: { value: number }) {
   return (
     <svg width="70" height="70" viewBox="0 0 70 70" role="img" aria-label={`Puissance ${value}`}>
       <polygon
@@ -283,50 +284,21 @@ function StyledArt({ card, style }: { card: CardData; style: SnapStyle }) {
   );
 }
 
-/** Fenêtre de la SR : l'illustration y est rangée, mais le haut du sujet en déborde. */
-const WIN = { top: 70, side: 16, bottom: 16, over: 24, below: 26 };
+/** SR : de combien l'image monte au-dessus de la carte, et jusqu'où la partie qui déborde descend. */
+const POP = { over: 22, reach: 64 };
 
 /**
- * SR : l'image est cadrée dans une fenêtre intérieure, puis le haut de la même image, aligné au
- * pixel près, est redessiné devant le bord supérieur de la fenêtre et au-delà du haut de la carte,
- * avec un fondu sur les côtés : le sujet semble sortir du cadre. Sans détourage, ça marche quand le
- * sujet est en haut au centre ; avec une image détourée, le contour serait parfait.
+ * SR : l'image remplit la carte ; le haut de la même image, aligné au pixel près, est redessiné
+ * devant le bord supérieur du cadre et au-delà, avec un fondu sur les côtés : le sujet semble
+ * sortir de la carte. Sans détourage, ça marche quand le sujet est en haut au centre ; avec une
+ * image détourée, le contour serait parfait.
  */
 function BreakoutArt({ card, style }: { card: CardData; style: SnapStyle }) {
-  const box: CSSProperties = {
-    position: "absolute",
-    left: WIN.side,
-    right: WIN.side,
-    top: -WIN.over,
-    bottom: WIN.bottom,
-  };
-  const reach = WIN.top + WIN.over + WIN.below;
+  const box: CSSProperties = { position: "absolute", left: 0, right: 0, top: -POP.over, bottom: 0 };
   return (
     <>
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          borderRadius: R,
-          background: "linear-gradient(160deg, #3a3050 0%, #1a1530 55%, #0c0a18 100%)",
-        }}
-      />
-      <div className="tcg-grain" style={{ borderRadius: R, opacity: 0.3 }} />
-      <div
-        style={{
-          position: "absolute",
-          left: WIN.side,
-          right: WIN.side,
-          top: WIN.top,
-          bottom: WIN.bottom,
-          overflow: "hidden",
-          borderRadius: 10,
-        }}
-      >
-        <div
-          style={{ position: "absolute", left: 0, right: 0, top: -(WIN.top + WIN.over), bottom: 0 }}
-        >
+      <div style={{ position: "absolute", inset: 0, borderRadius: R, overflow: "hidden" }}>
+        <div style={box}>
           <StyledArt card={card} style={style} />
         </div>
       </div>
@@ -339,8 +311,8 @@ function BreakoutArt({ card, style }: { card: CardData; style: SnapStyle }) {
             "--z": "30px",
             pointerEvents: "none",
             WebkitMaskImage:
-              "radial-gradient(ellipse 58% 44% at 50% 28%, #000 52%, transparent 100%)",
-            maskImage: "radial-gradient(ellipse 58% 44% at 50% 28%, #000 52%, transparent 100%)",
+              "radial-gradient(ellipse 56% 38% at 50% 16%, #000 48%, transparent 100%)",
+            maskImage: "radial-gradient(ellipse 56% 38% at 50% 16%, #000 48%, transparent 100%)",
             filter: "drop-shadow(0 6px 8px rgb(0 0 0 / 0.55))",
           } as CSSProperties
         }
@@ -349,7 +321,7 @@ function BreakoutArt({ card, style }: { card: CardData; style: SnapStyle }) {
           style={{
             position: "absolute",
             inset: 0,
-            clipPath: `inset(0 0 calc(100% - ${reach}px) 0)`,
+            clipPath: `inset(0 0 calc(100% - ${POP.over + POP.reach}px) 0)`,
           }}
         >
           <StyledArt card={card} style={style} />
@@ -359,61 +331,20 @@ function BreakoutArt({ card, style }: { card: CardData; style: SnapStyle }) {
   );
 }
 
-/** Éclats de la SSR : la même image découpée, chaque morceau à sa propre profondeur. */
-const SHARDS = [
-  { clip: "polygon(0 0, 58% 0, 40% 38%, 0 52%)", dx: -9, dy: -7, z: 6 },
-  { clip: "polygon(58% 0, 100% 0, 100% 44%, 40% 38%)", dx: 9, dy: -8, z: 14 },
-  { clip: "polygon(0 52%, 40% 38%, 62% 66%, 0 100%)", dx: -10, dy: 6, z: 2 },
-  { clip: "polygon(40% 38%, 100% 44%, 100% 100%, 62% 66%)", dx: 10, dy: 5, z: 10 },
-  { clip: "polygon(0 100%, 62% 66%, 100% 100%)", dx: 0, dy: 11, z: 4 },
-];
-
-function ShatteredArt({ card, style }: { card: CardData; style: SnapStyle }) {
+/**
+ * SSR lenticulaire : comme les cartes à image changeante, l'illustration bascule vers sa version
+ * néon (ou dorée, pour une carte déjà néon) quand on penche la carte vers la droite.
+ */
+function LenticularArt({ card, style }: { card: CardData; style: SnapStyle }) {
+  const alt: SnapStyle = style === "neon" ? "goldspot" : "neon";
   return (
-    <>
-      {SHARDS.map((s, i) => (
-        <div
-          key={i}
-          className="tcg-shard"
-          style={
-            {
-              clipPath: s.clip,
-              "--dx": `${s.dx}px`,
-              "--dy": `${s.dy}px`,
-              "--z": `${s.z}px`,
-            } as CSSProperties
-          }
-        >
-          <div style={{ position: "absolute", inset: 0, borderRadius: R, overflow: "hidden" }}>
-            <div className="tcg-drift" style={{ position: "absolute", inset: 0 }}>
-              <StyledArt card={card} style={style} />
-            </div>
-          </div>
-        </div>
-      ))}
-      <svg
-        className="tcg-crack"
-        width={W}
-        height={H}
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-        aria-hidden
-      >
-        <g
-          stroke="#fff"
-          strokeWidth="0.7"
-          fill="none"
-          vectorEffect="non-scaling-stroke"
-          style={{ filter: "drop-shadow(0 0 3px #b8ecff)" }}
-        >
-          <polyline points="58,0 40,38 0,52" vectorEffect="non-scaling-stroke" />
-          <polyline points="40,38 100,44" vectorEffect="non-scaling-stroke" />
-          <polyline points="40,38 62,66 0,100" vectorEffect="non-scaling-stroke" />
-          <polyline points="62,66 100,100" vectorEffect="non-scaling-stroke" />
-        </g>
-      </svg>
-    </>
+    <div style={{ position: "absolute", inset: 0, borderRadius: R, overflow: "hidden" }}>
+      <StyledArt card={card} style={style} />
+      <div className="tcg-lenti" style={{ position: "absolute", inset: 0 }}>
+        <StyledArt card={card} style={alt} />
+      </div>
+      <div className="tcg-lenti-lines" />
+    </div>
   );
 }
 
@@ -435,25 +366,18 @@ function Frame({ style, finish, card }: { style: SnapStyle; finish: SnapFinish; 
   if (finish === "sr") {
     return (
       <>
-        <Ring background={PEARL} width={7} />
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            left: WIN.side,
-            right: WIN.side,
-            top: WIN.top,
-            bottom: WIN.bottom,
-            borderRadius: 10,
-            boxShadow:
-              "0 0 0 3px #fff4fb, 0 0 0 5px rgb(0 0 0 / 0.55), 0 0 18px rgb(255 200 235 / 0.6), inset 0 0 14px rgb(0 0 0 / 0.5)",
-            pointerEvents: "none",
-          }}
+        <Ring background={PEARL} width={10} />
+        <Ring
+          background="linear-gradient(rgb(0 0 0 / 0.55) 0 0)"
+          width={1.5}
+          style={{ inset: 10, borderRadius: R - 9 }}
         />
       </>
     );
   }
-  if (isExtraStyle(style)) return <ExtraFrame style={style} finish={finish} card={card} />;
+  if (isExtraStyle(style) && !hasClassicChrome(style)) {
+    return <ExtraFrame style={style} finish={finish} card={card} />;
+  }
   if (style === "ink") {
     return (
       <>
@@ -522,7 +446,7 @@ function nameStyle(
   finish: SnapFinish,
   len: number,
 ): { className?: string; css: CSSProperties } {
-  if (isExtraStyle(style)) return extraName(style, finish, len);
+  if (isExtraStyle(style) && !hasClassicChrome(style)) return extraName(style, finish, len);
   const size = len > 16 ? 23 : 29;
   if (style === "pixel") {
     return {
@@ -578,14 +502,26 @@ function nameStyle(
   };
 }
 
+const FINISH_SYMBOL: Record<SnapFinish, string> = {
+  common: "●",
+  uncommon: "◆",
+  rare: "★",
+  legendary: "★★",
+  sr: "SR",
+  ssr: "SSR",
+};
+
 export function SnapCard({
   card,
   style = "classic",
   finish = finishOf(card),
+  edition = false,
 }: {
   card: CardData;
   style?: SnapStyle;
   finish?: SnapFinish;
+  /** Bandeau du bas : numéro dans la série, symbole de rareté, auteur de l'idée. */
+  edition?: boolean;
 }) {
   const name = nameStyle(style, finish, card.title.length);
   const accent = FINISH_ACCENT[finish];
@@ -608,7 +544,7 @@ export function SnapCard({
       >
         {/* Illustration (ou éclats pour la SSR), rognée aux coins de la carte. */}
         {finish === "ssr" ? (
-          <ShatteredArt card={card} style={style} />
+          <LenticularArt card={card} style={style} />
         ) : finish === "sr" ? (
           <BreakoutArt card={card} style={style} />
         ) : (
@@ -637,11 +573,12 @@ export function SnapCard({
           }}
         />
         {(finish === "rare" || finish === "sr" || finish === "ssr") && <div className="tcg-holo" />}
+        {finish === "sr" && <div className="tcg-etched" />}
         <div
           className="tcg-layer"
           style={
             {
-              "--z": finish === "ssr" ? "20px" : "10px",
+              "--z": "10px",
               position: "absolute",
               inset: 0,
               borderRadius: radius,
@@ -672,7 +609,7 @@ export function SnapCard({
               position: "absolute",
               left: 14,
               right: 14,
-              bottom: 22,
+              bottom: edition ? 34 : 22,
               textAlign: "center",
               pointerEvents: "none",
             } as CSSProperties
@@ -768,6 +705,39 @@ export function SnapCard({
           </div>
           {card.effect}
         </div>
+        {edition && (
+          <div
+            className="tcg-layer tcg-hide-on-reveal"
+            style={
+              {
+                "--z": "40px",
+                position: "absolute",
+                left: 16,
+                right: 16,
+                bottom: 12,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 8,
+                paddingTop: 5,
+                borderTop: `1px solid ${accent}66`,
+                fontFamily: font("franklin", "sans-serif"),
+                fontSize: 9.5,
+                fontWeight: 700,
+                letterSpacing: 0.8,
+                color: paper ? "#5a4632" : "rgb(255 255 255 / 0.85)",
+                pointerEvents: "none",
+              } as CSSProperties
+            }
+          >
+            <span>
+              {card.serial ?? "—"} <span style={{ color: accent }}>{FINISH_SYMBOL[finish]}</span>
+            </span>
+            <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              Idée de {card.author ?? "?"}
+            </span>
+          </div>
+        )}
         <div className="tcg-glare" style={{ borderRadius: radius }} />
       </div>
     </Tilt>

@@ -139,6 +139,51 @@ export const DESIGNS = [
     title: "Snap · Thème du site",
     summary: "Cadre et nom aux couleurs du thème choisi (Classique, Fantasy, RGB…).",
   },
+  {
+    id: "snap-edition",
+    title: "Snap · Édition",
+    summary:
+      "Le Snap classique avec un bandeau : numéro dans la série, symbole de rareté et auteur de l'idée.",
+  },
+  {
+    id: "snap-raretes-v2",
+    title: "Snap · Raretés v2",
+    summary:
+      "Nouvelle SR (le sujet sort de la carte, gravure nacrée) et nouvelle SSR lenticulaire : l'image bascule en néon quand on penche la carte.",
+  },
+  {
+    id: "snap-gold-spot",
+    title: "Snap · Or, sujet en couleur",
+    summary:
+      "Tout est doré sauf le centre de l'image, où se trouve le sujet : il garde ses couleurs.",
+  },
+  {
+    id: "snap-cosmic-frame",
+    title: "Snap · Bordure cosmique",
+    summary:
+      "L'image reste intacte ; la nébuleuse étoilée est dans la bordure et déborde de la carte.",
+  },
+  {
+    id: "snap-watercolor-frame",
+    title: "Snap · Aquarelle encadrée",
+    summary: "Illustration à l'aquarelle, avec le cadre et le nom du Snap classique.",
+  },
+  {
+    id: "snap-variantes",
+    title: "Snap · Variantes",
+    summary: "La même carte en variantes à collectionner : néon, glitch, prisme et or.",
+  },
+  {
+    id: "hearth-snap",
+    title: "Taverne · badges Snap",
+    summary:
+      "Portrait ovale et ruban de la Taverne, coût en rond bleu et puissance en hexagone jaune.",
+  },
+  {
+    id: "magic-snap",
+    title: "Arcanes · badges Snap",
+    summary: "Cadre des Arcanes (numéro, rareté, auteur), coût et puissance façon Snap.",
+  },
 ] as const;
 
 export type DesignId = (typeof DESIGNS)[number]["id"];
