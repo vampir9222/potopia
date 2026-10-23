@@ -1,0 +1,17 @@
+// Domaine tcg : jeu de cartes, en préparation et réservé aux admins.
+// `userId` référence core.users sans relation.
+
+// Note d'un admin sur une proposition de design de carte (une par admin et par design).
+model TcgDesignVote {
+  id        String   @id @default(uuid(7))
+  designId  String   @map("design_id")
+  userId    String   @map("user_id")
+  stars     Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([designId, userId])
+  @@map("design_votes")
+  @@schema("tcg")
+}

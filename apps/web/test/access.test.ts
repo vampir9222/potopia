@@ -33,6 +33,13 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+// next/font est transformé à la compilation par Next : hors Next, une police factice suffit.
+vi.mock("next/font/google", () => {
+  const font = () => ({ className: "", variable: "", style: { fontFamily: "" } });
+  const names = ["Bangers", "Caveat", "Cinzel", "Comic_Neue", "EB_Garamond", "Nunito"];
+  names.push("Orbitron", "Press_Start_2P", "Space_Grotesk", "VT323");
+  return Object.fromEntries(names.map((name) => [name, font]));
+});
 
 const { markAllNotificationsAsRead, markNotificationAsRead } =
   await import("@/app/actions/notifications");
@@ -49,6 +56,9 @@ const { default: AdminIdeaPage } = await import("@/app/(platform)/admin/ideas/[i
 const uploadUrlRoute = await import("@/app/api/ideas/upload-url/route");
 const ideaImageRoute = await import("@/app/api/admin/ideas/[id]/image/route");
 const ideasExportRoute = await import("@/app/api/admin/ideas/export/route");
+const cardVotesRoute = await import("@/app/api/admin/cards/votes/route");
+const { default: AdminCardsPage } = await import("@/app/(platform)/admin/cards/page");
+const { rateDesignAction } = await import("@/app/(platform)/admin/cards/actions");
 const troisGameRoute = await import("@/app/api/trois/game/route");
 const troisGuessRoute = await import("@/app/api/trois/guess/route");
 const troisPracticeRoute = await import("@/app/api/trois/practice/route");
@@ -59,6 +69,14 @@ const { default: WalletPage } = await import("@/app/(platform)/wallet/page");
 const ADMIN_ID = "100000000000000001";
 const MEMBER_ID = "100000000000000002";
 const discord = new FakeDiscord();
+
+function rateForm(stars = "4"): FormData {
+  const form = new FormData();
+  form.set("designId", "pixel");
+  form.set("stars", stars);
+  form.set("comment", "Sympa");
+  return form;
+}
 
 function adjustForm(userId: string, amount = 100): FormData {
   const form = new FormData();
@@ -74,6 +92,7 @@ function adjustForm(userId: string, amount = 100): FormData {
 const actions: Record<string, () => Promise<unknown>> = {
   markNotificationAsRead: () => markNotificationAsRead("inconnue"),
   markAllNotificationsAsRead: () => markAllNotificationsAsRead(),
+  rateDesignAction: () => rateDesignAction({ status: "idle" }, rateForm()),
   adjustBalance: () => adjustBalance({ status: "idle" }, adjustForm("inconnu")),
   sendIdea: () => sendIdea({ status: "idle" }, ideaForm()),
 };
@@ -111,6 +130,7 @@ const routes: Record<string, () => Promise<Response>> = {
   "POST /api/ideas/upload-url": requestUploadUrl,
   "GET /api/admin/ideas/[id]/image": requestIdeaImage,
   "GET /api/admin/ideas/export": () => ideasExportRoute.GET(withCookie("/api/admin/ideas/export")),
+  "GET /api/admin/cards/votes": () => cardVotesRoute.GET(withCookie("/api/admin/cards/votes")),
   "GET /api/trois/game": () => troisGameRoute.GET(withCookie("/api/trois/game")),
   "POST /api/trois/guess": () =>
     troisGuessRoute.POST(withCookie("/api/trois/guess", { guess: "faire" })),
@@ -144,6 +164,7 @@ const adminPages: Record<string, () => Promise<unknown>> = {
   "admin/economy/page": () => AdminEconomyPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/page": () => AdminIdeasPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/[id]/page": () => AdminIdeaPage({ params: Promise.resolve({ id: ideaId }) }),
+  "admin/cards/page": () => AdminCardsPage(),
 };
 
 async function signIn(discordId: string): Promise<string> {
@@ -202,6 +223,29 @@ describe("server actions", () => {
     expect(state.status).toBe("ok");
     expect(await getBalance(memberId)).toBe(250);
     expect(await countUnread(memberId)).toBe(1);
+  });
+
+  it("rateDesignAction refuse un membre non admin (403)", async () => {
+    await signIn(MEMBER_ID);
+    await expect(rateDesignAction({ status: "idle" }, rateForm())).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+  });
+
+  it("rateDesignAction enregistre la note de l'admin, et refuse une note invalide", async () => {
+    await signIn(ADMIN_ID);
+    expect((await rateDesignAction({ status: "idle" }, rateForm())).status).toBe("ok");
+    const invalid = await rateDesignAction({ status: "idle" }, rateForm("9"));
+    expect(invalid).toMatchObject({ status: "error", message: "Note de 1 à 5 étoiles." });
+
+    const res = await cardVotesRoute.GET(withCookie("/api/admin/cards/votes"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    const body = await res.json();
+    expect(body.designs.find((d: { id: string }) => d.id === "pixel")).toMatchObject({
+      average: 4,
+      votes: [{ stars: 4, comment: "Sympa" }],
+    });
   });
 
   it("adjustBalance renvoie une erreur lisible pour un débit trop élevé", async () => {
