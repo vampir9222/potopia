@@ -15,7 +15,7 @@ type Props = {
 export function AppGrid({ apps }: Props) {
   if (apps.length === 0) return null;
   return (
-    <ul className="stagger grid grid-cols-2 gap-3 min-[420px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6">
+    <ul className="stagger grid grid-cols-2 gap-3 min-[420px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
       {apps.map((app) => {
         const Icon = ICONS[app.icon];
         return (

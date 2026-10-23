@@ -1,16 +1,18 @@
 import { BRAND } from "@app/config/brand";
 import type { ReactNode } from "react";
-import { Avatar } from "@app/ui";
+import { ProfileMenu } from "./ProfileMenu";
 
 type Props = {
   user: { name: string; image: string | null };
+  /** Server action de déconnexion, proposée dans le menu de l'avatar. */
+  signOut: () => Promise<void>;
   /** Bouton du menu mobile (la colonne compte passe dans un menu sur petit écran). */
   menuButton?: ReactNode;
   /** Cloche de notifications, etc. */
   actions?: ReactNode;
 };
 
-export function Header({ user, menuButton, actions }: Props) {
+export function Header({ user, signOut, menuButton, actions }: Props) {
   return (
     <header className="bg-bg/80 sticky top-0 z-30 flex h-14 items-center gap-3 px-4 backdrop-blur-md">
       {/* liseré doré sous le header */}
@@ -27,7 +29,7 @@ export function Header({ user, menuButton, actions }: Props) {
       </a>
       <div className="ml-auto flex items-center gap-2">
         {actions}
-        <Avatar name={user.name} src={user.image} />
+        <ProfileMenu user={user} signOut={signOut} />
       </div>
     </header>
   );

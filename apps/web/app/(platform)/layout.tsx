@@ -1,8 +1,8 @@
 import { countUnread, listNotifications } from "@app/core";
-import { AccountPanel, Header, NotificationBell } from "@app/core/ui";
+import { AccountPanel, ActivityFeed, Header, NotificationBell } from "@app/core/ui";
 import { getBalance } from "@app/economy";
 import { BalanceCard } from "@app/economy/ui";
-import { resolveTheme, THEME_COOKIE, ThemeSwitcher, VolumeControl } from "@app/ui";
+import { Card, resolveTheme, THEME_COOKIE, ThemeSwitcher, VolumeControl } from "@app/ui";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/actions/auth";
@@ -10,30 +10,38 @@ import { markAllNotificationsAsRead, markNotificationAsRead } from "@/app/action
 import { MobileMenu } from "@/components/MobileMenu";
 import { SideNav } from "@/components/SideNav";
 import { SpinOrb } from "@/components/SpinOrb";
+import { getActivityFeed } from "@/lib/activity";
 import { getCurrentMember } from "@/lib/session";
 
 export default async function PlatformLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentMember();
   const theme = resolveTheme((await cookies()).get(THEME_COOKIE)?.value);
-  const [notifications, unreadCount, balance] = await Promise.all([
+  const [notifications, unreadCount, balance, feed] = await Promise.all([
     listNotifications(user.id, 15),
     countUnread(user.id),
     getBalance(user.id),
+    getActivityFeed(),
   ]);
 
-  // Colonne compte : à gauche sur grand écran, dans le menu latéral sur mobile.
-  const accountPanel = (
-    <AccountPanel user={user} signOut={signOut}>
-      <BalanceCard balance={balance} />
-      <SideNav isAdmin={user.role === "admin"} />
-    </AccountPanel>
+  // Colonne de gauche (compte puis activité) : fixe sur grand écran, dans le menu latéral sur mobile.
+  const sidePanels = (
+    <div className="flex flex-col gap-4">
+      <AccountPanel user={user}>
+        <BalanceCard balance={balance} />
+        <SideNav isAdmin={user.role === "admin"} />
+      </AccountPanel>
+      <Card title="Activité récente">
+        <ActivityFeed items={feed} />
+      </Card>
+    </div>
   );
 
   return (
     <>
       <Header
         user={user}
-        menuButton={<MobileMenu>{accountPanel}</MobileMenu>}
+        signOut={signOut}
+        menuButton={<MobileMenu>{sidePanels}</MobileMenu>}
         actions={
           <>
             <VolumeControl />
@@ -48,8 +56,11 @@ export default async function PlatformLayout({ children }: { children: ReactNode
           </>
         }
       />
-      <div className="mx-auto flex max-w-6xl gap-6 px-4 py-6">
-        <aside className="animate-rise hidden w-72 shrink-0 lg:block">{accountPanel}</aside>
+      {/* Plein écran : la colonne de gauche reste en place au défilement, le reste pour les apps. */}
+      <div className="flex gap-6 px-4 py-6 lg:px-6">
+        <aside className="animate-rise sticky top-20 hidden max-h-[calc(100dvh-6.5rem)] w-80 shrink-0 self-start overflow-y-auto lg:block">
+          {sidePanels}
+        </aside>
         <main className="page-stagger min-w-0 flex-1">{children}</main>
       </div>
     </>
