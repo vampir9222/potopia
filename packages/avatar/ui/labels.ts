@@ -11,7 +11,6 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   eyes: "Visage",
   eyebrows: "Sourcils",
   nose: "Nez",
-  ears: "Oreilles",
   hair: "Cheveux",
   beards: "Barbe",
   facial: "Lunettes et masques",
@@ -24,15 +23,8 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   backpack: "Sac",
 };
 
-/** Têtes proposées (humaines). */
+/** Têtes proposées (humaines, masculine et féminine). */
 export const HEAD_LABELS: Record<string, string> = {
   heads_human_male: "Masculine",
   heads_human_female: "Féminine",
-  heads_human_male_small: "Masculine fine",
-  heads_human_female_small: "Féminine fine",
-  heads_human_male_plump: "Masculine ronde",
-  heads_human_male_gaunt: "Masculine creusée",
-  heads_human_male_elderly: "Masculine âgée",
-  heads_human_female_elderly: "Féminine âgée",
-  heads_human_elderly_small: "Âgée fine",
 };

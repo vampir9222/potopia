@@ -128,7 +128,7 @@ describe("import LPC", () => {
     ]);
     expect(result.rejected).toContainEqual({
       id: "heads_wolf_male",
-      reason: expect.stringContaining("tête non retenue"),
+      reason: "hors de la liste retenue pour sa catégorie",
     });
   });
 
@@ -213,19 +213,19 @@ describe("import LPC", () => {
       },
     };
     const face: DefinitionFile = {
-      path: "head/face_happy",
+      path: "head/face_neutral",
       def: {
         type_name: "expression",
         required_tags: ["human"],
         replace_in_path: { head: { Human_Male: "male", Human_Female: "female" } },
-        layer_1: { zPos: 101, male: "faces/${head}/happy/" },
+        layer_1: { zPos: 101, male: "faces/${head}/neutral/" },
       },
     };
     const result = run(
       [face, head],
-      probeFor(["body/male/", "body/female/", "head/human/", "faces/male/happy/"]),
+      probeFor(["body/male/", "body/female/", "head/human/", "faces/male/neutral/"]),
     );
-    const item = result.catalog.items.find((i) => i.id === "face_happy");
+    const item = result.catalog.items.find((i) => i.id === "face_neutral");
     expect(item?.heads).toEqual({ male: ["heads_human_male"] });
     expect(item?.headPaths).toEqual({ heads_human_male: "male" });
     expect(item?.requiredTags).toEqual(["human"]);

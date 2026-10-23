@@ -21,7 +21,6 @@ export const CATEGORIES = [
   "eyes",
   "eyebrows",
   "nose",
-  "ears",
   "hair",
   "beards",
   "facial",

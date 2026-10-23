@@ -255,8 +255,8 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 - La catégorie vient du `type_name` de chaque définition, traduit par `TYPE_TO_CATEGORY`
   (`packages/avatar-assets/import/lpc.ts`). Armes, boucliers, carquois, outils, bijoux, épaules,
   bras et les pièces secondaires (liserés, surcouches, accessoires de chapeau) sont écartés. Seules
-  les 9 têtes humaines adultes sont gardées (`ALLOWED_HEADS`), avec nez, sourcils et oreilles
-  humaines ou elfiques (les oreilles d'animaux sont dans `EXCLUDED_ITEMS`).
+  les têtes humaines masculine et féminine et 6 expressions de visage sont gardées
+  (`ALLOWED_ITEMS`), avec nez et sourcils ; ni oreilles, ni têtes non humaines.
 - Un élément n'est proposé pour une morphologie que si chacun de ses calques y existe avec les 5
   animations, au même nombre de frames que le corps de référence. Le script affiche chaque élément
   écarté avec sa raison.

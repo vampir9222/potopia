@@ -42,13 +42,8 @@ const NATURAL_HAIR = [
 ];
 /** Tête par silhouette (seules les têtes humaines masculine et féminine sont importées). */
 const HEADS: Partial<Record<Morph, string[]>> = {
-  male: [
-    "heads_human_male",
-    "heads_human_male",
-    "heads_human_male_plump",
-    "heads_human_male_gaunt",
-  ],
-  female: ["heads_human_female", "heads_human_female", "heads_human_female_small"],
+  male: ["heads_human_male"],
+  female: ["heads_human_female"],
 };
 const MORPH_WEIGHTS: Partial<Record<Morph, number>> = { male: 1, female: 1 };
 
