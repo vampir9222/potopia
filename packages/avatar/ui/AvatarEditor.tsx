@@ -150,7 +150,7 @@ export function AvatarEditor({ initialConfig, save }: Props) {
     else items = withoutCategory(items, cat);
     update({ ...config, items });
   };
-  // Nouvelle silhouette : la tête assortie, sauf pour l'ado (au choix).
+  // Nouvelle silhouette : la tête assortie (modifiable ensuite).
   const setMorph = (morph: Morph) => {
     const head = PREFERRED_HEADS[morph];
     update({

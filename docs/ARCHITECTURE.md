@@ -263,8 +263,9 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
   et `data/` (`catalog.json`, `palettes.json`, `credits.json`, ignorés par Prettier).
 - Les capes n'ont ni `sit`, ni `jump`, ni `emote` : elles sont admises par `ANIMATION_FALLBACKS`
   (`emote` reprend les frames d'`idle`, `sit` et `jump` ne les dessinent pas, comme le générateur
-  LPC). Aucune robe ni aucun sac à dos ne remplit la règle des 5 animations, et les corps `child` et `muscular` n'ont pas d'`emote` : l'éditeur ne propose que les morphologies qui
-  ont un corps et une tête (`availableMorphs`).
+  LPC). Aucune robe ni aucun sac à dos ne remplit la règle des 5 animations.
+- Morphologies : homme et femme seulement (`MORPHS`) ; les autres morphologies LPC (ado, enfant,
+  musclé, enceinte) ne sont pas importées.
 
 **Compositeur** (`packages/avatar`, même code dans le navigateur et sur le serveur).
 

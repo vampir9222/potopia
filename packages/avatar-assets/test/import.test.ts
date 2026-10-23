@@ -146,13 +146,6 @@ describe("import LPC", () => {
   });
 
   it("écarte un élément sans la morphologie demandée", () => {
-    const hat: DefinitionFile = {
-      path: "hat/hat",
-      def: { type_name: "hat", layer_1: { zPos: 120, child: "hat/child/" } },
-    };
-    const result = run([hat], probeFor(["body/male/", "body/female/", "hat/child/"]));
-    // L'enfant n'a pas de corps ici, mais le chapeau existe pour lui : il est gardé pour « child ».
-    expect(result.catalog.items.find((i) => i.id === "hat")?.morphs).toEqual(["child"]);
     const noMorph: DefinitionFile = {
       path: "hat/none",
       def: { type_name: "hat", layer_1: { zPos: 120 } },

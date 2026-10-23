@@ -43,12 +43,9 @@ const NATURAL_HAIR = [
 /** Tête par silhouette (seules les têtes humaines masculine et féminine sont importées). */
 const HEADS: Partial<Record<Morph, string[]>> = {
   male: ["heads_human_male"],
-  muscular: ["heads_human_male"],
   female: ["heads_human_female"],
-  pregnant: ["heads_human_female"],
-  teen: ["heads_human_male", "heads_human_female"],
 };
-const MORPH_WEIGHTS: Partial<Record<Morph, number>> = { male: 4, female: 4, teen: 1 };
+const MORPH_WEIGHTS: Partial<Record<Morph, number>> = { male: 1, female: 1 };
 
 function pick<T>(rng: Rng, list: readonly T[]): T | undefined {
   return list[Math.floor(rng() * list.length)];
@@ -127,7 +124,7 @@ export function randomConfig(
 
   const chance = (p: number) => rng() < p;
   if (chance(0.92)) choose("hair");
-  if (chance(0.3) && morph !== "female" && morph !== "pregnant") choose("beards");
+  if (chance(0.3) && morph === "male") choose("beards");
   if (chance(0.15) && optionsFor(catalog, config, "dress").length > 0) {
     choose("dress");
   } else {

@@ -18,9 +18,7 @@ export const REQUIRED_CATEGORIES: readonly Category[] = ["body", "head"];
 /** Tête proposée d'abord pour une silhouette (après un changement de morphologie). */
 export const PREFERRED_HEADS: Partial<Record<Morph, string>> = {
   male: "heads_human_male",
-  muscular: "heads_human_male",
   female: "heads_human_female",
-  pregnant: "heads_human_female",
 };
 
 /** Une robe se porte sans pantalon : choisir `dress` retire `legs`. */

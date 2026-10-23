@@ -1,6 +1,7 @@
 // Types du catalogue d'éléments d'avatar, généré par scripts/import-lpc.ts depuis les données LPC.
 
-export const MORPHS = ["male", "female", "teen", "child", "muscular", "pregnant"] as const;
+/** Morphologies proposées. LPC en a d'autres (teen, child, muscular, pregnant), non importées. */
+export const MORPHS = ["male", "female"] as const;
 export type Morph = (typeof MORPHS)[number];
 
 /** Animations retenues, dans l'ordre des lignes de la planche composée. */

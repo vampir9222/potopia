@@ -71,10 +71,8 @@ describe("validation de la config d'avatar", () => {
   it("refuse un élément incompatible avec la morphologie", async () => {
     const userId = await createUser("u1");
     const config = validConfig();
-    const notMale = catalog.items.find(
-      (i) => i.category === "hair" && !i.morphs.includes("male") && !i.heads,
-    );
-    const item = notMale ?? itemOf("head", (m) => m.length === 1 && m[0] === "child");
+    // Haut qui n'existe qu'en « female » (la config de test est « male »).
+    const item = itemOf("torso", (m) => !m.includes("male"));
     config.items[item.category] = { id: item.id };
     await expect(validateAvatarConfig(userId, config)).rejects.toThrow(
       "n'existe pas pour cette morphologie",
