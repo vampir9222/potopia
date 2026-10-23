@@ -1,8 +1,16 @@
 "use client";
 
 import { Button, Input, Label, Select, Textarea } from "@app/ui";
-import { CircleCheck, ImagePlus, X } from "lucide-react";
-import { startTransition, useActionState, useRef, useState, type FormEvent } from "react";
+import { CircleCheck, ClipboardPaste, ImagePlus, X } from "lucide-react";
+import {
+  type ClipboardEvent,
+  type FormEvent,
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { IMAGE_TYPES, LIMITS, RARITIES, RARITY_LABELS } from "../src/validation";
 import { toWebp } from "./webp";
 
@@ -45,6 +53,18 @@ async function uploadImage(file: File, endpoint: string): Promise<string> {
   return body.key;
 }
 
+/** Première image du presse-papiers d'un événement « coller », avec un nom lisible. */
+function pastedImage(event: ClipboardEvent): File | undefined {
+  const item = [...event.clipboardData.items].find(
+    (i) => i.kind === "file" && i.type.startsWith("image/"),
+  );
+  const blob = item?.getAsFile();
+  if (!blob) return undefined;
+  return new File([blob], blob.name && blob.name !== "image.png" ? blob.name : "image collée", {
+    type: blob.type,
+  });
+}
+
 export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }: Props) {
   const [state, formAction, submitting] = useActionState(action, { status: "idle" });
   const [uploading, setUploading] = useState(false);
@@ -55,6 +75,41 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
   const fileRef = useRef<HTMLInputElement>(null);
   const pickRef = useRef(0);
   const [converting, setConverting] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  // Aperçu de l'image choisie ou collée (URL locale, libérée quand l'image change).
+  useEffect(() => {
+    if (!file) return setPreview(null);
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  /** Coller avec Ctrl+V n'importe où dans le formulaire : une image remplace celle choisie. */
+  function onPaste(event: ClipboardEvent<HTMLFormElement>) {
+    const image = pastedImage(event);
+    if (!image) return; // du texte : collage normal dans le champ
+    event.preventDefault();
+    void pickFile(image);
+  }
+
+  /** Bouton « Coller une image » : lit le presse-papiers (le navigateur peut demander l'accord). */
+  async function pasteFromClipboard() {
+    setUploadError(null);
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const type = item.types.find((t) => t.startsWith("image/"));
+        if (type) {
+          const blob = await item.getType(type);
+          return void pickFile(new File([blob], "image collée", { type: blob.type }));
+        }
+      }
+      setUploadError("Pas d'image dans le presse-papiers.");
+    } catch {
+      setUploadError("Lecture du presse-papiers impossible : utilise Ctrl+V dans le formulaire.");
+    }
+  }
 
   // Après un envoi réussi : formulaire vidé, rien n'est relisible (boîte noire).
   const [handledState, setHandledState] = useState(state);
@@ -111,7 +166,7 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
   const error = uploadError ?? (state.status === "error" ? state.message : null);
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="flex flex-col gap-4">
+    <form ref={formRef} onSubmit={onSubmit} onPaste={onPaste} className="flex flex-col gap-4">
       <Label hint={`${lengths.title}/${LIMITS.title}`}>
         Titre
         <Input
@@ -155,9 +210,10 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
 
       <div className="flex flex-col gap-1 text-sm">
         <span className="text-muted">
-          Image (facultatif, JPEG, PNG ou WebP, convertie en WebP, 3 Mo maximum)
+          Image (facultatif, JPEG, PNG ou WebP, convertie en WebP, 3 Mo maximum). Tu peux aussi la
+          coller avec Ctrl+V.
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="border-border text-muted hover:text-text hover:bg-surface-hover flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2">
             <ImagePlus size={16} aria-hidden />
             {file ? "Changer d'image" : "Choisir une image"}
@@ -170,8 +226,23 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
               onChange={(e) => pickFile(e.target.files?.[0])}
             />
           </label>
+          <button
+            type="button"
+            onClick={pasteFromClipboard}
+            className="border-border text-muted hover:text-text hover:bg-surface-hover flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2"
+          >
+            <ClipboardPaste size={16} aria-hidden />
+            Coller une image
+          </button>
           {file && (
             <span className="text-text flex min-w-0 items-center gap-1">
+              {preview && (
+                <img
+                  src={preview}
+                  alt=""
+                  className="border-border size-10 rounded border object-cover"
+                />
+              )}
               <span className="truncate">{file.name}</span>
               <button
                 type="button"
