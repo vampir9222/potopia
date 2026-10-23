@@ -34,6 +34,29 @@ export const DESIGNS = [
     title: "Rareté cosmétique",
     summary: "Même carte en 4 raretés : seul le look change.",
   },
+  {
+    id: "snap",
+    title: "Snap : art plein cadre",
+    summary:
+      "L'illustration occupe toute la carte, gemme de coût et éclat de puissance, holo animé.",
+  },
+  {
+    id: "hearth",
+    title: "Taverne : portrait ovale",
+    summary:
+      "Cadre de pierre et d'or, portrait ovale, ruban du nom, cristal de mana, gemme de rareté.",
+  },
+  {
+    id: "poke",
+    title: "Poké : bord jaune",
+    summary:
+      "Fond de la couleur de la famille, puissance en PV, coût en énergies, illustration holo.",
+  },
+  {
+    id: "magic",
+    title: "Arcanes : cadre de couleur",
+    summary: "Bordure noire, cadre teinté, symbole d'édition de la couleur de la rareté.",
+  },
 ] as const;
 
 export type DesignId = (typeof DESIGNS)[number]["id"];

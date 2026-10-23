@@ -82,10 +82,15 @@ export default async function AdminCardsPage() {
   const name = (id: string) => names.get(id) ?? "Membre inconnu";
 
   // Les idées avec une image d'abord : ce sont les plus parlantes pour juger un design.
+  // Numéro de série dans l'ordre d'envoi (la plus ancienne idée est la n° 01).
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const serials = new Map(
+    ideas.map((idea, i) => [idea.id, `${pad(ideas.length - i)}/${pad(ideas.length)}`]),
+  );
   const cards = ideas.length
     ? [...ideas]
         .sort((a, b) => Number(Boolean(b.imageKey)) - Number(Boolean(a.imageKey)))
-        .map((idea) => toCard(idea, name(idea.authorId)))
+        .map((idea) => ({ ...toCard(idea, name(idea.authorId)), serial: serials.get(idea.id) }))
     : SAMPLES;
 
   return (
@@ -106,7 +111,8 @@ export default async function AdminCardsPage() {
           Propositions de design pour le futur jeu de cartes, remplies avec les idées de la boîte.
           Coût et puissance sont provisoires ; la rareté ne change que le look. Note chaque
           proposition de 1 à 5 étoiles, avec un commentaire si tu veux : les notes orienteront les
-          prochaines propositions.
+          prochaines propositions. Les designs 8 à 11 montrent trois finitions (peu commune, rare,
+          légendaire) : passe la souris sur une carte pour l'incliner et voir le holo.
         </p>
       </Card>
 
