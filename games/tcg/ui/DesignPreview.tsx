@@ -12,6 +12,7 @@ import {
   PolaroidCard,
 } from "./cards";
 import { HearthCard, MagicCard, PokeCard, PremiumDefs, SnapCard } from "./premium";
+import { SnapCard as SnapVariant, SnapDefs, type SnapFinish, type SnapStyle } from "./snap";
 
 const ORDER: DesignId[] = [
   "pixel",
@@ -25,7 +26,22 @@ const ORDER: DesignId[] = [
   "hearth",
   "poke",
   "magic",
+  "snap-classic",
+  "snap-ink",
+  "snap-neon",
+  "snap-pixel",
+  "snap-prism",
+  "snap-raretes",
 ];
+
+const SNAP_STYLES: Partial<Record<DesignId, SnapStyle>> = {
+  "snap-classic": "classic",
+  "snap-ink": "ink",
+  "snap-neon": "neon",
+  "snap-pixel": "pixel",
+  "snap-prism": "prism",
+};
+const LADDER: SnapFinish[] = ["common", "uncommon", "rare", "legendary", "sr", "ssr"];
 
 /** Les designs premium montrent 3 finitions : peu commune, rare, légendaire. */
 const SHOWCASE = ["uncommon", "rare", "legendary"] as const;
@@ -152,6 +168,33 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
           ))}
         </PremiumBoard>
       );
+    case "snap-classic":
+    case "snap-ink":
+    case "snap-neon":
+    case "snap-pixel":
+    case "snap-prism":
+      return (
+        <PremiumBoard>
+          <SnapDefs />
+          {showcase(pictured, designId).map((c, i) => (
+            <SnapVariant key={i} card={c} style={SNAP_STYLES[designId]} />
+          ))}
+        </PremiumBoard>
+      );
+    case "snap-raretes": {
+      const card = pick(pictured, 0);
+      return (
+        <Board
+          wrap
+          background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)"
+        >
+          <SnapDefs />
+          {LADDER.map((finish) => (
+            <SnapVariant key={finish} card={card} finish={finish} />
+          ))}
+        </Board>
+      );
+    }
     case "raretes": {
       const card = pick(pictured, 0);
       return (

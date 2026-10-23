@@ -57,6 +57,38 @@ export const DESIGNS = [
     title: "Arcanes : cadre de couleur",
     summary: "Bordure noire, cadre teinté, symbole d'édition de la couleur de la rareté.",
   },
+  {
+    id: "snap-classic",
+    title: "Snap · Classique",
+    summary:
+      "Coût en rond bleu, puissance en hexagone jaune, cadre métal selon la finition. Effet au survol.",
+  },
+  {
+    id: "snap-ink",
+    title: "Snap · Encre",
+    summary: "Illustration en noir et blanc encré, trame, teinte de la famille, cadre d'encre.",
+  },
+  {
+    id: "snap-neon",
+    title: "Snap · Néon",
+    summary: "Photo assombrie, lignes de balayage, liseré et nom qui brillent comme un néon.",
+  },
+  {
+    id: "snap-pixel",
+    title: "Snap · Pixel",
+    summary: "Photo en mosaïque de pixels, cadre et nom rétro : dans l'esprit de la boule.",
+  },
+  {
+    id: "snap-prism",
+    title: "Snap · Prisme",
+    summary: "Cadre arc-en-ciel qui tourne lentement, nom chromé.",
+  },
+  {
+    id: "snap-raretes",
+    title: "Snap · De commune à SSR",
+    summary:
+      "Les 6 finitions : la légendaire brille d'un éclat doré, la SR sort du cadre, la SSR vole en éclats au survol.",
+  },
 ] as const;
 
 export type DesignId = (typeof DESIGNS)[number]["id"];

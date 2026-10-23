@@ -20,14 +20,14 @@ const FACTIONS = [
   { base: "#c99a2e", light: "#fff0a8", dark: "#5a420c", name: "Lumière" },
 ] as const;
 
-function faction(tag: string) {
+export function faction(tag: string) {
   let h = 0;
   for (const ch of tag.toLowerCase()) h = (h * 33 + ch.charCodeAt(0)) >>> 0;
   return FACTIONS[h % FACTIONS.length] ?? FACTIONS[0];
 }
 
 /** Illustration de la carte ; sans image, un emblème aux couleurs de la famille. */
-function PremiumArt({ card, round = false }: { card: CardData; round?: boolean }) {
+export function PremiumArt({ card, round = false }: { card: CardData; round?: boolean }) {
   if (card.imageUrl) return <Art card={card} height="100%" />;
   const f = faction(card.tag);
   return (

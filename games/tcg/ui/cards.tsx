@@ -725,13 +725,24 @@ export function PolaroidCard({ card, index = 0 }: { card: CardData; index?: numb
 }
 
 /** Fond d'un plateau de présentation (3 ou 4 cartes côte à côte). */
-export function Board({ background, children }: { background: string; children: ReactNode }) {
+export function Board({
+  background,
+  wrap = false,
+  children,
+}: {
+  background: string;
+  /** Plusieurs rangées au lieu d'un défilement horizontal. */
+  wrap?: boolean;
+  children: ReactNode;
+}) {
   return (
     <div
       style={{
         background,
         padding: 40,
         display: "flex",
+        flexWrap: wrap ? "wrap" : undefined,
+        justifyContent: wrap ? "center" : undefined,
         gap: 48,
         overflowX: "auto",
         borderRadius: 12,

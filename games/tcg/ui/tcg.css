@@ -138,13 +138,179 @@
   opacity: 0.35;
 }
 
+/* ───────────── Snap : effets des variantes et des raretés ───────────── */
+
+/* Profondeur : les calques avec --z avancent quand la carte s'incline (parallaxe). */
+.tcg-depth {
+  transform-style: preserve-3d;
+}
+.tcg-layer {
+  transform: translateZ(var(--z, 0px));
+}
+
+/* Effet de la carte : caché au repos, il glisse depuis le bas au survol (comme dans Snap). */
+.tcg-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
+}
+.tcg-tilt:hover .tcg-reveal,
+.tcg-tilt:focus-within .tcg-reveal {
+  opacity: 1;
+  transform: none;
+}
+.tcg-tilt:hover .tcg-hide-on-reveal {
+  opacity: 0;
+}
+.tcg-hide-on-reveal {
+  transition: opacity 0.2s;
+}
+
+/* Légendaire : un éclat de lumière balaie la carte de temps en temps. */
+.tcg-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+}
+.tcg-shine::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  bottom: -30%;
+  width: 38%;
+  left: -60%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgb(255 244 200 / 0.05) 30%,
+    rgb(255 250 225 / 0.65) 50%,
+    rgb(255 244 200 / 0.05) 70%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  mix-blend-mode: overlay;
+  animation: tcg-sweep 4.2s ease-in-out infinite;
+}
+@keyframes tcg-sweep {
+  0%,
+  55% {
+    left: -60%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+
+/* Texte doré (nom des légendaires) et chromé (SSR). */
+.tcg-gold-text {
+  background: linear-gradient(
+    180deg,
+    #fffbe6 0%,
+    #ffe08a 35%,
+    #d39b2a 55%,
+    #fff1b8 70%,
+    #b07a1c 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tcg-chrome-text {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #cfe7ff 30%,
+    #6c7a8c 50%,
+    #ffffff 62%,
+    #b9c3d0 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Cadre prismatique : un dégradé arc-en-ciel qui tourne lentement autour de la carte. */
+.tcg-prism {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: var(--prism-w, 7px);
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--tcg-angle),
+    #ff6ab5,
+    #ffd36a,
+    #7dffb0,
+    #6ad5ff,
+    #b88bff,
+    #ff6ab5
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: tcg-orbit 6s linear infinite;
+}
+
+/* Lignes de balayage (variante néon). */
+.tcg-scan {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.22) 0 1px, transparent 1px 3px);
+  mix-blend-mode: multiply;
+}
+
+/* SSR : l'image est découpée en éclats qui s'écartent en 3D au survol. */
+.tcg-shard {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(0, 0, var(--z, 0px));
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tcg-tilt[data-active] .tcg-shard {
+  transform: translate3d(var(--dx, 0px), var(--dy, 0px), calc(var(--z, 0px) + 32px));
+}
+.tcg-crack {
+  transition: opacity 0.4s;
+  opacity: 0.55;
+}
+.tcg-tilt[data-active] .tcg-crack {
+  opacity: 1;
+}
+
+/* Lent zoom de l'illustration (SSR). */
+.tcg-drift {
+  animation: tcg-drift 14s ease-in-out infinite alternate;
+}
+@keyframes tcg-drift {
+  to {
+    transform: scale(1.12) translate(-2%, -2%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tcg-tilt {
     transform: none;
     transition: none;
   }
   .tcg-sparkle,
-  .tcg-orbit {
+  .tcg-orbit,
+  .tcg-prism,
+  .tcg-drift,
+  .tcg-shine::before {
     animation: none;
+  }
+  .tcg-shard,
+  .tcg-tilt[data-active] .tcg-shard {
+    transform: none;
   }
 }
