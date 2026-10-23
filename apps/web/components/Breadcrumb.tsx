@@ -8,6 +8,8 @@ import { Fragment } from "react";
 /** Libellé de chaque segment d'URL. Ajouter ici les nouvelles sections. */
 const LABELS: Record<string, string> = {
   admin: "Administration",
+  avatar: "Mon avatar",
+  credits: "Crédits",
   cards: "Carte design",
   economy: "Monnaie",
   ideas: "Boîte à idées",

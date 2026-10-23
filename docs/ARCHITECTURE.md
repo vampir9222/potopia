@@ -41,7 +41,9 @@ games/
 packages/
   config/            tsconfig, eslint, brand.ts
   db/                client Prisma partagé, assemblage des schémas, migrations, seed
-  core/              auth, users, rôles, accès, registre des apps, activité, notifications
+  core/              auth, users, rôles, accès, registre des apps, activité, notifications, avatars
+  avatar/            compositeur d'avatars LPC (client et serveur), éditeur, place du dashboard
+  avatar-assets/     sprites LPC importés, catalogue, palettes, crédits (pnpm assets:import)
   economy/           monnaie : ledger + wallets
   ideas/             boîte à idées (module autonome, indépendant du futur TCG)
   storage/           client R2 + URLs présignées (aucune logique métier)
@@ -134,6 +136,7 @@ actions aux composants en props.
   session porte en plus `guildCheckedAt`.
 - `ActivityEvent` : id, userId, app, type, payload (Json), createdAt.
 - `Notification` : id, userId, title, link?, readAt?, createdAt.
+- `Avatar` et `UserAvatarItem` : voir « Avatars et place ».
 
 ### economy
 
@@ -237,6 +240,95 @@ décors.
   moins d'animations.
 - Les jeux gardent leur propre style pour l'instant (TROIS).
 
+## Avatars et place
+
+Chaque membre a un avatar pixel art composé à partir des sprites du projet LPC (Universal LPC
+Spritesheet Character Generator). Seules ses données sont reprises (PNG, définitions JSON,
+palettes), jamais son code (GPL) : le compositeur est fait maison.
+
+**Import des assets** (`pnpm assets:import`, script `scripts/import-lpc.ts`, relançable).
+
+- Clone partiel du repo LPC, épinglé sur un commit (`--ref` pour en changer), dans `.cache/lpc/`
+  (gitignoré) : définitions, palettes et uniquement les PNG de base des 5 animations retenues
+  (`idle`, `walk`, `sit`, `jump`, `emote`). Les variantes de couleur précalculées, rangées dans des
+  sous-dossiers `<animation>/`, ne sont pas prises.
+- La catégorie vient du `type_name` de chaque définition, traduit par `TYPE_TO_CATEGORY`
+  (`packages/avatar-assets/import/lpc.ts`). Armes, boucliers, carquois, outils, bijoux, épaules,
+  bras et les pièces secondaires (liserés, surcouches, accessoires de chapeau) sont écartés. Seules
+  les têtes humaines masculine et féminine et 6 expressions de visage sont gardées
+  (`ALLOWED_ITEMS`), avec nez et sourcils ; ni oreilles, ni têtes non humaines.
+- Un élément n'est proposé pour une morphologie que si chacun de ses calques y existe avec les 5
+  animations, au même nombre de frames que le corps de référence. Le script affiche chaque élément
+  écarté avec sa raison.
+- Sortie versionnée dans `packages/avatar-assets` : `sprites/` (les PNG retenus, à leur chemin LPC)
+  et `data/` (`catalog.json`, `palettes.json`, `credits.json`, ignorés par Prettier).
+- Les capes n'ont ni `sit`, ni `jump`, ni `emote` : elles sont admises par `ANIMATION_FALLBACKS`
+  (`emote` reprend les frames d'`idle`, `sit` et `jump` ne les dessinent pas, comme le générateur
+  LPC). Aucune robe ni aucun sac à dos ne remplit la règle des 5 animations.
+- Morphologies : homme et femme seulement (`MORPHS`) ; les autres morphologies LPC (ado, enfant,
+  musclé, enceinte) ne sont pas importées.
+
+**Compositeur** (`packages/avatar`, même code dans le navigateur et sur le serveur).
+
+- Config : `{ v: 1, morph, skin, eyes, items: { <catégorie>: { id, colors? } } }`. La peau et les
+  yeux se choisissent une fois : tout emplacement de couleur du matériau `body` (corps, tête,
+  visage) prend `skin`, tout emplacement `eye` prend `eyes`.
+- Règles : un élément par catégorie, corps et tête obligatoires, une robe retire le pantalon,
+  élément compatible avec la morphologie (et avec la tête pour les visages, dont le chemin contient
+  `${head}`).
+- Tous les calques des éléments choisis sont triés par zPos (tri stable), puis dessinés avec un
+  palette swap : chaque teinte du dégradé de base du matériau est remplacée par la teinte de même
+  rang de la couleur choisie.
+- Sortie : une planche unique de 5 animations × 4 directions (haut, gauche, bas, droite), frames de
+  64 px (`sheetLayout`).
+- Lecture et écriture des PNG : `createImageBitmap` et canvas côté navigateur, sharp côté serveur
+  (`@app/avatar/server`, déjà présent avec Next et compatible Vercel).
+- `configHash` : SHA-256 du JSON canonique de la config, de la version du rendu et du commit LPC.
+
+**Données** (module core) :
+
+- `Avatar` : userId (PK), config (Json), configHash, sheetKey (`avatars/<userId>-<hash>.png`),
+  updatedAt.
+- `UserAvatarItem` : userId, itemId, acquiredAt. Vide pour l'instant : tous les éléments sont
+  `unlock: "free"`, la validation exige déjà la possession des autres.
+
+**Cycle de vie.**
+
+- Première visite : `ensureAvatar` crée un avatar aléatoire mais cohérent (tête humaine assortie à
+  la silhouette, couleurs naturelles), sans événement d'activité. Il recompose aussi la planche si
+  le catalogue a été réimporté (empreinte différente). Les membres pas encore revenus reçoivent le
+  leur via `ensureMissingAvatars`, quelques-uns à la fois, après la réponse du dashboard.
+- Éditeur (`/avatar`) : aperçu composé dans le navigateur à partir de `public/avatar-assets`
+  (copie des sprites faite par la tâche `generate` d'`apps/web`, gitignorée).
+- Enregistrement (server action) : validation zod puis catalogue (`checkConfig`), composition,
+  envoi dans R2 (`putObject`, `Cache-Control: immutable`), upsert, événement `avatar/updated`, puis
+  suppression de l'ancienne planche. Même config : rien ne se passe.
+- Lecture : `GET /api/avatars/[userId]/[hash]` (requireMember) vérifie que l'empreinte est la
+  courante puis redirige (302) vers une URL GET présignée de 15 min. La redirection est gardée
+  10 min (`private, max-age=600`), moins longtemps que la validité de l'URL ; une nouvelle planche a
+  toujours une nouvelle URL, grâce à l'empreinte.
+- Vercel : `outputFileTracingIncludes` embarque `public/avatar-assets` dans les fonctions, qui
+  composent les planches.
+
+**La place** (sous la grille des apps).
+
+- Scène canvas qui remplit la hauteur restante de l'écran (280 px au moins), vue de dessus, décor dessiné en code (arbres, fontaine, bancs,
+  chemin). Simulation 100 % locale (`ui/place/sim.ts`) : chaque navigateur a sa propre scène.
+- Errance : marcher vers un point (horizontale puis verticale, donc 4 directions), pause, repartir.
+  Tri d'affichage par position verticale, décor compris.
+- Membres inactifs depuis plus de 3 jours (dernier événement ou dernière session) : assis, « zzz ».
+- Survol : pseudo. Clic : saut et petite bulle.
+- `GET /api/place?since=` (requireMember) renvoie les membres (URL de leur planche, dernière
+  activité) et les événements depuis `since` (10 min au plus). Le client l'appelle toutes les 30 s :
+  un avatar modifié change de planche sans recharger la page, et chaque événement déclenche une
+  réaction (`REACTIONS` : `avatar/updated` → émotion, 3 sur 3 à TROIS → confettis…).
+- Pause quand l'onglet est caché (requestAnimationFrame, et pas d'appel réseau). Si l'appareil
+  demande moins d'animations : personnages immobiles, ni saut ni confettis. Scène `aria-hidden` :
+  les mêmes informations sont dans le fil d'activité.
+
+**Crédits.** `/credits` liste chaque élément importé (auteurs, licences, liens) depuis
+`credits.json`, avec le lien vers le repo LPC et le commit importé. Lien depuis la place.
+
 ## Tests (Vitest)
 
 - **economy** (sur un vrai Postgres) :
@@ -250,6 +342,14 @@ décors.
   - limite d'envois ;
   - clé R2 générée côté serveur, et refus d'une clé fournie par le client ou émise pour un autre
     utilisateur.
+- **avatars** :
+  - import : un élément sans l'une des 5 animations, sans la morphologie ou au mauvais nombre de
+    frames est écarté ; les calques multiples gardent leur zPos ;
+  - compositeur : ordre des calques par zPos, éléments multi-calques, robe qui retire le
+    pantalon, peau appliquée au corps et à la tête ;
+  - validation : élément inexistant, incompatible ou non possédé, couleur hors palette refusés ;
+  - empreinte : même config, même hash ; config modifiée, nouveau hash ;
+  - enregistrement : planche dans R2, événement, ancienne planche supprimée.
 - **accès** :
   - un non-membre du serveur Discord est refusé partout ;
   - la session est révoquée après la revérification ;
@@ -269,6 +369,7 @@ décors.
 - [x] 7. `packages/ideas` : formulaire, upload, pages admin, et leurs tests.
 - [x] 7b. `games/trois` : intégration du jeu TROIS (identité Discord, classement, activité).
 - [x] 8. Finitions : `check:boundaries`, CI GitHub Actions, README complet.
+- [x] 9. Avatars pixel art (assets LPC, compositeur, éditeur) et place du dashboard.
 
 ## Hors périmètre (pour l'instant)
 

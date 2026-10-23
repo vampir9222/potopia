@@ -15,3 +15,12 @@ export class ForbiddenError extends Error {
     this.name = "ForbiddenError";
   }
 }
+
+/** Config d'avatar refusée (élément inconnu, incompatible, non débloqué…) : à traduire en 400. */
+export class AvatarConfigError extends Error {
+  readonly status = 400;
+  constructor(readonly issues: string[]) {
+    super(issues[0] ?? "Avatar invalide.");
+    this.name = "AvatarConfigError";
+  }
+}

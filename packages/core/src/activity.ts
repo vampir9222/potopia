@@ -37,3 +37,12 @@ export async function listRecentEvents(limit = 20): Promise<ActivityEvent[]> {
     take: Math.min(Math.max(limit, 1), MAX_RECENT_EVENTS),
   });
 }
+
+/** Événements publiés après `since` (exclu), du plus ancien au plus récent, MAX_RECENT_EVENTS au plus. */
+export async function listEventsSince(since: Date): Promise<ActivityEvent[]> {
+  return db.activityEvent.findMany({
+    where: { createdAt: { gt: since } },
+    orderBy: { createdAt: "asc" },
+    take: MAX_RECENT_EVENTS,
+  });
+}

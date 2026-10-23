@@ -103,6 +103,7 @@ serveur à la connexion, puis toutes les 6 heures.
 | `pnpm db:migrate`       | Crée une migration à partir des `schema.prisma` et l'applique (dev)       |
 | `pnpm db:deploy`        | Applique les migrations existantes (prod, fait par le build Vercel)       |
 | `pnpm db:reset:test`    | Remet à zéro la base de test                                              |
+| `pnpm assets:import`    | Réimporte les sprites LPC des avatars (`--ref <commit>` pour en changer)  |
 
 La CI GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lance format, lint,
 typecheck, frontières et tests (avec Postgres et stockage réels) sur chaque pull request vers `main`,
@@ -118,7 +119,10 @@ apps/web/        app Next : pages, layouts, server actions, routes API (fines, s
 packages/
   config/        tsconfig, ESLint, brand.ts (nom et monnaie)
   db/            client Prisma partagé, assemblage des schémas, migrations, contrôle des frontières
-  core/          auth Discord, accès, utilisateurs, registre des apps, activité, notifications
+  core/          auth Discord, accès, utilisateurs, registre des apps, activité, notifications,
+                 avatars (config, planche composée dans R2, place)
+  avatar/        compositeur d'avatars LPC (client et serveur), éditeur, place du dashboard
+  avatar-assets/ sprites LPC importés, catalogue, palettes et crédits (pnpm assets:import)
   economy/       monnaie : ledger en ajout seul, wallets
   ideas/         boîte à idées (lue par les admins seulement)
   storage/       client S3/R2 et URLs présignées
@@ -188,6 +192,8 @@ await withTx(async (tx) => {
 - `idempotencyKey` : une clé stable par opération ; rejouer la même opération ne crédite qu'une
   fois. `debit` lève `InsufficientFundsError` si le solde ne suffit pas.
 - La phrase affichée dans le fil d'activité se déclare dans `apps/web/lib/activity.ts`.
+- La réaction des avatars de la place (saut, émotion, confettis, bulle) se déclare dans
+  `REACTIONS` de `packages/avatar/ui/place/reactions.ts` ; par défaut, l'auteur saute.
 
 ### Jouer des sons
 

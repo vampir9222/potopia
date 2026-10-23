@@ -296,3 +296,37 @@ jeu du portail. Détails du jeu : [games/trois/README.md](../games/trois/README.
 
 - La CI est verte.
 - Quelqu'un qui découvre le projet peut le lancer en suivant uniquement le README.
+
+---
+
+## Étape 9 : avatars et place ✅
+
+Détails : section « Avatars et place » de [ARCHITECTURE.md](ARCHITECTURE.md).
+
+**Tâches**
+
+- `scripts/import-lpc.ts` (`pnpm assets:import`) : clone partiel du repo LPC épinglé sur un
+  commit, sélection des éléments (15 catégories, 5 animations, homme et femme, capes avec animations de remplacement), rapport
+  des éléments écartés, sortie dans `packages/avatar-assets` (PNG, catalogue, palettes, crédits).
+- `packages/avatar` : config et validation (`checkConfig`), compositeur (zPos, multi-calques,
+  palette swap, robe sans pantalon), empreinte, avatar aléatoire, adaptateur sharp ; UI :
+  `AvatarSprite`, `AvatarEditor`, `Place`.
+- core : `Avatar` et `UserAvatarItem`, `validateAvatarConfig`, `saveAvatar` (R2 + événement
+  `avatar/updated`), `ensureAvatar`, `ensureMissingAvatars`, `listPlaceMembers`,
+  `listEventsSince`. storage : `putObject` et `deleteObject`.
+- Web : page `/avatar` (lien « Mon avatar » du menu), routes `/api/avatars/[userId]/[hash]`
+  et `/api/place`, place sous la grille des apps, page `/credits`.
+
+**Tests**
+
+- Import : élément écarté sans l'une des 5 animations, sans la morphologie ou au mauvais nombre de
+  frames ; calques multiples gardés avec leur zPos.
+- Compositeur : ordre des calques, multi-calques, robe et pantalon, couleurs de peau.
+- Validation : élément inexistant, incompatible, non possédé ; couleur hors palette.
+- Empreinte : stable pour une même config, nouvelle pour une config modifiée.
+- Routes et action refusées sans session (401) et pour une session révoquée (403).
+
+**Fini quand**
+
+- Un membre personnalise son avatar, le voit se promener sur la place,
+  et les autres le voient changer au rafraîchissement suivant (30 s).

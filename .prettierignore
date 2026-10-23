@@ -8,3 +8,5 @@ packages/db/src/generated/
 packages/db/prisma/migrations/
 # Listes de mots des jeux : gardées telles que générées
 games/*/data/
+# Données générées par pnpm assets:import : gardées telles quelles
+packages/avatar-assets/data/

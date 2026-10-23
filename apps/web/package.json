@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "generate": "tsx scripts/copy-avatar-assets.ts",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -12,11 +13,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@app/avatar": "workspace:*",
+    "@app/avatar-assets": "workspace:*",
     "@app/config": "workspace:*",
     "@app/core": "workspace:*",
     "@app/db": "workspace:*",
     "@app/economy": "workspace:*",
     "@app/ideas": "workspace:*",
+    "@app/storage": "workspace:*",
     "@app/tcg": "workspace:*",
     "@app/trois": "workspace:*",
     "@app/ui": "workspace:*",

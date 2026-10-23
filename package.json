@@ -19,11 +19,13 @@
     "db:deploy": "pnpm --filter @app/db db:deploy",
     "db:reset:test": "pnpm --filter @app/db db:reset:test",
     "storage:init": "pnpm --filter @app/storage storage:init",
-    "check:boundaries": "pnpm --filter @app/db check:boundaries"
+    "check:boundaries": "pnpm --filter @app/db check:boundaries",
+    "assets:import": "tsx scripts/import-lpc.ts"
   },
   "devDependencies": {
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",
+    "tsx": "4.23.15",
     "turbo": "2.11.10",
     "typescript": "6.0.3"
   }
