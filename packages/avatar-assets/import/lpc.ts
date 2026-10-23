@@ -27,6 +27,9 @@ export const TYPE_TO_CATEGORY: Record<string, Category> = {
   head: "head",
   expression: "eyes",
   eyes: "eyes",
+  eyebrows: "eyebrows",
+  nose: "nose",
+  ears: "ears",
   hair: "hair",
   beard: "beards",
   mustache: "beards",
@@ -46,8 +49,26 @@ export const TYPE_TO_CATEGORY: Record<string, Category> = {
   backpack: "backpack",
 };
 
-/** Têtes proposées : humaines, masculine et féminine. Les autres (animaux, monstres…) sont écartées. */
-export const ALLOWED_HEADS: readonly string[] = ["heads_human_male", "heads_human_female"];
+/** Têtes proposées : humaines (adultes). Les autres (animaux, monstres…) sont écartées. */
+export const ALLOWED_HEADS: readonly string[] = [
+  "heads_human_male",
+  "heads_human_female",
+  "heads_human_male_small",
+  "heads_human_female_small",
+  "heads_human_male_plump",
+  "heads_human_male_gaunt",
+  "heads_human_male_elderly",
+  "heads_human_female_elderly",
+  "heads_human_elderly_small",
+];
+
+/** Éléments non humains écartés dans une catégorie gardée (oreilles d'animaux, de dragon). */
+export const EXCLUDED_ITEMS: readonly string[] = [
+  "head_ears_avyon",
+  "head_ears_dragon",
+  "head_ears_lykon",
+  "head_ears_zabos",
+];
 
 /**
  * Catégories admises malgré des animations absentes chez LPC : animation dont on reprend les
@@ -249,8 +270,12 @@ export function buildCatalog(input: {
       reject("aucun calque");
       continue;
     }
+    if (EXCLUDED_ITEMS.includes(id)) {
+      reject("élément non humain");
+      continue;
+    }
     if (cat === "head" && !ALLOWED_HEADS.includes(id)) {
-      reject("tête non retenue (humaines masculine et féminine seulement)");
+      reject("tête non retenue (têtes humaines seulement)");
       continue;
     }
     const fallbacks = ANIMATION_FALLBACKS[cat];

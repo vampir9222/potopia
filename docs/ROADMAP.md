@@ -306,7 +306,7 @@ Détails : section « Avatars et place » de [ARCHITECTURE.md](ARCHITECTURE.md).
 **Tâches**
 
 - `scripts/import-lpc.ts` (`pnpm assets:import`) : clone partiel du repo LPC épinglé sur un
-  commit, sélection des éléments (13 catégories, 5 animations, homme et femme, capes avec animations de remplacement), rapport
+  commit, sélection des éléments (16 catégories, 5 animations, homme et femme, capes avec animations de remplacement), rapport
   des éléments écartés, sortie dans `packages/avatar-assets` (PNG, catalogue, palettes, crédits).
 - `packages/avatar` : config et validation (`checkConfig`), compositeur (zPos, multi-calques,
   palette swap, robe sans pantalon), empreinte, avatar aléatoire, adaptateur sharp ; UI :

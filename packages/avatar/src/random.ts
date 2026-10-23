@@ -42,8 +42,13 @@ const NATURAL_HAIR = [
 ];
 /** Tête par silhouette (seules les têtes humaines masculine et féminine sont importées). */
 const HEADS: Partial<Record<Morph, string[]>> = {
-  male: ["heads_human_male"],
-  female: ["heads_human_female"],
+  male: [
+    "heads_human_male",
+    "heads_human_male",
+    "heads_human_male_plump",
+    "heads_human_male_gaunt",
+  ],
+  female: ["heads_human_female", "heads_human_female", "heads_human_female_small"],
 };
 const MORPH_WEIGHTS: Partial<Record<Morph, number>> = { male: 1, female: 1 };
 
@@ -124,6 +129,8 @@ export function randomConfig(
 
   const chance = (p: number) => rng() < p;
   if (chance(0.92)) choose("hair");
+  if (chance(0.6)) choose("eyebrows");
+  if (chance(0.35)) choose("nose");
   if (chance(0.3) && morph === "male") choose("beards");
   if (chance(0.15) && optionsFor(catalog, config, "dress").length > 0) {
     choose("dress");
