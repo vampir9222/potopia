@@ -26,6 +26,8 @@ model User {
   accounts       Account[]
   activityEvents ActivityEvent[]
   notifications  Notification[]
+  avatar         Avatar?
+  avatarItems    UserAvatarItem[]
 
   @@map("users")
   @@schema("core")
@@ -116,5 +118,35 @@ model Notification {
 
   @@index([userId, createdAt(sort: Desc)])
   @@map("notifications")
+  @@schema("core")
+}
+
+// Avatar pixel art (éléments LPC) : config choisie et planche composée, stockée dans R2.
+model Avatar {
+  userId     String   @id @map("user_id")
+  // Config validée contre le catalogue (@app/avatar) : morphologie, couleurs, éléments.
+  config     Json
+  // Empreinte de la config (et du catalogue) : nomme la planche et invalide les caches.
+  configHash String   @map("config_hash")
+  // Clé R2 de la planche : avatars/<userId>-<hash>.png. Jamais une URL.
+  sheetKey   String   @map("sheet_key")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("avatars")
+  @@schema("core")
+}
+
+// Éléments d'avatar débloqués par un membre (ceux dont le catalogue dit « unlock » ≠ free).
+model UserAvatarItem {
+  userId     String   @map("user_id")
+  itemId     String   @map("item_id")
+  acquiredAt DateTime @default(now()) @map("acquired_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId, itemId])
+  @@map("user_avatar_items")
   @@schema("core")
 }

@@ -14,8 +14,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@app/avatar": "workspace:*",
+    "@app/avatar-assets": "workspace:*",
     "@app/config": "workspace:*",
     "@app/db": "workspace:*",
+    "@app/storage": "workspace:*",
     "@app/ui": "workspace:*",
     "better-auth": "1.7.12",
     "lucide-react": "1.61.0",

@@ -1,4 +1,13 @@
-import { ForbiddenError, notify, UnauthorizedError, countUnread } from "@app/core";
+import type { PlaceSnapshot } from "@app/avatar/ui";
+import {
+  countUnread,
+  ensureAvatar,
+  ForbiddenError,
+  getAvatar,
+  notify,
+  publishEvent,
+  UnauthorizedError,
+} from "@app/core";
 import { FakeDiscord, fakeUser, OTHER_GUILD_ID, signInWithDiscord } from "@app/core/testing";
 import { db } from "@app/db";
 import { truncateTestDb } from "@app/db/testing";
@@ -33,6 +42,8 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+// Tâches après la réponse (avatars manquants) : ignorées en test.
+vi.mock("next/server", () => ({ after: () => undefined }));
 
 const { markAllNotificationsAsRead, markNotificationAsRead } =
   await import("@/app/actions/notifications");
@@ -54,6 +65,12 @@ const troisPracticeRoute = await import("@/app/api/trois/practice/route");
 const troisLeaderboardRoute = await import("@/app/api/trois/leaderboard/route");
 const { default: TroisPage } = await import("@/app/(platform)/trois/page");
 const { default: WalletPage } = await import("@/app/(platform)/wallet/page");
+const { default: AvatarPage } = await import("@/app/(platform)/avatar/page");
+const { default: CreditsPage } = await import("@/app/(platform)/credits/page");
+const { saveAvatarAction } = await import("@/app/(platform)/avatar/actions");
+const { sprites } = await import("@/lib/avatar");
+const avatarSheetRoute = await import("@/app/api/avatars/[userId]/[hash]/route");
+const placeRoute = await import("@/app/api/place/route");
 
 const ADMIN_ID = "100000000000000001";
 const MEMBER_ID = "100000000000000002";
@@ -75,6 +92,7 @@ const actions: Record<string, () => Promise<unknown>> = {
   markAllNotificationsAsRead: () => markAllNotificationsAsRead(),
   adjustBalance: () => adjustBalance({ status: "idle" }, adjustForm("inconnu")),
   sendIdea: () => sendIdea({ status: "idle" }, ideaForm()),
+  saveAvatarAction: () => saveAvatarAction({}),
 };
 
 function ideaForm(): FormData {
@@ -116,7 +134,15 @@ const routes: Record<string, () => Promise<Response>> = {
     troisPracticeRoute.POST(withCookie("/api/trois/practice", { guess: "faire", slot: 0 })),
   "GET /api/trois/leaderboard": () =>
     troisLeaderboardRoute.GET(withCookie("/api/trois/leaderboard?period=week")),
+  "GET /api/avatars/[userId]/[hash]": () => requestAvatarSheet("inconnu", "0123456789abcdef"),
+  "GET /api/place": () => placeRoute.GET(withCookie("/api/place")),
 };
+
+function requestAvatarSheet(userId: string, hash: string): Promise<Response> {
+  return avatarSheetRoute.GET(withCookie(`/api/avatars/${userId}/${hash}`), {
+    params: Promise.resolve({ userId, hash }),
+  });
+}
 
 /** Requête vers l'app avec les cookies de la requête courante (POST JSON si body). */
 function withCookie(path: string, body?: unknown): Request {
@@ -135,6 +161,8 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "ideas/page": () => IdeasPage(),
   "trois/page": () => TroisPage(),
   "wallet/page": () => WalletPage({ searchParams: Promise.resolve({}) }),
+  "avatar/page": () => AvatarPage(),
+  "credits/page": () => CreditsPage(),
 };
 const adminPages: Record<string, () => Promise<unknown>> = {
   "admin/layout": () => AdminLayout({ children }),
@@ -293,5 +321,40 @@ describe("route handlers", () => {
   it("l'image d'une idée sans image renvoie 404 à un admin", async () => {
     await signIn(ADMIN_ID);
     expect((await requestIdeaImage()).status).toBe(404);
+  });
+
+  it("la planche d'un avatar redirige vers une URL présignée, 404 pour une autre empreinte", async () => {
+    const userId = await signIn(MEMBER_ID);
+    const avatar = await ensureAvatar({ userId, sprites });
+    const res = await requestAvatarSheet(userId, avatar.configHash);
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toContain(avatar.sheetKey);
+    expect(res.headers.get("cache-control")).toBe("private, max-age=600");
+    expect((await requestAvatarSheet(userId, "0000000000000000")).status).toBe(404);
+  });
+
+  it("la place liste les membres et les événements récents, sans contenu", async () => {
+    const userId = await signIn(MEMBER_ID);
+    await ensureAvatar({ userId, sprites });
+    const since = new Date(Date.now() - 1000).toISOString();
+    await publishEvent({ userId, app: "avatar", type: "updated" });
+    const res = await placeRoute.GET(withCookie(`/api/place?since=${since}`));
+    const body = (await res.json()) as PlaceSnapshot;
+    expect(body.members.map((m) => m.id)).toEqual([userId]);
+    expect(body.members[0]?.sheetUrl).toMatch(/^\/api\/avatars\/.+\/[0-9a-f]{16}$/);
+    expect(body.events.map((e) => [e.app, e.type])).toEqual([["avatar", "updated"]]);
+    expect((await placeRoute.GET(withCookie("/api/place?since=hier"))).status).toBe(400);
+  });
+
+  it("saveAvatarAction refuse une config invalide et enregistre une config valide", async () => {
+    const userId = await signIn(MEMBER_ID);
+    const { config } = await ensureAvatar({ userId, sprites });
+    expect(await saveAvatarAction({ ...config, morph: "dragon" })).toEqual({
+      status: "error",
+      message: "Avatar invalide.",
+    });
+    const next = { ...config, eyes: config.eyes === "ulpc.green" ? "ulpc.blue" : "ulpc.green" };
+    expect(await saveAvatarAction(next)).toEqual({ status: "ok" });
+    expect((await getAvatar(userId))?.config).toEqual(next);
   });
 });

@@ -14,6 +14,7 @@ function numberField(payload: Payload, key: string): number | undefined {
  * contenu privé : seulement des compteurs (score d'une partie…).
  */
 const DESCRIPTIONS: Record<string, (payload: Payload) => string> = {
+  "avatar/updated": () => "a changé de look",
   "ideas/idea_submitted": () => "a proposé une idée",
   "trois/day_completed": (payload) => {
     const found = numberField(payload, "found");

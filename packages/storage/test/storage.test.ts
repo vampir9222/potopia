@@ -1,6 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { createR2Client, getStorage, headObject, presignGet, presignPut } from "../src/index";
+import {
+  createR2Client,
+  deleteObject,
+  getStorage,
+  headObject,
+  presignGet,
+  presignPut,
+  putObject,
+} from "../src/index";
 
 // Client R2 fictif : la signature est calculée localement, sans appel réseau.
 const r2 = createR2Client({
@@ -75,5 +83,18 @@ describe("stockage local (docker-compose)", () => {
   it("headObject renvoie null pour un objet absent", async () => {
     expect(await headObject(`tests/${randomUUID()}.png`)).toBeNull();
     expect(getStorage().bucket).toBe("app-test");
+  });
+
+  it("putObject envoie depuis le serveur avec son Cache-Control, deleteObject supprime", async () => {
+    const key = `tests/${randomUUID()}.png`;
+    const body = new Uint8Array([137, 80, 78, 71, 4, 5]);
+    await putObject({ key, body, contentType: "image/png", cacheControl: "private, max-age=60" });
+    expect(await headObject(key)).toEqual({ contentType: "image/png", contentLength: body.length });
+    const get = await fetch(await presignGet({ key }));
+    expect(get.headers.get("cache-control")).toBe("private, max-age=60");
+
+    await deleteObject(key);
+    expect(await headObject(key)).toBeNull();
+    await expect(deleteObject(key)).resolves.toBeUndefined();
   });
 });

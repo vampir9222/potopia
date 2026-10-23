@@ -11,6 +11,8 @@ try {
 const nextConfig: NextConfig = {
   // Les packages du monorepo exportent du TypeScript brut : Next les compile.
   transpilePackages: [
+    "@app/avatar",
+    "@app/avatar-assets",
     "@app/config",
     "@app/core",
     "@app/db",
@@ -20,6 +22,9 @@ const nextConfig: NextConfig = {
     "@app/trois",
     "@app/ui",
   ],
+  // Composition des planches d'avatar côté serveur : les sprites de public/ (servis par le CDN)
+  // doivent aussi être embarqués dans les fonctions.
+  outputFileTracingIncludes: { "/**": ["./public/avatar-assets/**/*"] },
   experimental: {
     // forbidden() → 403 sur les pages admin (convention forbidden.tsx).
     authInterrupts: true,

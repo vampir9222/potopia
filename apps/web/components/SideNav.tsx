@@ -1,7 +1,7 @@
 "use client";
 
 import { cx } from "@app/ui";
-import { Coins, House, Shield, type LucideIcon } from "lucide-react";
+import { Coins, House, Shield, Shirt, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,6 +9,7 @@ type Item = { href: string; label: string; icon: LucideIcon; adminOnly?: boolean
 
 const ITEMS: Item[] = [
   { href: "/", label: "Accueil", icon: House },
+  { href: "/avatar", label: "Mon avatar", icon: Shirt },
   { href: "/wallet", label: "Ma monnaie", icon: Coins },
   { href: "/admin", label: "Administration", icon: Shield, adminOnly: true },
 ];

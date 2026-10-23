@@ -1,0 +1,35 @@
+{
+  "name": "@app/avatar",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./ui": "./ui/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@app/avatar-assets": "workspace:*",
+    "@app/config": "workspace:*",
+    "@app/ui": "workspace:*",
+    "lucide-react": "1.61.0",
+    "sharp": "0.35.5",
+    "zod": "4.6.7"
+  },
+  "peerDependencies": {
+    "react": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "eslint": "10.13.0",
+    "react": "19.3.1",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}

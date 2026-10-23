@@ -4,6 +4,7 @@
 
 /* Les packages sont liés dans node_modules, que Tailwind n'analyse pas : on les déclare. */
 @source "../../../packages/ui/src";
+@source "../../../packages/avatar/ui";
 @source "../../../packages/core/ui";
 @source "../../../packages/economy/ui";
 @source "../../../packages/ideas/ui";

@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -77,4 +78,36 @@ export async function headObject(
     if (error instanceof S3ServiceException && error.$metadata.httpStatusCode === 404) return null;
     throw error;
   }
+}
+
+const putObjectInput = z.object({
+  key: keySchema,
+  body: z.custom<Uint8Array<ArrayBufferLike>>((value) => value instanceof Uint8Array),
+  contentType: z.string().min(1).max(100),
+  cacheControl: z.string().max(200).optional(),
+});
+
+/** Envoi direct depuis le serveur (contenu produit par le serveur lui-même, jamais par un client). */
+export async function putObject(
+  input: z.input<typeof putObjectInput>,
+  storage: Storage = getStorage(),
+): Promise<void> {
+  const { key, body, contentType, cacheControl } = putObjectInput.parse(input);
+  await storage.s3.send(
+    new PutObjectCommand({
+      Bucket: storage.bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      ContentLength: body.byteLength,
+      CacheControl: cacheControl,
+    }),
+  );
+}
+
+/** Supprime un objet (sans erreur s'il n'existe pas). */
+export async function deleteObject(key: string, storage: Storage = getStorage()): Promise<void> {
+  await storage.s3.send(
+    new DeleteObjectCommand({ Bucket: storage.bucket, Key: keySchema.parse(key) }),
+  );
 }

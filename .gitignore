@@ -27,3 +27,9 @@ Thumbs.db
 
 # Scripts locaux non versionnés (seed de démo…)
 *.local.ts
+
+# Clone partiel des données LPC (pnpm assets:import)
+.cache/
+
+# Sprites d'avatar copiés depuis packages/avatar-assets (pnpm generate)
+apps/web/public/avatar-assets/
