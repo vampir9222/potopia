@@ -1,0 +1,104 @@
+// Domaine agents : Agents Doubles, jeu coopératif à deux (règles de Codenames Duet).
+// `userA` et `userB` référencent core.users sans relation. Modèles préfixés Agents.
+
+enum AgentsStatus {
+  PLAYING
+  WON
+  LOST
+  ABANDONED
+
+  @@schema("agents")
+}
+
+/// CLUE : on attend l'indice de `clueSeat` · GUESS : l'autre joueur touche des mots ·
+/// SUDDEN : mort subite, sans indice · OVER : partie terminée.
+enum AgentsPhase {
+  CLUE
+  GUESS
+  SUDDEN
+  OVER
+
+  @@schema("agents")
+}
+
+/// Ce qu'était le mot touché sur la carte de celui qui a donné l'indice.
+enum AgentsResult {
+  AGENT
+  BYSTANDER
+  ASSASSIN
+
+  @@schema("agents")
+}
+
+/// Une partie entre deux membres. Siège 0 = userA (celui qui l'a lancée), siège 1 = userB.
+model AgentsGame {
+  id          String       @id @default(uuid(7))
+  userA       String       @map("user_a")
+  userB       String       @map("user_b")
+  /// Les 25 mots de la grille, dans l'ordre d'affichage
+  words       String[]
+  /// Carte secrète de chaque joueur : 25 caractères, G = agent, N = témoin, A = assassin.
+  /// Jamais envoyée au partenaire tant que la partie n'est pas finie.
+  keyA        String       @map("key_a")
+  keyB        String       @map("key_b")
+  status      AgentsStatus @default(PLAYING)
+  phase       AgentsPhase  @default(CLUE)
+  /// Siège qui donne (ou vient de donner) l'indice du tour en cours
+  clueSeat    Int          @map("clue_seat")
+  turnsLeft   Int          @default(9) @map("turns_left")
+  /// Mots touchés depuis l'indice en cours
+  turnGuesses Int          @default(0) @map("turn_guesses")
+  /// Témoins touchés pendant la partie
+  mistakes    Int          @default(0)
+  /// Tours utilisés à la fin de la partie (10 = gagnée en mort subite)
+  turnsUsed   Int?         @map("turns_used")
+  /// Verrou optimiste : deux coups envoyés en même temps ne passent pas tous les deux
+  version     Int          @default(0)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  finishedAt  DateTime?    @map("finished_at")
+
+  clues   AgentsClue[]
+  guesses AgentsGuess[]
+
+  @@index([userA, updatedAt])
+  @@index([userB, updatedAt])
+  @@index([status, finishedAt])
+  @@map("games")
+  @@schema("agents")
+}
+
+model AgentsClue {
+  gameId    String   @map("game_id")
+  /// 1 à 9
+  turn      Int
+  seat      Int
+  word      String
+  count     Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  game AgentsGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, turn])
+  @@map("clues")
+  @@schema("agents")
+}
+
+model AgentsGuess {
+  gameId    String       @map("game_id")
+  seq       Int
+  /// Tour de l'indice (1 à 9), ou 10 pendant la mort subite
+  turn      Int
+  /// Siège du joueur qui a touché le mot
+  seat      Int
+  /// Index du mot dans la grille (0 à 24)
+  card      Int
+  result    AgentsResult
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  game AgentsGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, seq])
+  @@map("guesses")
+  @@schema("agents")
+}

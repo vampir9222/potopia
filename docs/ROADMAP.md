@@ -330,3 +330,35 @@ Détails : section « Avatars et place » de [ARCHITECTURE.md](ARCHITECTURE.md).
 
 - Un membre personnalise son avatar, le voit se promener sur la place,
   et les autres le voient changer au rafraîchissement suivant (30 s).
+
+---
+
+## Étape 10 : Agents Doubles ✅
+
+Deuxième jeu du portail, à deux : les règles de Codenames Duet, coopératives, au tour par tour.
+Détails du jeu : [games/agents/README.md](../games/agents/README.md).
+
+**Tâches**
+
+- `games/agents` : schéma Postgres `agents` (`games`, `clues`, `guesses`, modèles préfixés
+  `Agents`), règles sans base de données (`src/rules.ts` : tirage des cartes, indice, mot touché,
+  fin de tour, mort subite), parties, notifications et classement des duos.
+- Liste d'environ 1 700 mots, dont des personnages ultra connus (jeux vidéo, films, séries).
+- Routes `/api/agents/games`, `/api/agents/games/[id]` et `/api/agents/leaderboard`
+  (requireMember), pages `/agents` et `/agents/[id]`, tuile du registre, événement
+  `agents/mission_completed` dans le fil d'activité (avec le nom du partenaire).
+
+**Tests**
+
+- Cartes : 9 agents et 3 assassins par carte, 15 agents en tout, répartition du jeu.
+- Mots : pas de doublon, grille sans mots trop proches ; indice refusé s'il ressemble à un mot de la
+  grille.
+- Partie : chacun ne voit que sa carte, témoin qui passe la main, assassin, victoire, mort subite,
+  coups simultanés jamais comptés deux fois, abandon, liste des parties.
+- Classement des duos ; chaque route et page refusent sans session (401) et une session révoquée
+  (403).
+
+**Fini quand**
+
+- Deux membres jouent une mission jusqu'au bout et apparaissent au classement des duos et dans
+  l'activité.

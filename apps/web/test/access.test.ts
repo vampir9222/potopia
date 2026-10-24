@@ -72,6 +72,11 @@ const ideasExportRoute = await import("@/app/api/admin/ideas/export/route");
 const cardVotesRoute = await import("@/app/api/admin/cards/votes/route");
 const { default: AdminCardsPage } = await import("@/app/(platform)/admin/cards/page");
 const { rateDesignAction } = await import("@/app/(platform)/admin/cards/actions");
+const agentsGamesRoute = await import("@/app/api/agents/games/route");
+const agentsGameRoute = await import("@/app/api/agents/games/[id]/route");
+const agentsLeaderboardRoute = await import("@/app/api/agents/leaderboard/route");
+const { default: AgentsPage } = await import("@/app/(platform)/agents/page");
+const { default: AgentsGamePage } = await import("@/app/(platform)/agents/[id]/page");
 const troisGameRoute = await import("@/app/api/trois/game/route");
 const troisGuessRoute = await import("@/app/api/trois/guess/route");
 const troisPracticeRoute = await import("@/app/api/trois/practice/route");
@@ -152,6 +157,19 @@ const routes: Record<string, () => Promise<Response>> = {
   "GET /api/admin/ideas/[id]/image": requestIdeaImage,
   "GET /api/admin/ideas/export": () => ideasExportRoute.GET(withCookie("/api/admin/ideas/export")),
   "GET /api/admin/cards/votes": () => cardVotesRoute.GET(withCookie("/api/admin/cards/votes")),
+  "GET /api/agents/games": () => agentsGamesRoute.GET(withCookie("/api/agents/games")),
+  "POST /api/agents/games": () =>
+    agentsGamesRoute.POST(withCookie("/api/agents/games", { partnerId: "inconnu" })),
+  "GET /api/agents/games/[id]": () =>
+    agentsGameRoute.GET(withCookie("/api/agents/games/inconnue"), {
+      params: Promise.resolve({ id: "inconnue" }),
+    }),
+  "POST /api/agents/games/[id]": () =>
+    agentsGameRoute.POST(withCookie("/api/agents/games/inconnue", { action: "stop" }), {
+      params: Promise.resolve({ id: "inconnue" }),
+    }),
+  "GET /api/agents/leaderboard": () =>
+    agentsLeaderboardRoute.GET(withCookie("/api/agents/leaderboard?period=all")),
   "GET /api/trois/game": () => troisGameRoute.GET(withCookie("/api/trois/game")),
   "POST /api/trois/guess": () =>
     troisGuessRoute.POST(withCookie("/api/trois/guess", { guess: "faire" })),
@@ -184,6 +202,8 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "(platform)/layout": () => PlatformLayout({ children }),
   "(platform)/page": () => DashboardPage(),
   "ideas/page": () => IdeasPage(),
+  "agents/page": () => AgentsPage(),
+  "agents/[id]/page": () => AgentsGamePage({ params: Promise.resolve({ id: "inconnue" }) }),
   "trois/page": () => TroisPage(),
   "wallet/page": () => WalletPage({ searchParams: Promise.resolve({}) }),
   "avatar/page": () => AvatarPage(),

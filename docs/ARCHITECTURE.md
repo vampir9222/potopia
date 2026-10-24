@@ -37,6 +37,7 @@ Pourquoi Better Auth plutôt qu'Auth.js :
 ```
 apps/web/            app Next mince : routes, layouts, server actions, route handlers
 games/
+  agents/            Agents Doubles, jeu d'espions coopératif à deux (règles de Codenames Duet)
   trois/             Wordle français à 3 mots par jour (premier jeu intégré)
 packages/
   config/            tsconfig, eslint, brand.ts
@@ -370,6 +371,8 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 - [x] 7b. `games/trois` : intégration du jeu TROIS (identité Discord, classement, activité).
 - [x] 8. Finitions : `check:boundaries`, CI GitHub Actions, README complet.
 - [x] 9. Avatars pixel art (assets LPC, compositeur, éditeur) et place du dashboard.
+- [x] 10. `games/agents` : Agents Doubles, jeu coopératif à deux, tour par tour, classement des
+      duos.
 
 ## Hors périmètre (pour l'instant)
 

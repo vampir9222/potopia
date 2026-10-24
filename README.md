@@ -128,6 +128,7 @@ packages/
   storage/       client S3/R2 et URLs présignées
   ui/            thèmes et composants de base
 games/
+  agents/        Agents Doubles, le jeu d'espions coopératif à deux
   trois/         TROIS, le Wordle à 3 mots par jour
 ```
 

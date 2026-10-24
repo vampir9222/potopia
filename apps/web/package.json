@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@app/agents": "workspace:*",
     "@app/avatar": "workspace:*",
     "@app/avatar-assets": "workspace:*",
     "@app/config": "workspace:*",

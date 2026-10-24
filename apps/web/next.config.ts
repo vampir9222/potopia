@@ -11,6 +11,7 @@ try {
 const nextConfig: NextConfig = {
   // Les packages du monorepo exportent du TypeScript brut : Next les compile.
   transpilePackages: [
+    "@app/agents",
     "@app/avatar",
     "@app/avatar-assets",
     "@app/config",
