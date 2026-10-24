@@ -1,3 +1,4 @@
+import { AgentsError } from "@app/agents";
 import { ForbiddenError, UnauthorizedError } from "@app/core";
 import { InvalidImageError } from "@app/ideas";
 import { TroisError } from "@app/trois";
@@ -15,7 +16,7 @@ const STATUSES: [new (...args: never[]) => Error, number][] = [
  */
 export function errorResponse(error: unknown): Response {
   // Erreurs de jeu : statut et message choisis par le jeu (essai refusé, mot inconnu…).
-  if (error instanceof TroisError) {
+  if (error instanceof TroisError || error instanceof AgentsError) {
     return Response.json({ error: error.message }, { status: error.status });
   }
   for (const [type, status] of STATUSES) {

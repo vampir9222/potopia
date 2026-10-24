@@ -8,6 +8,7 @@ import { Fragment } from "react";
 /** Libellé de chaque segment d'URL. Ajouter ici les nouvelles sections. */
 const LABELS: Record<string, string> = {
   admin: "Administration",
+  agents: "Agents Doubles",
   avatar: "Mon avatar",
   credits: "Crédits",
   cards: "Carte design",
@@ -19,6 +20,7 @@ const LABELS: Record<string, string> = {
 
 /** Libellé d'un segment dynamique (identifiant), selon la section qui le précède. */
 const ITEM_LABELS: Record<string, string> = {
+  agents: "Mission",
   ideas: "Idée",
 };
 
