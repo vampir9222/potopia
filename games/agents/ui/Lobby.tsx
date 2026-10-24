@@ -65,7 +65,7 @@ export function AgentsLobby() {
   const finished = games?.filter((g) => g.status !== "playing") ?? [];
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+    <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <Card>
           <h1 className="font-display text-text text-lg font-semibold">🕵️ {NAME}</h1>
@@ -144,7 +144,7 @@ export function AgentsLobby() {
         </Card>
       </div>
 
-      <aside className="flex w-full flex-col gap-4 lg:w-96">
+      <aside className="flex w-full flex-col gap-4 xl:w-96">
         <Card title="Classement des duos">
           <DuoLeaderboard />
         </Card>

@@ -1,7 +1,14 @@
 "use client";
 
 import { Avatar, Badge, Button, Card, Input, Select, cx } from "@app/ui";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   AGENTS_TOTAL,
   MAX_COUNT,
@@ -87,15 +94,18 @@ export function AgentsGame({ id }: { id: string }) {
     return () => clearTimeout(t);
   }, [message]);
 
-  const move = async (body: Record<string, unknown>) => {
+  /** Envoie un coup ; true s'il est passé (le formulaire d'indice ne se vide qu'alors). */
+  const move = async (body: Record<string, unknown>): Promise<boolean> => {
     setBusy(true);
     setMessage(null);
     try {
       apply(await api<GameView>(`/api/agents/games/${id}`, { body }));
       setSelected(null);
+      return true;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Erreur");
       if ((error as { status?: number }).status === 409) load();
+      return false;
     } finally {
       setBusy(false);
     }
@@ -124,7 +134,7 @@ export function AgentsGame({ id }: { id: string }) {
     view.status === "lost" && lastGuess && lastGuess.result !== "agent" ? lastGuess.card : null;
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+    <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <Card>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -181,13 +191,14 @@ export function AgentsGame({ id }: { id: string }) {
 
         <Card className="p-2 sm:p-3">
           <div
-            className="grid grid-cols-5 gap-1.5 sm:gap-2"
+            className="ag-board mx-auto grid max-w-3xl grid-cols-5 gap-2.5 p-1 sm:gap-4 sm:p-2"
             role="grid"
             aria-label="Grille de mots"
           >
             {view.cards.map((c, i) => (
               <WordCard
                 key={i}
+                index={i}
                 card={c}
                 partnerName={view.partner.name}
                 showKey={showKey || over}
@@ -208,19 +219,21 @@ export function AgentsGame({ id }: { id: string }) {
               />
               Afficher ma carte
             </label>
-            <span className="flex items-center gap-1">
-              <span className="bg-agent h-1.5 w-4 rounded-full" /> mes agents
+            <span className="flex items-center gap-1.5">
+              <span className="ag-legend ag-legend-agent" /> mes agents
             </span>
-            <span className="flex items-center gap-1">
-              <span className="bg-assassin ring-danger h-1.5 w-4 rounded-full ring-1" /> mes
-              assassins
+            <span className="flex items-center gap-1.5">
+              <span className="ag-legend ag-legend-assassin" /> mes assassins
             </span>
-            {over && <span>bande du bas : carte de {view.partner.name}</span>}
+            <span className="flex items-center gap-1.5">
+              <WalkerIcon className="size-3" /> témoin (chez qui)
+            </span>
+            {over && <span>contour intérieur : carte de {view.partner.name}</span>}
           </div>
         </Card>
       </div>
 
-      <aside className="flex w-full flex-col gap-4 lg:w-80">
+      <aside className="flex w-full flex-col gap-4 xl:w-80">
         <History view={view} />
         <Card title="Règles">
           <Rules />
@@ -244,14 +257,30 @@ export function AgentsGame({ id }: { id: string }) {
   );
 }
 
-const STRIPE: Record<CardView["mine"], string> = {
-  G: "bg-agent",
-  A: "bg-assassin ring-1 ring-danger",
-  N: "",
-};
+/** Silhouette d'espion (chapeau et lunettes), dessinée en SVG pour rester nette à toutes les tailles. */
+function SpyIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden fill="currentColor">
+      <path d="M6.6 10.6 8 4.8c.2-.8 1-1.2 1.8-1l2.2.6 2.2-.6c.8-.2 1.6.2 1.8 1l1.4 5.8z" />
+      <path d="M2.5 10.8h19c.3 0 .5.2.5.5s-.2.6-.5.7c-2.4.8-5.9 1.2-9.5 1.2s-7.1-.4-9.5-1.2a.7.7 0 0 1-.5-.7c0-.3.2-.5.5-.5" />
+      <path d="M6.3 14.6c1.5.4 3.6.6 5.7.6s4.2-.2 5.7-.6c-.3 3.6-2.8 6.4-5.7 6.4s-5.4-2.8-5.7-6.4m2.3 1.2c0 .7.7 1.2 1.6 1.2s1.4-.5 1.4-1.2zm4.6 0c0 .7.6 1.2 1.4 1.2s1.6-.5 1.6-1.2z" />
+    </svg>
+  );
+}
+
+/** Silhouette de passant, pour les témoins. */
+function WalkerIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden fill="currentColor">
+      <circle cx="12.5" cy="4" r="2.4" />
+      <path d="M10.2 7.4h3.6c.9 0 1.6.6 1.8 1.4l1.1 4.8c.1.6-.3 1.1-.9 1.1-.4 0-.8-.3-.9-.7l-.8-3.2-.6 3.4 1.6 7.4a1.1 1.1 0 0 1-2.1.5l-1.6-6-1.4 6a1.1 1.1 0 0 1-2.1-.5l1.4-7.4-.6-3.4-.8 3.2c-.1.4-.5.7-.9.7-.6 0-1-.5-.9-1.1l1.1-4.8c.2-.8.9-1.4 1.9-1.4" />
+    </svg>
+  );
+}
 
 function WordCard({
   card,
+  index,
   partnerName,
   showKey,
   over,
@@ -261,6 +290,7 @@ function WordCard({
   onClick,
 }: {
   card: CardView;
+  index: number;
   partnerName: string;
   showKey: boolean;
   over: boolean;
@@ -270,50 +300,77 @@ function WordCard({
   onClick?: () => void;
 }) {
   const out = card.bystanderMine && card.bystanderTheirs;
-  const tone = card.found
-    ? "bg-agent border-agent text-white"
-    : fatal
-      ? "bg-assassin border-danger text-white"
-      : out
-        ? "bg-bystander/70 border-bystander text-zinc-900"
-        : "bg-surface border-(--frame) text-text";
+  // face visible : carte mot, ou tuile qui la recouvre (agent trouvé, témoin des deux côtés, assassin)
+  const tile = card.found ? "found" : fatal ? "fatal" : out ? "out" : null;
+  const key = showKey && !tile ? card.mine : "N";
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={!onClick}
       aria-pressed={selected}
+      aria-label={card.word}
+      // cartes distribuées une à une, reflets du contour décalés d'une carte à l'autre
+      style={
+        {
+          animationDelay: `${index * 28}ms`,
+          "--ag-delay": `-${(index * 1730) % 4500}ms`,
+        } as CSSProperties
+      }
       className={cx(
-        "relative flex min-h-14 flex-col items-center justify-center overflow-hidden rounded-md border px-0.5 pt-2 pb-3 text-center transition sm:min-h-18",
-        tone,
-        onClick && "hover:border-accent cursor-pointer hover:-translate-y-0.5",
-        !onClick && "cursor-default",
-        selected && "ring-accent ring-offset-bg scale-[1.03] ring-2 ring-offset-1",
+        "ag-card ag-deal",
+        tile && `ag-tile ag-tile-${tile}`,
+        key === "G" && "ag-key-agent",
+        key === "A" && "ag-key-assassin",
+        over && card.theirs === "G" && "ag-their-agent",
+        over && card.theirs === "A" && "ag-their-assassin",
+        onClick && "ag-touchable",
+        selected && "ag-selected",
         flip && "agents-flip",
       )}
     >
-      {showKey && STRIPE[card.mine] && (
-        <span className={cx("absolute inset-x-0 top-0 h-1.5", STRIPE[card.mine])} aria-hidden />
-      )}
-      {over && card.theirs && STRIPE[card.theirs] && (
-        <span
-          className={cx("absolute inset-x-0 bottom-0 h-1.5", STRIPE[card.theirs])}
-          aria-hidden
-        />
-      )}
-      <span className="text-[9px] leading-tight font-semibold break-words hyphens-auto uppercase sm:text-xs md:text-sm">
-        {card.word}
-      </span>
-      {card.found && <span className="text-[10px] sm:text-xs">🕵️</span>}
-      {fatal && <span className="text-[10px] sm:text-xs">💀</span>}
-      {!card.found && !out && (card.bystanderMine || card.bystanderTheirs) && (
-        <span className="bg-bystander mt-0.5 rounded px-1 text-[8px] leading-tight text-zinc-900 sm:text-[10px]">
-          témoin {card.bystanderTheirs ? `chez ${partnerName}` : "chez toi"}
-        </span>
+      {tile ? (
+        <>
+          {tile === "found" && <SpyIcon className="ag-tile-icon" />}
+          {tile === "out" && <WalkerIcon className="ag-tile-icon" />}
+          {tile === "fatal" && <span className="ag-tile-icon text-2xl leading-none">💀</span>}
+          {tile === "found" && <span className="ag-shine" aria-hidden />}
+          <span className="ag-tile-word">{card.word}</span>
+        </>
+      ) : (
+        <>
+          <span className="ag-top" aria-hidden>
+            <span
+              className={cx(
+                "ag-portrait",
+                key === "G" && "ag-portrait-agent",
+                key === "A" && "ag-portrait-assassin",
+              )}
+            >
+              {key === "A" ? (
+                <span className="text-[0.6rem] leading-none sm:text-xs">💀</span>
+              ) : (
+                <SpyIcon className="size-full" />
+              )}
+            </span>
+            <span className="ag-mirror">{card.word}</span>
+          </span>
+          <span className="ag-label">{card.word}</span>
+
+          {(card.bystanderMine || card.bystanderTheirs) && (
+            <span className="ag-witness">
+              <WalkerIcon className="size-2.5 shrink-0" />
+              {card.bystanderTheirs ? partnerName : "toi"}
+            </span>
+          )}
+        </>
       )}
       <span className="sr-only">
-        {showKey && card.mine === "G" && "ton agent"}
-        {showKey && card.mine === "A" && "ton assassin"}
+        {key === "G" && " · ton agent"}
+        {key === "A" && " · ton assassin"}
+        {card.found && " · agent trouvé"}
+        {card.bystanderTheirs && ` · témoin chez ${partnerName}`}
+        {card.bystanderMine && " · témoin chez toi"}
       </span>
     </button>
   );
@@ -333,7 +390,7 @@ function StatusPanel({
   busy: boolean;
   selected: number | null;
   message: string | null;
-  onMove: (body: Record<string, unknown>) => void;
+  onMove: (body: Record<string, unknown>) => Promise<boolean>;
   onCancel: () => void;
 }) {
   const [word, setWord] = useState("");
@@ -357,15 +414,14 @@ function StatusPanel({
     body = (
       <form
         className="flex flex-col gap-3"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          onMove({ action: "clue", word, count: Number(count) });
-          setWord("");
+          if (await onMove({ action: "clue", word, count: Number(count) })) setWord("");
         }}
       >
         <p className="text-sm">
-          <strong>À toi de donner un indice.</strong> Fais trouver à {partner} tes agents (bande
-          verte), sans le mener vers tes assassins 💀. Il t'en reste{" "}
+          <strong>À toi de donner un indice.</strong> Fais trouver à {partner} tes agents (contour
+          vert), sans le mener vers tes assassins 💀. Il t'en reste{" "}
           <strong>{view.myAgentsLeft}</strong> à faire trouver.
         </p>
         <div className="flex flex-wrap gap-2">
@@ -375,21 +431,22 @@ function StatusPanel({
             placeholder="Un seul mot"
             maxLength={30}
             aria-label="Indice"
-            className="max-w-56 flex-1"
+            className="max-w-56 min-w-36 flex-1"
             autoFocus
           />
-          <Select
-            value={count}
-            onChange={(e) => setCount(e.target.value)}
-            aria-label="Nombre de mots"
-            className="w-20"
-          >
-            {Array.from({ length: MAX_COUNT + 1 }, (_, n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </Select>
+          <div className="w-20">
+            <Select
+              value={count}
+              onChange={(e) => setCount(e.target.value)}
+              aria-label="Nombre de mots"
+            >
+              {Array.from({ length: MAX_COUNT + 1 }, (_, n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </Select>
+          </div>
           <Button type="submit" disabled={busy || !word.trim()}>
             Envoyer l'indice
           </Button>
@@ -498,8 +555,8 @@ function Ending({ view }: { view: GameView }) {
     <div className="flex flex-col gap-3">
       <p className="text-text text-base font-semibold">{title}</p>
       <p className="text-muted text-sm">
-        Les deux cartes sont maintenant visibles : bande du haut pour la tienne, du bas pour celle
-        de {view.partner.name}.
+        Les deux cartes sont maintenant visibles : contour extérieur pour la tienne, intérieur pour
+        celle de {view.partner.name}.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button disabled={busy} onClick={again}>

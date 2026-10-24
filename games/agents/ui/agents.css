@@ -1,7 +1,17 @@
 /*
  * Styles du jeu Agents Doubles, importés par apps/web/app/globals.css après Tailwind et le thème.
- * Couleurs des cases (agent, témoin, assassin) et retournement d'une carte touchée.
+ * Cartes façon Codenames : carte papier crème, étiquette blanche du mot, mot à l'envers en haut.
+ * Ma carte secrète se lit au contour net (vert = agent, rouge = assassin), parcouru par un reflet,
+ * et au médaillon en haut à gauche ; les cartes neutres restent sans couleur. Les tuiles agent,
+ * témoin et assassin recouvrent la carte une fois révélée.
  */
+
+/* angle animable du reflet qui fait le tour du contour */
+@property --ag-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
 
 @theme {
   --color-agent: #16a34a;
@@ -9,6 +19,349 @@
   --color-assassin: #111114;
 }
 
+.ag-board {
+  perspective: 900px;
+}
+
+/* --- Carte mot --- */
+.ag-card {
+  --ag-ring: 0 0 #0000;
+  --ag-inset: 0 0 #0000;
+  --ag-beam: transparent;
+  position: relative;
+  display: flex;
+  /* proportions d'une vraie carte, quelle que soit la largeur de l'écran */
+  aspect-ratio: 4 / 3;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.25rem;
+  border-radius: 0.6rem;
+  padding: 0.3rem;
+  background:
+    radial-gradient(120% 90% at 20% 0%, rgb(255 255 255 / 0.55), transparent 60%),
+    linear-gradient(160deg, #f4ead0 0%, #e6d6ae 100%);
+  color: #2b2418;
+  text-align: center;
+  box-shadow:
+    var(--ag-ring),
+    var(--ag-inset),
+    0 2px 0 #b6a274,
+    0 8px 16px -8px rgb(0 0 0 / 0.7);
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.25s,
+    filter 0.2s;
+  transform-style: preserve-3d;
+  container-type: inline-size;
+}
+@media (min-width: 640px) {
+  .ag-card {
+    padding: 0.4rem;
+  }
+}
+/* filet intérieur, comme le cadre imprimé d'une carte */
+.ag-card::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgb(110 90 50 / 0.3);
+  border-radius: 0.45rem;
+  pointer-events: none;
+}
+/* reflet qui fait le tour du contour coloré (anneau de 2 px, juste à l'extérieur du liseré sombre) */
+.ag-card::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  padding: 2px;
+  border-radius: 0.8rem;
+  background: conic-gradient(
+    from var(--ag-angle),
+    transparent 0deg 250deg,
+    var(--ag-beam) 320deg,
+    transparent 360deg
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: 0;
+  pointer-events: none;
+  animation: ag-spin 4.5s linear infinite;
+  animation-delay: var(--ag-delay, 0s);
+}
+
+.ag-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.ag-portrait {
+  display: grid;
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #cbb98c, #a8925f);
+  color: #4a3d22;
+  padding: 2px;
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.3);
+}
+@media (min-width: 640px) {
+  .ag-portrait {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+/* le mot à l'envers, pour celui qui est en face (comme sur les vraies cartes) */
+.ag-mirror {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.35;
+  transform: rotate(180deg);
+}
+@media (max-width: 639px) {
+  .ag-mirror {
+    display: none;
+  }
+}
+.ag-label {
+  display: block;
+  border-radius: 0.3rem;
+  background: linear-gradient(180deg, #fffdf6, #f4efe2);
+  padding: 0.25rem 0.15rem;
+  color: #1b1710;
+  /* taille calée sur la largeur de la carte : un mot long tient sans être coupé n'importe où */
+  font-size: clamp(0.34rem, 9.5cqi, 0.85rem);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  overflow-wrap: break-word;
+  text-transform: uppercase;
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.08),
+    0 1px 0 rgb(255 255 255 / 0.6);
+  hyphens: auto;
+}
+@media (max-width: 639px) {
+  .ag-card {
+    padding: 0.2rem;
+  }
+  .ag-label {
+    padding: 0.2rem 0.05rem;
+    letter-spacing: 0;
+  }
+}
+
+/* --- Ma carte secrète : contours nets --- */
+.ag-key-agent {
+  --ag-ring: 0 0 0 2px #0d0d12, 0 0 0 4px #22c55e, 0 0 6px 3px rgb(34 197 94 / 0.25);
+  --ag-beam: #dcfce7;
+}
+.ag-key-assassin {
+  --ag-ring: 0 0 0 2px #0d0d12, 0 0 0 4px #ef4444, 0 0 6px 3px rgb(239 68 68 / 0.25);
+  --ag-beam: #fee2e2;
+}
+.ag-key-agent::after,
+.ag-key-assassin::after,
+.ag-selected::after {
+  opacity: 1;
+}
+/* médaillon : espion vert pour mes agents, crâne rouge pour mes assassins */
+.ag-portrait-agent {
+  background: linear-gradient(160deg, #4ade80, #15803d);
+  color: #f0fdf4;
+}
+.ag-portrait-assassin {
+  background: linear-gradient(160deg, #f87171, #991b1b);
+  color: #fff1f2;
+}
+/* fin de partie : la carte du partenaire en contour intérieur */
+.ag-their-agent {
+  --ag-inset: inset 0 0 0 3px #22c55e;
+}
+.ag-their-assassin {
+  --ag-inset: inset 0 0 0 3px #ef4444;
+}
+
+/* témoin d'un seul côté : petit macaron */
+.ag-witness {
+  position: absolute;
+  bottom: -0.4rem;
+  left: 50%;
+  display: flex;
+  max-width: 92%;
+  align-items: center;
+  gap: 0.15rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #3b3222;
+  padding: 0.05rem 0.35rem;
+  color: #f1e5c3;
+  font-size: 0.5rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+@media (min-width: 640px) {
+  .ag-witness {
+    font-size: 0.6rem;
+  }
+}
+
+/* --- Interaction --- */
+.ag-touchable {
+  cursor: pointer;
+}
+.ag-touchable:hover {
+  filter: brightness(1.05);
+  transform: translateY(-4px) rotateX(8deg);
+  box-shadow:
+    var(--ag-ring),
+    var(--ag-inset),
+    0 2px 0 #b6a274,
+    0 16px 22px -10px rgb(0 0 0 / 0.8);
+}
+.ag-card:disabled {
+  cursor: default;
+}
+.ag-selected {
+  --ag-ring: 0 0 0 2px #0d0d12, 0 0 0 4px #fbbf24, 0 0 10px 3px rgb(251 191 36 / 0.35);
+  --ag-beam: #fffbeb;
+  transform: translateY(-4px) scale(1.04);
+}
+.ag-selected::after {
+  animation-duration: 1.4s;
+}
+
+/* --- Tuiles qui recouvrent la carte --- */
+.ag-tile {
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.ag-tile::before {
+  border-color: rgb(255 255 255 / 0.25);
+}
+.ag-tile-icon {
+  width: 46%;
+  max-width: 2.6rem;
+  height: auto;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.35));
+}
+.ag-tile-word {
+  margin-top: 0.15rem;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+@media (min-width: 640px) {
+  .ag-tile-word {
+    font-size: 0.62rem;
+  }
+}
+.ag-tile-found {
+  background:
+    radial-gradient(110% 80% at 30% 10%, rgb(255 255 255 / 0.28), transparent 55%),
+    linear-gradient(155deg, #22c55e 0%, #15803d 70%, #0f5f2e 100%);
+  color: #ecfdf3;
+}
+.ag-tile-out {
+  background:
+    radial-gradient(110% 80% at 30% 10%, rgb(255 255 255 / 0.3), transparent 55%),
+    linear-gradient(155deg, #dccb9f 0%, #b9a473 100%);
+  color: #4a3e24;
+  filter: saturate(0.85);
+}
+.ag-tile-fatal {
+  --ag-ring: 0 0 0 2px #0d0d12, 0 0 0 4px #ef4444;
+  --ag-beam: #fecaca;
+  background: linear-gradient(155deg, #26262b 0%, #0a0a0c 100%);
+  color: #fca5a5;
+}
+.ag-tile-fatal::after {
+  opacity: 1;
+  animation-duration: 1.6s;
+}
+/* reflet qui traverse une tuile agent */
+.ag-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgb(255 255 255 / 0.45) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  animation: ag-shine 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* légende */
+.ag-legend {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.65rem;
+  border-radius: 0.2rem;
+  background: #eadcb8;
+}
+.ag-legend-agent {
+  box-shadow:
+    0 0 0 2px #22c55e,
+    0 0 8px rgb(34 197 94 / 0.8);
+}
+.ag-legend-assassin {
+  box-shadow:
+    0 0 0 2px #ef4444,
+    0 0 8px rgb(239 68 68 / 0.8);
+}
+
+/* --- Animations --- */
+@keyframes ag-spin {
+  to {
+    --ag-angle: 360deg;
+  }
+}
+@keyframes ag-shine {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  85%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+/* distribution des cartes à l'arrivée sur la page */
+@keyframes ag-deal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) rotateX(-25deg) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ag-deal {
+  animation: ag-deal 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
 @keyframes agents-flip {
   0% {
     transform: rotateY(0);
@@ -20,13 +373,18 @@
     transform: rotateY(0);
   }
 }
-
 .agents-flip {
-  animation: agents-flip 0.45s ease-in-out;
+  animation: agents-flip 0.5s ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .agents-flip {
-    animation: none;
+  .ag-deal,
+  .agents-flip,
+  .ag-shine,
+  .ag-card::after {
+    animation: none !important;
+  }
+  .ag-card::after {
+    opacity: 0 !important;
   }
 }

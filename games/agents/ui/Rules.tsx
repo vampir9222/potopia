@@ -6,8 +6,8 @@ export function Rules() {
     <div className="text-muted flex flex-col gap-2 text-sm">
       <p>
         Jeu <strong className="text-text">coopératif à deux</strong> : vous gagnez ou perdez
-        ensemble. La grille de 25 mots est commune, mais chacun a sa carte secrète : 9 agents (bande
-        verte) et 3 assassins 💀. Il y a {AGENTS_TOTAL} agents à trouver en tout.
+        ensemble. La grille de 25 mots est commune, mais chacun a sa carte secrète : 9 agents
+        (contour vert) et 3 assassins 💀. Il y a {AGENTS_TOTAL} agents à trouver en tout.
       </p>
       <ul className="list-disc space-y-1 pl-4">
         <li>
