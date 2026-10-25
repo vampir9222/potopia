@@ -36,10 +36,42 @@ function seeded(seed = 1) {
   };
 }
 
-/** Partie entre A et B, cartes imposées, A donne le premier indice. */
+/** Grille imposée : aucun mot proche des indices des tests (« indice », « autre »). */
+const WORDS = [
+  "chat",
+  "chien",
+  "lune",
+  "soleil",
+  "mer",
+  "fleuve",
+  "arbre",
+  "pomme",
+  "train",
+  "avion",
+  "piano",
+  "table",
+  "porte",
+  "livre",
+  "vélo",
+  "sable",
+  "glace",
+  "feu",
+  "roi",
+  "reine",
+  "clé",
+  "pont",
+  "tour",
+  "miroir",
+  "lampe",
+];
+
+/** Partie entre A et B, grille et cartes imposées, A donne le premier indice. */
 async function newGame(): Promise<string> {
   const { id } = await createGame({ userId: A, partnerId: B });
-  await db.agentsGame.update({ where: { id }, data: { keyA: KEY_A, keyB: KEY_B, clueSeat: 0 } });
+  await db.agentsGame.update({
+    where: { id },
+    data: { words: WORDS, keyA: KEY_A, keyB: KEY_B, clueSeat: 0 },
+  });
   return id;
 }
 
