@@ -29,8 +29,8 @@
       "dependsOn": ["^build", "generate"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
-    "@app/db#build": {
-      "dependsOn": ["generate"],
+    "@app/web#build": {
+      "dependsOn": ["^build", "generate"],
       "cache": false
     },
     "typecheck": {

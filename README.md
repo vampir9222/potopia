@@ -106,9 +106,9 @@ serveur à la connexion, puis toutes les 6 heures.
 | `pnpm assets:import`    | Réimporte les sprites LPC des avatars (`--ref <commit>` pour en changer)  |
 
 La CI GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lance format, lint,
-typecheck, frontières et tests (avec Postgres et stockage réels) sur chaque pull request vers `main`,
-qui est protégée. Le build est fait par Vercel au déploiement : en production, il applique d'abord
-les migrations (voir « Déployer »).
+typecheck, frontières, tests (avec Postgres et stockage réels) et build du site sur chaque pull
+request vers `main`, qui est protégée. Le déploiement est fait par Vercel : en production, il
+applique les migrations après le build (voir « Déployer »).
 
 ---
 
@@ -215,13 +215,19 @@ propose aussitôt.
 
 1. **Base Neon** : créer un projet, récupérer l'URL **poolée** (`DATABASE_URL`) et l'URL **directe**
    (`DIRECT_URL`, ou `DATABASE_URL_UNPOOLED` fourni par l'intégration Neon de Vercel).
-   **Migrations automatiques** : à chaque déploiement de **production**, la tâche `build` de
-   `@app/db` ([scripts/deploy-production.ts](packages/db/scripts/deploy-production.ts)) lance
-   `prisma migrate deploy` avant de construire l'app. Fusionner une PR qui contient une migration
-   l'applique donc en prod, y compris les changements de tables existantes (colonne ajoutée,
-   renommée, supprimée…). Si une migration échoue, le build échoue et la version en ligne reste en
-   place. Les previews Vercel, la CI et le local n'appliquent rien. À la main si besoin, depuis un
-   poste avec `DIRECT_URL` pointant sur Neon : `pnpm db:deploy`.
+   **Migrations automatiques** : à chaque déploiement de **production**, le build de `apps/web`
+   enchaîne `next build` puis la tâche `deploy:production` de `@app/db`
+   ([scripts/deploy-production.ts](packages/db/scripts/deploy-production.ts)), qui lance
+   `prisma migrate deploy`. Fusionner une PR qui contient une migration l'applique donc en prod, y
+   compris les changements de tables existantes (colonne ajoutée, renommée, supprimée…). L'ordre
+   compte : si le build du site échoue, la base n'a pas bougé ; si une migration échoue, le build
+   échoue et la version en ligne reste en place. Les previews Vercel, la CI et le local
+   n'appliquent rien. À la main si besoin, depuis un poste avec `DIRECT_URL` pointant sur Neon :
+   `pnpm db:deploy`.
+   **Migration en échec** : Prisma la note comme échouée et refuse tout déploiement suivant
+   (erreur `P3009`). Corriger la migration (ou la base) à la main, puis, depuis un poste avec
+   `DIRECT_URL` sur Neon, `pnpm --filter @app/db exec prisma migrate resolve --rolled-back <nom>`
+   (ou `--applied` si elle avait en fait abouti), et relancer le déploiement depuis Vercel.
 2. **Bucket R2 privé** : créer le bucket, puis un token API avec les droits « Object Read & Write »
    sur ce bucket (`R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ACCOUNT_ID`, `R2_BUCKET`). Laisser
    `R2_ENDPOINT` vide. Dans les réglages CORS du bucket :
