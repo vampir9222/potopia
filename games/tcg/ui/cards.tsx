@@ -725,19 +725,26 @@ export function PolaroidCard({ card, index = 0 }: { card: CardData; index?: numb
   );
 }
 
-/** Fond d'un plateau de présentation (3 ou 4 cartes côte à côte). */
+/**
+ * Fond d'un plateau de présentation (3 ou 4 cartes côte à côte ; sur mobile, les cartes passent à la
+ * ligne, classe `tcg-board` de tcg.css).
+ */
 export function Board({
   background,
   wrap = false,
+  zoom = 1,
   children,
 }: {
   background: string;
   /** Plusieurs rangées au lieu d'un défilement horizontal. */
   wrap?: boolean;
+  /** Réduction CSS (`zoom`) appliquée au plateau par la page, compensée quand on agrandit une carte. */
+  zoom?: number;
   children: ReactNode;
 }) {
   return (
     <div
+      className={wrap ? "tcg-board tcg-board-wrap" : "tcg-board"}
       style={{
         background,
         padding: 40,
@@ -755,7 +762,7 @@ export function Board({
         typeof child.type !== "string" &&
         child.type !== Fragment &&
         !(child.type as { tcgDefs?: boolean }).tcgDefs ? (
-          <Zoomable>{child}</Zoomable>
+          <Zoomable zoom={zoom}>{child}</Zoomable>
         ) : (
           child
         ),

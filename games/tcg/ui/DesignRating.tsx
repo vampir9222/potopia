@@ -2,17 +2,17 @@
 
 import { Label, Textarea } from "@app/ui";
 import { Star } from "lucide-react";
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 
 export type RateState =
   { status: "idle" } | { status: "ok"; message: string } | { status: "error"; message: string };
 
 type Props = {
   designId: string;
-  /** Note déjà donnée par l'admin connecté, s'il y en a une (0 = commentaire sans note). */
+  /** Note déjà donnée par le membre connecté, s'il y en a une (0 = commentaire sans note). */
   initial: { stars: number; comment: string | null } | null;
   /**
-   * Server action passée par l'app : elle fait requireAdmin puis rateDesign.
+   * Server action passée par l'app : elle vérifie le membre connecté puis appelle rateDesign.
    * Champs envoyés : designId, stars (0 à 5, 0 = sans note), comment.
    */
   action: (state: RateState, formData: FormData) => Promise<RateState>;
@@ -32,13 +32,22 @@ export function DesignRating({ designId, initial, action }: Props) {
   const [stars, setStars] = useState(initial?.stars ?? 0);
   const [comment, setComment] = useState(initial?.comment ?? "");
   const [hover, setHover] = useState(0);
+  // Dernière valeur enregistrée côté serveur, et celle en cours d'envoi : `saved` n'avance qu'au
+  // retour « ok », sinon une erreur empêcherait de renvoyer la même note.
   const saved = useRef({ stars: initial?.stars ?? 0, comment: (initial?.comment ?? "").trim() });
+  const sent = useRef(saved.current);
   const shown = hover || stars;
+
+  useEffect(() => {
+    if (state.status === "ok") saved.current = sent.current;
+    // Erreur : les étoiles reviennent à la dernière note enregistrée (le commentaire tapé reste).
+    if (state.status === "error") setStars(saved.current.stars);
+  }, [state]);
 
   function save(next: { stars: number; comment: string }) {
     const trimmed = next.comment.trim();
     if (next.stars === saved.current.stars && trimmed === saved.current.comment) return;
-    saved.current = { stars: next.stars, comment: trimmed };
+    sent.current = { stars: next.stars, comment: trimmed };
     const data = new FormData();
     data.set("designId", designId);
     data.set("stars", String(next.stars));

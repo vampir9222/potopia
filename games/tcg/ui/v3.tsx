@@ -1,3 +1,4 @@
+import { BRAND } from "@app/config/brand";
 import type { CSSProperties, ReactNode } from "react";
 import { type CardData, font } from "./cards";
 import { faction, PremiumArt } from "./premium";
@@ -506,7 +507,7 @@ export function MixCard({
                 filter: "drop-shadow(0 1px 1px #000)",
               }}
             >
-              {card.author ?? "Potopia"}
+              {card.author ?? BRAND.name}
             </span>
           </Layer>
         )}

@@ -4,10 +4,11 @@ import { X } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 /**
- * Un clic sur la carte l'ouvre en grand au centre de l'écran (toujours inclinable). Un clic à côté,
- * le bouton ou Échap la referme. Basé sur <dialog> : le navigateur gère le focus et le fond.
+ * Un clic (ou Entrée / Espace) sur la carte l'ouvre en grand au centre de l'écran (toujours
+ * inclinable). Un clic à côté, le bouton ou Échap la referme. Basé sur <dialog> : le navigateur gère
+ * le focus et le fond.
  */
-export function Zoomable({ children }: { children: ReactNode }) {
+export function Zoomable({ zoom = 1, children }: { zoom?: number; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
 
@@ -17,22 +18,25 @@ export function Zoomable({ children }: { children: ReactNode }) {
     if (!dialog.open) dialog.showModal();
     // Taille d'affichage : la plus grande qui tient à l'écran (carte de 300 × 420), au plus ×2.
     const scale = Math.min(2, (window.innerHeight - 96) / 420, (window.innerWidth - 48) / 300);
-    // La page réduit les planches avec `zoom` : on compense pour que la carte zoomée garde sa taille.
-    const parent = dialog.parentElement as (HTMLElement & { currentCSSZoom?: number }) | null;
-    const inherited = parent?.currentCSSZoom ?? 1;
-    dialog.style.zoom = String(Math.max(scale, 1) / inherited);
-  }, [open]);
+    // La page réduit les planches avec `zoom` (reçu en prop, hérité par le <dialog>) : on compense
+    // pour que la carte agrandie garde sa taille.
+    dialog.style.zoom = String(Math.max(scale, 1) / zoom);
+  }, [open, zoom]);
 
   return (
     <>
       <div
         role="button"
-        tabIndex={-1}
+        tabIndex={0}
         title="Cliquer pour agrandir"
         onClick={() => setOpen(true)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") setOpen(true);
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen(true);
+          }
         }}
+        className="focus-visible:outline-accent rounded-lg focus-visible:outline-2"
         style={{ flexShrink: 0, cursor: "zoom-in" }}
       >
         {children}
