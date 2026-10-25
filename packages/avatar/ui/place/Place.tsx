@@ -137,8 +137,18 @@ export function Place({
       }
     };
 
+    // Le serveur peut renvoyer deux fois le même événement (marge de 10 s sur `since`, liste
+    // tronquée) : chaque réaction n'est jouée qu'une fois. Ensemble borné aux derniers ids reçus.
+    const seen = new Set<string>();
+    const SEEN_MAX = 200;
     const react = (events: PlaceEvent[]) => {
       for (const event of events) {
+        if (seen.has(event.id)) continue;
+        seen.add(event.id);
+        if (seen.size > SEEN_MAX) {
+          const oldest = seen.values().next().value;
+          if (oldest !== undefined) seen.delete(oldest);
+        }
         const walker = entries.get(event.userId)?.walker;
         if (!walker) continue;
         for (const reaction of reactionsFor(event)) {
