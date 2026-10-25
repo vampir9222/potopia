@@ -24,12 +24,17 @@ import { designFonts } from "./fonts";
 export const metadata: Metadata = { title: "Vote pour le design des cartes" };
 
 type Tab = "design" | "effets" | "variantes" | "archives";
-const TABS: { id: Tab; label: string }[] = [
+/**
+ * Onglets de la page. `hidden` : masqué pour l'instant mais gardé tel quel (propositions, votes et
+ * code intacts) ; repasser à false pour le remettre.
+ */
+const TABS: { id: Tab; label: string; hidden?: boolean }[] = [
   { id: "design", label: "Design" },
-  { id: "effets", label: "Effets de rareté" },
-  { id: "variantes", label: "Variantes" },
+  { id: "effets", label: "Effets de rareté", hidden: true },
+  { id: "variantes", label: "Variantes", hidden: true },
   { id: "archives", label: "Archives" },
 ];
+const SHOWN_TABS = TABS.filter((t) => !t.hidden);
 
 /** Coût de 1 à 6, stable pour une idée donnée. La rareté n'influence jamais les stats. */
 function costOf(id: string): number {
@@ -85,7 +90,7 @@ export default async function CardsVotePage({
 }) {
   const member = await getCurrentMember();
   const params = await searchParams;
-  const tab = TABS.find((t) => t.id === params.onglet)?.id ?? "design";
+  const tab = SHOWN_TABS.find((t) => t.id === params.onglet)?.id ?? "design";
   const hideVoted = params.masquer === "1";
 
   const [idea, votes] = await Promise.all([getShowcaseIdea(), listDesignVotes()]);
@@ -157,16 +162,16 @@ export default async function CardsVotePage({
             utilisent la même carte exemple.
           </p>
           <p>
-            Le <strong className="text-text">design</strong> (la mise en page de la carte, normale
-            ou full art) et les <strong className="text-text">effets de rareté</strong> se votent
-            séparément. Chaque carte a une rareté qui ne change jamais, et la rareté ne touche
-            qu&apos;au look, jamais à la puissance.
+            On vote d&apos;abord le <strong className="text-text">design</strong> : la mise en page
+            de la carte, normale ou full art. Les effets de rareté viendront plus tard : chaque
+            carte a une rareté qui ne change jamais, et la rareté ne touche qu&apos;au look, jamais
+            à la puissance.
           </p>
         </div>
       </Card>
 
       <nav className="flex flex-wrap items-center gap-2" aria-label="Onglets">
-        {TABS.map((t) => {
+        {SHOWN_TABS.map((t) => {
           const n = toVote(t.id);
           return (
             <Link
