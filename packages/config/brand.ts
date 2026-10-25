@@ -15,6 +15,11 @@ export const BRAND = {
     icon: "/brand/currency.svg",
   },
   locale: "fr-FR",
+  /**
+   * Fuseau d'affichage des dates : le serveur tourne en UTC (Vercel) et les navigateurs des membres
+   * sont en France ; sans fuseau explicite, serveur et client formateraient des heures différentes.
+   */
+  timeZone: "Europe/Paris",
 } as const;
 
 export type Brand = typeof BRAND;

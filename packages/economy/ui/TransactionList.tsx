@@ -17,7 +17,11 @@ type Props = {
 
 const number = new Intl.NumberFormat(BRAND.locale, { signDisplay: "always" });
 const plain = new Intl.NumberFormat(BRAND.locale);
-const date = new Intl.DateTimeFormat(BRAND.locale, { dateStyle: "short", timeStyle: "short" });
+const date = new Intl.DateTimeFormat(BRAND.locale, {
+  dateStyle: "short",
+  timeStyle: "short",
+  timeZone: BRAND.timeZone,
+});
 
 export function TransactionList({ transactions, showBalance = false }: Props) {
   if (transactions.length === 0) {

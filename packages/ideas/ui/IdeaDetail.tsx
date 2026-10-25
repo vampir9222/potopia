@@ -16,7 +16,11 @@ type Props = {
   imageSrc: string | null;
 };
 
-const date = new Intl.DateTimeFormat(BRAND.locale, { dateStyle: "long", timeStyle: "short" });
+const date = new Intl.DateTimeFormat(BRAND.locale, {
+  dateStyle: "long",
+  timeStyle: "short",
+  timeZone: BRAND.timeZone,
+});
 
 function Field({ label, children }: { label: string; children: string }) {
   return (

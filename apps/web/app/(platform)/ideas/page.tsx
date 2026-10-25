@@ -44,8 +44,10 @@ export default async function IdeasPage() {
               <p className="text-muted">
                 <span className="text-text font-medium">C'est confidentiel.</span> Seuls les admins
                 lisent les idées. Elles n'apparaissent nulle part sur la plateforme : le fil
-                d'activité indique seulement que tu as proposé une idée, sans dire laquelle. Une
-                fois envoyée, tu ne pourras plus la relire, alors garde une copie si tu y tiens.
+                d'activité indique seulement que tu as proposé une idée, sans dire laquelle. Seule
+                exception : une idée, choisie par les admins, sert de carte exemple (image comprise)
+                sur la page « Vote design des cartes ». Une fois envoyée, tu ne pourras plus la
+                relire, alors garde une copie si tu y tiens.
               </p>
             </div>
           </div>

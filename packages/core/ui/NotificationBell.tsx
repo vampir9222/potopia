@@ -20,10 +20,40 @@ type Props = {
   markAllAsRead: () => Promise<void>;
 };
 
+const itemClass = "hover:bg-surface-hover flex gap-3 px-4 py-3";
+
+function NotificationRow({ notification: n }: { notification: NotificationItem }) {
+  return (
+    <>
+      <span
+        aria-hidden
+        className={`mt-1.5 size-2 shrink-0 rounded-full ${n.readAt ? "" : "bg-accent"}`}
+      />
+      <span className="min-w-0 flex-1">
+        <span className={`block text-sm ${n.readAt ? "text-muted" : "text-text"}`}>{n.title}</span>
+        <span className="text-muted text-xs">{formatRelative(n.createdAt)}</span>
+      </span>
+    </>
+  );
+}
+
 export function NotificationBell({ notifications, unreadCount, markAsRead, markAllAsRead }: Props) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
+
+  // Marque la notification comme lue, puis suit son lien : la navigation attend la fin de l'action,
+  // sinon le changement de page l'interrompait et la notification restait non lue.
+  const follow = async (n: NotificationItem) => {
+    if (!n.readAt) {
+      try {
+        await markAsRead(n.id);
+      } catch {
+        // Le lien reste la priorité : on y va même si le marquage a échoué.
+      }
+    }
+    if (n.link) window.location.assign(n.link);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -81,24 +111,33 @@ export function NotificationBell({ notifications, unreadCount, markAsRead, markA
             <ul className="max-h-96 overflow-y-auto">
               {notifications.map((n) => (
                 <li key={n.id} className="border-border border-b last:border-b-0">
-                  <a
-                    href={n.link ?? undefined}
-                    onClick={() => {
-                      if (!n.readAt) startTransition(() => markAsRead(n.id));
-                    }}
-                    className="hover:bg-surface-hover flex gap-3 px-4 py-3"
-                  >
-                    <span
-                      aria-hidden
-                      className={`mt-1.5 size-2 shrink-0 rounded-full ${n.readAt ? "" : "bg-accent"}`}
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className={`block text-sm ${n.readAt ? "text-muted" : "text-text"}`}>
-                        {n.title}
-                      </span>
-                      <span className="text-muted text-xs">{formatRelative(n.createdAt)}</span>
-                    </span>
-                  </a>
+                  {n.link ? (
+                    <a
+                      href={n.link}
+                      onClick={(e) => {
+                        // Ouverture dans un autre onglet (Ctrl/Cmd, molette…) : le navigateur fait
+                        // son travail, l'action part en parallèle sans quitter cette page.
+                        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) {
+                          if (!n.readAt) startTransition(() => markAsRead(n.id));
+                          return;
+                        }
+                        e.preventDefault();
+                        void follow(n);
+                      }}
+                      className={itemClass}
+                    >
+                      <NotificationRow notification={n} />
+                    </a>
+                  ) : (
+                    // Sans lien : un bouton, focalisable et activable au clavier, qui marque comme lu.
+                    <button
+                      type="button"
+                      onClick={() => void follow(n)}
+                      className={`${itemClass} w-full text-left`}
+                    >
+                      <NotificationRow notification={n} />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

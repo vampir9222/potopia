@@ -17,6 +17,22 @@ export function avatarSheetUrl(userId: string, hash: string): string {
   return `/api/avatars/${encodeURIComponent(userId)}/${hash}`;
 }
 
+/**
+ * Champs du payload d'un événement dont la place a besoin (voir `reactions.ts`), par `app/type`.
+ * Le reste n'est pas relayé au navigateur : les payloads ne portent que des compteurs, mais la
+ * liste blanche évite qu'un nouveau champ parte sur `/api/place` sans qu'on l'ait décidé.
+ */
+const PLACE_PAYLOAD_FIELDS: Record<string, readonly string[]> = {
+  "trois/day_completed": ["found"],
+};
+
+function placePayload(app: string, type: string, payload: unknown): Record<string, unknown> {
+  const fields = PLACE_PAYLOAD_FIELDS[`${app}/${type}`];
+  if (!fields || !payload || typeof payload !== "object" || Array.isArray(payload)) return {};
+  const source = payload as Record<string, unknown>;
+  return Object.fromEntries(fields.filter((key) => key in source).map((key) => [key, source[key]]));
+}
+
 /** Membres de la place et événements publiés depuis `since` (aucun au premier affichage). */
 export async function getPlaceSnapshot(since?: Date): Promise<PlaceSnapshot> {
   const now = new Date();
@@ -37,7 +53,7 @@ export async function getPlaceSnapshot(since?: Date): Promise<PlaceSnapshot> {
       userId: e.userId,
       app: e.app,
       type: e.type,
-      payload: e.payload,
+      payload: placePayload(e.app, e.type, e.payload),
     })),
     now: now.toISOString(),
   };

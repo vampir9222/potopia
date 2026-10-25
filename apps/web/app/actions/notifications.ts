@@ -1,7 +1,7 @@
 "use server";
 
 import { markAllAsRead, markAsRead } from "@app/core";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { z } from "zod";
 import { actionMember } from "@/lib/session";
 
@@ -11,11 +11,11 @@ export async function markNotificationAsRead(id: string): Promise<void> {
   const user = await actionMember();
   // markAsRead ne touche que les notifications de user.id.
   await markAsRead({ userId: user.id, notificationId: notificationId.parse(id) });
-  revalidatePath("/", "layout");
+  refresh();
 }
 
 export async function markAllNotificationsAsRead(): Promise<void> {
   const user = await actionMember();
   await markAllAsRead({ userId: user.id });
-  revalidatePath("/", "layout");
+  refresh();
 }
