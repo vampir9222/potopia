@@ -3,8 +3,9 @@
 Plateforme web de mini-jeux pour un groupe d'amis Discord. Nom de code et nom de la monnaie : voir
 `packages/config/brand.ts` (seul endroit où ils apparaissent).
 
-Ce document décrit le socle (étape 1 du projet) : plateforme, base commune (monnaie, activité,
-notifications) et boîte à idées. Aucun jeu pour l'instant.
+Ce document décrit la plateforme telle qu'elle est : socle (accès Discord, monnaie, activité,
+notifications), boîte à idées, avatars et place, deux jeux (TROIS et Agents Doubles) et le vote du
+design des futures cartes. Il est tenu à jour à chaque changement (voir CLAUDE.md).
 
 ## Stack
 
@@ -38,10 +39,12 @@ Pourquoi Better Auth plutôt qu'Auth.js :
 apps/web/            app Next mince : routes, layouts, server actions, route handlers
 games/
   agents/            Agents Doubles, jeu d'espions coopératif à deux (règles de Codenames Duet)
+  tcg/               futur jeu de cartes : pour l'instant, le vote du design des cartes (/cartes)
   trois/             Wordle français à 3 mots par jour (premier jeu intégré)
 packages/
   config/            tsconfig, eslint, brand.ts
-  db/                client Prisma partagé, assemblage des schémas, migrations, seed
+  db/                client Prisma partagé, assemblage des schémas, migrations, contrôle des
+                     frontières, migrations de production (`deploy:production`)
   core/              auth, users, rôles, accès, registre des apps, activité, notifications, avatars
   avatar/            compositeur d'avatars LPC (client et serveur), éditeur, place du dashboard
   avatar-assets/     sprites LPC importés, catalogue, palettes, crédits (pnpm assets:import)
@@ -164,6 +167,18 @@ actions aux composants en props.
 - `IdeaUpload` : key (PK), userId, contentType, size, createdAt, usedAt?. Une idée ne peut
   référencer qu'une clé émise par le serveur, pour ce même utilisateur, et une seule fois.
 
+### tcg
+
+- `TcgDesignVote` : designId, userId, stars (0 à 5 ; 0 = commentaire sans note ou note retirée),
+  comment?, createdAt, updatedAt. Une note par membre et par design (`(design_id, user_id)`
+  unique). Les designs eux-mêmes sont dans le code (`games/tcg/src/designs.ts`), pas en base.
+
+### trois et agents
+
+Décrits dans les README des jeux : [games/trois/README.md](../games/trois/README.md) (`games`,
+`guesses`, `daily_words`) et [games/agents/README.md](../games/agents/README.md) (`games`, `clues`,
+`guesses`, index unique partiel : une seule partie en cours par paire de joueurs).
+
 ## Mécanismes clés
 
 **`credit()` et `debit()`.** Tout se fait dans une seule transaction SQL :
@@ -174,7 +189,9 @@ actions aux composants en props.
 3. si la clé d'idempotence existe déjà, renvoyer la transaction d'origine, même si le solde a changé
    depuis ; une clé réutilisée pour un autre membre ou un autre montant lève
    `IdempotencyConflictError` ;
-4. pour un débit, refuser l'opération si le solde est insuffisant (`InsufficientFundsError`) ;
+4. refuser l'opération si le solde deviendrait négatif (`InsufficientFundsError`) ou dépasserait
+   `MAX_BALANCE` (1 000 000 000, `BalanceLimitError`, loin de la limite d'une colonne `integer`) ;
+   l'admin voit un message d'erreur lisible dans le formulaire ;
 5. `INSERT … ON CONFLICT (idempotency_key) DO NOTHING RETURNING`, qui couvre la même clé insérée en
    parallèle sur un autre wallet ;
 6. mettre à jour le solde.
@@ -193,12 +210,21 @@ Avant tout, le navigateur réencode l'image en WebP (2048 px de côté max, mét
 retirées), puis contrôle la taille. S'il ne sait pas encoder le WebP, il envoie l'original.
 
 1. `POST /api/ideas/upload-url` : validation zod (jpeg, png ou webp, 3 Mo max).
-2. Le serveur génère la clé `ideas/<uuid>.<ext>`, crée la ligne `IdeaUpload`, puis renvoie une URL
-   PUT présignée valable 5 min, qui signe `ContentType` et `ContentLength`.
-3. À la soumission de l'idée, le serveur verrouille la ligne `IdeaUpload` (`FOR UPDATE`), vérifie
-   qu'elle a été émise pour ce membre et jamais utilisée, fait un `HeadObject` (l'objet existe-t-il,
-   et sa taille est-elle celle annoncée ?) puis marque l'upload comme utilisé. Toute anomalie lève
+2. Le serveur compte les demandes du membre sur l'heure glissante (au plus 30,
+   `UPLOAD_RATE_LIMIT`, sous `pg_advisory_xact_lock` par membre ; au-delà, `UploadRateLimitError`
+   → 429 « Trop d'images envoyées en une heure »), génère la clé `ideas/<uuid>.<ext>`, crée la
+   ligne `IdeaUpload`, puis renvoie une URL PUT présignée valable 5 min, qui signe `ContentType`
+   et `ContentLength`.
+3. À la soumission de l'idée, **avant** d'ouvrir la transaction, le serveur vérifie que la clé a
+   été émise pour ce membre et jamais utilisée, puis fait un `HeadObject` (l'objet existe-t-il, sa
+   taille et son type sont-ils ceux annoncés ?). L'appel réseau au stockage reste ainsi hors
+   verrou et hors du délai de 5 s de la transaction. Dans la transaction, la ligne `IdeaUpload`
+   est verrouillée (`FOR UPDATE`), revérifiée puis marquée comme utilisée. Toute anomalie lève
    `InvalidImageError` et annule la soumission.
+4. **Purge** : chaque demande d'URL supprime au passage jusqu'à 20 uploads jamais utilisés de plus
+   de 24 h (`purgeStaleUploads` : ligne supprimée sous verrou, objet supprimé du stockage dans la
+   même transaction, annulée et retentée plus tard si le stockage refuse). Une image envoyée puis
+   abandonnée ne reste donc pas dans le bucket.
 
 En base, on stocke la clé, jamais une URL. Le CORS du bucket n'autorise que le PUT et le GET depuis
 l'origine de l'app (`pnpm storage:init` en local, dashboard R2 en prod).
@@ -218,10 +244,11 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
   d'admin, et `/cartes` et `/api/cartes/exemple` (requireMember) l'affichent à tous les membres.
   Aucune autre idée n'est concernée.
 
-**Rate-limit des idées.**
+**Limites d'envoi.**
 
-- Comptage en base sur l'heure glissante, protégé par un `pg_advisory_xact_lock` par utilisateur.
-- Pas de limite d'envoi (ni idées ni images) : la plateforme est réservée au groupe.
+- Idées : aucune limite, la plateforme est réservée au groupe.
+- Demandes d'URL d'envoi d'image : 30 par membre et par heure glissante (voir « Upload d'image »),
+  pour qu'un onglet qui boucle ou un script ne remplisse pas le bucket.
 
 **Notifications.**
 
@@ -230,11 +257,14 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 
 **Registre des apps** (`packages/core/src/apps/registry.ts`).
 
-- Une entrée a la forme `{ id, name, icon, route, requiredRole }`, où `icon` est un nom d'icône
-  lucide.
+- Une entrée a la forme `{ id, name, icon, route, requiredRole }`. `icon` est un nom déclaré dans
+  l'union `AppIconName` (`registry.ts`) et associé à une icône lucide dans `ICONS`
+  (`packages/core/ui/AppGrid.tsx`) : une nouvelle icône demande les deux.
 - Une tuile n'est visible que si l'utilisateur a le rôle requis.
-- Tuiles actuelles : « Boîte à idées » (membres) et « Administration » (admins). Le TCG aura sa propre
-  tuile.
+- Tuiles actuelles, dans l'ordre : « TROIS », « Agents Doubles », « Boîte à idées », « Vote design
+  des cartes » (membres), puis « Administration » (admins).
+- Le fil d'Ariane prend le nom des apps dans ce registre (`components/Breadcrumb.tsx`, composant
+  serveur) ; seule exception, le libellé plus court « Design des cartes » pour `/cartes`.
 
 **Thèmes.** Tout le style passe par `packages/ui/theme.css` : couleurs, police des titres, dégradés et
 décors.
@@ -251,7 +281,53 @@ décors.
   flash.
 - Les animations (apparitions en cascade, reflets, cloche, braises) sont coupées si l'appareil demande
   moins d'animations.
-- Les jeux gardent leur propre style pour l'instant (TROIS).
+- Les jeux gardent leur propre style pour l'instant (TROIS, Agents Doubles, cartes du vote) : une
+  feuille CSS par jeu (`games/*/ui/*.css`), importée dans `apps/web/app/globals.css`.
+
+**Dates.** Toutes les dates affichées passent par `BRAND.timeZone` (`Europe/Paris`) : le serveur
+Vercel tourne en UTC, les navigateurs des membres en France ; sans fuseau explicite, l'heure
+affichée serait décalée et le rendu serveur différerait du rendu client (erreur d'hydratation).
+
+**Erreurs, 404 et chargement** (`apps/web/app`).
+
+- `error.tsx` (page entière) et `(platform)/error.tsx` (header et colonne gauche conservés) :
+  message en français sans détail technique, boutons « Réessayer » (`retry()`) et « Accueil » ;
+  l'erreur part dans la console. `global-error.tsx` couvre une panne du layout racine (son propre
+  `<html>`, styles en ligne car sans `globals.css`).
+- `not-found.tsx` : page introuvable aux couleurs du thème ; `forbidden.tsx` : 403.
+- `(platform)/loading.tsx` : squelette discret. Limite de Next sans Cache Components : il ne
+  s'affiche qu'une fois le layout `(platform)` chargé (session, notifications, solde, activité).
+
+**Réponses des routes.** Les routes JSON privées répondent via `json()` (`apps/web/lib/route.ts`),
+qui pose `cache-control: private, no-store`. `errorResponse` traduit les erreurs connues (401, 403,
+400, 429, erreurs de jeu) et laisse les autres en 500 sans détail. Après une server action qui change
+ce qu'affiche le layout (notification lue, avatar enregistré), `refresh()` de `next/cache`
+rafraîchit le routeur client sans recharger la page.
+
+**Vote du design des cartes** (`/cartes`, module `games/tcg`).
+
+- Les propositions sont dans `games/tcg/src/designs.ts` (`DESIGNS`, 55 aujourd'hui). Leur numéro
+  affiché est leur place dans la liste : on n'ajoute qu'à la fin et on ne renomme jamais un id
+  (il est stocké avec chaque note).
+- Onglets (`TABS` dans la page) : **Design** (les propositions en cours, `DESIGN_TAB`, montrées
+  sans effet de rareté, en carte normale et en full art, plus les deux points de départ 39 et 44,
+  `REFERENCES`), **Effets de rareté** (`EFFECTS_TAB`) et **Variantes**, tous deux masqués pour
+  l'instant (`hidden: true`), et **Archives**. Tant qu'un onglet est masqué, ses designs restent
+  visibles et notables dans les Archives, dans une carte à part ; repasser `hidden` à false les
+  renvoie dans leur onglet.
+- Archives : seule la proposition ouverte (`?voir=<id>`) rend sa planche, les autres n'affichent que
+  titre et résumé. `?masquer=1` cache ce que le membre a déjà noté (au moins une étoile ou un
+  commentaire).
+- Mots-clés lus dans les commentaires **des admins** (`commentTags`) : « à supprimer » envoie le
+  design à la corbeille (en bas des Archives), « variant » le range dans les variantes à ressortir
+  plus tard. Accents et majuscules ignorés ; un mot-clé précédé d'une négation dans le même membre
+  de phrase (« pas à supprimer », « plutôt qu'une variante ») ne compte pas.
+- Tout membre vote (server action `rateDesignAction`, `actionMember`) et voit les avis des autres.
+  L'export JSON des notes (`/api/admin/cards/votes`) reste réservé aux admins.
+- Carte exemple : l'idée `SHOWCASE_IDEA_ID` (voir « Boîte noire »), image servie par
+  `/api/cartes/exemple` (302 vers une URL présignée de 5 min, redirection gardée 4 min).
+- Toutes les cartes affichent leurs informations d'emblée, rien n'apparaît au survol. Polices :
+  seules celles de l'onglet Design sont préchargées (`cartes/fonts.ts`).
 
 ## Avatars et place
 
@@ -309,8 +385,9 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 
 - Première visite : `ensureAvatar` crée un avatar aléatoire mais cohérent (tête humaine assortie à
   la silhouette, couleurs naturelles), sans événement d'activité. Il recompose aussi la planche si
-  le catalogue a été réimporté (empreinte différente). Les membres pas encore revenus reçoivent le
-  leur via `ensureMissingAvatars`, quelques-uns à la fois, après la réponse du dashboard.
+  le catalogue a été réimporté (empreinte différente) et supprime alors l'ancienne planche. Les
+  membres pas encore revenus reçoivent le leur via `ensureMissingAvatars` : 5 à la fois, tirés au
+  hasard et en parallèle (un échec n'empêche pas les autres), après la réponse du dashboard.
 - Éditeur (`/avatar`) : aperçu composé dans le navigateur à partir de `public/avatar-assets`
   (copie des sprites faite par la tâche `generate` d'`apps/web`, gitignorée).
 - Enregistrement (server action) : validation zod puis catalogue (`checkConfig`), composition,
@@ -321,7 +398,9 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
   10 min (`private, max-age=600`), moins longtemps que la validité de l'URL ; une nouvelle planche a
   toujours une nouvelle URL, grâce à l'empreinte.
 - Vercel : `outputFileTracingIncludes` embarque `public/avatar-assets` dans les fonctions, qui
-  composent les planches.
+  composent les planches. Les sprites décodés sont gardés en mémoire dans un cache LRU borné à
+  64 Mio (`DEFAULT_SPRITE_CACHE_BYTES`, `packages/avatar/src/server.ts`) : décodé, le catalogue
+  entier pèserait ~450 Mo par instance.
 
 **La place** (sous la grille des apps).
 
@@ -335,6 +414,11 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
   activité) et les événements depuis `since` (10 min au plus). Le client l'appelle toutes les 30 s :
   un avatar modifié change de planche sans recharger la page, et chaque événement déclenche une
   réaction (`REACTIONS` : `avatar/updated` → émotion, 3 sur 3 à TROIS → confettis…).
+  - `listEventsSince` reprend 10 s avant `since` (`EVENT_COMMIT_GRACE_MS`) : un événement validé
+    après coup n'est pas perdu. Le prochain `since` est la date du dernier événement livré, et la
+    place ne joue chaque événement qu'une fois (dédoublonnage par id).
+  - Seuls les champs utiles aux réactions sont relayés (`PLACE_PAYLOAD_FIELDS`), jamais le payload
+    brut des événements.
 - Pause quand l'onglet est caché (requestAnimationFrame, et pas d'appel réseau). Si l'appareil
   demande moins d'animations : personnages immobiles, ni saut ni confettis. Scène `aria-hidden` :
   les mêmes informations sont dans le fil d'activité.
@@ -352,7 +436,9 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 - **ideas** :
   - un non-admin reçoit 403 sur la lecture d'une idée ou d'une image ;
   - validation des entrées ;
-  - limite d'envois ;
+  - plafond de 30 demandes d'envoi d'image par heure, purge des uploads abandonnés ;
+  - image dont le type ne correspond pas à celui annoncé refusée ;
+  - idée exemple (`SHOWCASE_IDEA_ID`) lisible sans être admin, aucune autre ;
   - clé R2 générée côté serveur, et refus d'une clé fournie par le client ou émise pour un autre
     utilisateur.
 - **avatars** :
@@ -365,8 +451,14 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
   - enregistrement : planche dans R2, événement, ancienne planche supprimée.
 - **accès** :
   - un non-membre du serveur Discord est refusé partout ;
-  - la session est révoquée après la revérification ;
-  - chaque route est bien protégée.
+  - la session est révoquée après la revérification ; une panne Discord ne révoque qu'après 24 h ;
+  - un membre ne peut pas changer son pseudo ou son image par l'API Better Auth ;
+  - chaque route et chaque page est bien protégée (`apps/web/test/access.test.ts`).
+- **db** : contrôle des frontières (SQL brut, toute méthode Prisma, destructuration, types,
+  imports dynamiques) et faux positifs écartés.
+- **storage** : clés, présignatures, objets (sur le stockage S3 local).
+- **jeux** : voir les README de TROIS et d'Agents Doubles ; **tcg** : vote ouvert aux membres,
+  numéros stables, mots-clés et négations.
 
 ## Étapes de réalisation
 
@@ -385,6 +477,10 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 - [x] 9. Avatars pixel art (assets LPC, compositeur, éditeur) et place du dashboard.
 - [x] 10. `games/agents` : Agents Doubles, jeu coopératif à deux, tour par tour, classement des
       duos.
+- [x] 11. `games/tcg` : vote du design des cartes ouvert aux membres (`/cartes`), Ma monnaie
+      (`/wallet`), exports JSON admin.
+- [x] 12. Audit du 2026-10-25 : sécurité (profil, panne Discord), déploiement, pages d'erreur,
+      fuseau horaire, limites d'envoi, corrections des jeux.
 
 ## Hors périmètre (pour l'instant)
 

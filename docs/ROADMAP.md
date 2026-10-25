@@ -179,9 +179,12 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
   - layout `(platform)`, qui exécute `requireMember()` et affiche le header (marque depuis
     `brand.ts`, cloche, avatar) ;
   - `/` : le dashboard.
-    - Colonne gauche : compte, solde, 5 dernières transactions, déconnexion.
-    - Centre : grille de tuiles, puis fil d'activité.
+    - Colonne gauche : compte, solde, menu (Accueil, Mon avatar, Ma monnaie, Administration pour
+      les admins), puis le fil d'activité.
+    - Centre : grille de tuiles, puis la place des avatars.
+    - Header : marque, boule musicale et volume, thème, cloche, menu du profil (déconnexion).
     - Sur mobile, la colonne gauche passe dans un menu.
+  - `/wallet` (« Ma monnaie ») : solde et historique paginé (20 par page) ;
   - `/admin` : accueil de l'administration ;
   - `/admin/economy` : liste des membres, crédit ou débit avec motif obligatoire, historique.
 - Server actions : notifications (marquer comme lu) et ajustement admin de la monnaie. Chacune
@@ -207,31 +210,41 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
 - `schema.prisma` (schéma `ideas`) : `Idea` et `IdeaUpload`, avec la migration.
 - Validation zod : longueurs maximales, rareté (enum), types d'image et taille de 3 Mo.
 - `createUploadUrl(userId, { contentType, size })` :
-  - rate-limit à 10 par heure ;
+  - au plus 30 demandes par heure glissante et par membre (advisory lock par membre), 429 au-delà ;
   - génère la clé `ideas/<uuid>.<ext>` ;
-  - crée la ligne `IdeaUpload` et renvoie l'URL présignée PUT.
-- `submitIdea(userId, input)`, dans une seule transaction :
-  - advisory lock par utilisateur et rate-limit à 5 par heure ;
-  - si une image est jointe : la clé doit appartenir à l'utilisateur et ne pas avoir servi, on
-    vérifie l'objet avec `HeadObject`, puis on marque l'upload comme utilisé ;
+  - crée la ligne `IdeaUpload` et renvoie l'URL présignée PUT ;
+  - purge au passage les uploads jamais utilisés de plus de 24 h (`purgeStaleUploads`).
+- `submitIdea(userId, input)` (aucune limite d'envoi d'idées) :
+  - si une image est jointe, avant la transaction : la clé doit appartenir à l'utilisateur et ne
+    pas avoir servi, et l'objet (`HeadObject`) doit avoir la taille et le type annoncés ;
+  - dans la transaction : l'upload est verrouillé, revérifié et marqué comme utilisé ;
   - création de l'idée, puis `publishEvent("ideas", "idea_submitted", {})` et
     `notifyAdmins("Nouvelle idée reçue")`.
   - Valeur de retour : `{ ok: true }` uniquement.
-- Admin : `listIdeas({ authorId?, rarity?, cursor })` et `getIdea(id)`.
+- Admin (lecteur en premier argument, `ForbiddenError` pour un non-admin) :
+  `listIdeas(reader, { authorId?, rarity?, cursor })`, `getIdea(reader, id)`,
+  `getIdeaImageUrl(reader, id)`, `listIdeaAuthorIds(reader)` et `exportIdeas(reader)` (export JSON,
+  URLs d'image de 15 min) ; `countIdeas()` pour l'accueil de l'administration.
+- Exception à la boîte noire : `getShowcaseIdea()` et `getShowcaseImageUrl()` pour l'idée exemple
+  du vote des cartes (`SHOWCASE_IDEA_ID`).
 - UI :
   - `IdeaForm` : upload direct vers R2, puis confirmation et formulaire vidé ;
-  - `IdeasAdminList` avec filtres, et `IdeaDetail`.
+  - `IdeasAdminList` avec filtres, liste chargée au défilement (`IdeasFeed`, bouton « Remonter »),
+    et `IdeaDetail` ;
+  - coller une image (Ctrl+V) dans le formulaire.
 - Web :
   - pages `/ideas`, `/admin/ideas` et `/admin/ideas/[id]` ;
-  - routes `/api/ideas/upload-url` et `/api/admin/ideas/[id]/image` (redirection 302 vers une URL
-    présignée GET) ;
+  - routes `/api/ideas/upload-url`, `/api/admin/ideas/[id]/image` (redirection 302 vers une URL
+    présignée GET) et `/api/admin/ideas/export` (fichier JSON, admin) ;
   - tuile « Boîte à idées » dans le registre.
 
 **Tests**
 
 - Un non-admin reçoit 403 sur `listIdeas`, `getIdea` et la route image.
 - Validation : champs trop longs, rareté invalide, type d'image refusé, image trop grosse.
-- Au 6e envoi dans l'heure, l'envoi est refusé.
+- Aucune limite d'envoi d'idées ; au-delà de 30 demandes d'envoi d'image dans l'heure, refus 429.
+- Les uploads abandonnés de plus de 24 h sont purgés (objet et ligne).
+- Une image dont le type ne correspond pas à celui annoncé est refusée.
 - La clé R2 est toujours générée côté serveur : une clé fournie par le client, déjà utilisée ou
   appartenant à un autre utilisateur est refusée.
 - L'événement d'activité ne contient ni titre ni contenu.
@@ -277,11 +290,14 @@ jeu du portail. Détails du jeu : [games/trois/README.md](../games/trois/README.
 **Tâches**
 
 - Script `pnpm check:boundaries` : il lit les `.prisma` pour associer chaque modèle à son domaine,
-  puis signale tout `db.<modèle>` utilisé hors de son domaine.
+  puis signale tout accès à un modèle d'un autre domaine (n'importe quel client et n'importe quelle
+  méthode, destructuration, types `Prisma.<Modèle>…`), le SQL brut visant le schéma d'un autre
+  module (avec ou sans guillemets) et tout import de `@app/db` dans `apps/*`.
 - Seed fictif : quelques users inventés, des transactions et des événements. Décision : script
   local non versionné (`*.local.ts`, ignoré par git), qui passe par les fonctions des modules
   (`createFakeMember` de `@app/core/testing`, mots du jour via `@app/trois/testing`).
-- CI GitHub Actions : install, lint, typecheck, check:boundaries, test (service Postgres) et build.
+- CI GitHub Actions : install, format, lint, typecheck, check:boundaries, test (services Postgres
+  et stockage S3) et build du site (sans migration).
 - README :
   - lancer le projet ;
   - variables d'environnement ;
@@ -362,3 +378,61 @@ Détails du jeu : [games/agents/README.md](../games/agents/README.md).
 
 - Deux membres jouent une mission jusqu'au bout et apparaissent au classement des duos et dans
   l'activité.
+
+---
+
+## Étape 11 : vote du design des cartes ✅
+
+Préparation du futur jeu de cartes : les membres notent des propositions de design. Détails :
+section « Vote du design des cartes » de [ARCHITECTURE.md](ARCHITECTURE.md).
+
+**Tâches**
+
+- `games/tcg` : schéma Postgres `tcg` (`design_votes`), `rateDesign` (tout membre),
+  `listDesignVotes`, propositions dans `src/designs.ts` (numéro = place dans la liste),
+  `commentTags` (« à supprimer », « variant », négations ignorées).
+- UI : aperçus de cartes (`ui/DesignPreview.tsx`, vagues `cards`, `premium`, `snap`, `v2`, `v3`),
+  notation par étoiles et commentaire (`DesignRating`), zoom sur une carte, inclinaison au pointeur.
+- Web : page `/cartes` (onglets Design, Effets de rareté et Variantes masqués pour l'instant,
+  Archives), tuile « Vote design des cartes », `/api/cartes/exemple` (image de l'idée exemple),
+  export admin `/api/admin/cards/votes`.
+
+**Tests**
+
+- Vote ouvert aux membres, une note par membre et par design, note de 0 à 5.
+- Numéros stables (39 et 44 restent les références), mots-clés et négations.
+- `/cartes` et `/api/cartes/exemple` refusent sans session (401) et pour une session révoquée (403) ;
+  l'export reste à 403 pour un membre.
+
+**Fini quand**
+
+- Un membre note les propositions de l'onglet Design, et les admins retrouvent les notes dans
+  l'export.
+
+---
+
+## Étape 12 : audit du 2026-10-25 ✅
+
+Relecture complète du projet (sécurité, jeux, modules serveur, front, documentation), puis
+corrections en PR séparées par thème.
+
+**Tâches**
+
+- Sécurité : endpoints Better Auth de modification du profil désactivés ; une panne Discord ne
+  révoque plus les sessions (essai suivant dans 15 min, révocation après 24 h sans réponse,
+  colonne `sessions.guild_unknown_since`).
+- Déploiement : migrations après `next build` (`deploy:production`), build dans la CI, procédure
+  `prisma migrate resolve` documentée.
+- Web : pages d'erreur, 404 et chargement ; dates en heure de Paris (`BRAND.timeZone`) ; `refresh()`
+  après les actions ; cloche fiable ; en-têtes `private, no-store` ; données de session réduites.
+- Serveur : plafond et purge des envois d'image, solde plafonné (`MAX_BALANCE`), cache de sprites
+  borné, planches orphelines supprimées, événements de la place sans perte ni doublon,
+  `check:boundaries` élargi.
+- Jeux : TROIS (bascule de jour, contrastes, rangs ex æquo) ; Agents Doubles (mort subite, une
+  partie en cours par paire, accessibilité) ; cartes (négations, onglets masqués, archives
+  allégées).
+- Documentation remise à jour, règle « doc à jour dans chaque PR » ajoutée à CLAUDE.md.
+
+**Fini quand**
+
+- Toutes les PR sont fusionnées, CI verte, déployées.

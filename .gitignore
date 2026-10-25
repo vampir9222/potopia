@@ -33,3 +33,6 @@ Thumbs.db
 
 # Sprites d'avatar copiés depuis packages/avatar-assets (pnpm generate)
 apps/web/public/avatar-assets/
+
+# Fichiers personnels (sources de la musique du site)
+Musique/

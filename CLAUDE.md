@@ -17,7 +17,10 @@ pnpm storage:init    # crée le bucket local et son CORS (une fois après db:up)
 ```
 
 Tests : Postgres local via `TEST_DATABASE_URL` (base `app_test`, vidée par les tests, donc packages
-testés un par un : `turbo run test --concurrency=1`). API Discord toujours mockée.
+testés un par un : `turbo run test --concurrency=1`). API Discord toujours mockée. Plusieurs
+sessions de travail en parallèle : une base de test par session (`TEST_DATABASE_URL=…/app_<nom>_test`).
+Ne jamais lancer de correction en masse (sed, fins de ligne…) sur des fichiers non suivis : le
+dossier `Musique/` et les exports sont des fichiers personnels.
 
 ## Règles non négociables
 
@@ -51,6 +54,11 @@ testés un par un : `turbo run test --concurrency=1`). API Discord toujours mock
 
 ## Conventions
 
+- **Documentation à jour dans chaque PR** : tout changement met à jour, dans la même PR, ce qu'il
+  touche dans `README.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, les README des jeux
+  (`games/*/README.md`) et `.env.example`. Ce qui n'existe plus est retiré (ou rangé sous un
+  titre « Archive » clairement séparé) ; chaque ajout, réglage, route, table, variable ou script
+  est décrit. La doc doit permettre de refaire le projet ou de le transmettre.
 - Validation des entrées avec zod, à la frontière (actions, route handlers, fonctions publiques).
 - Chaque module : `schema.prisma` (schéma Postgres à son nom), code serveur, `ui/` en React pur.
 - Versions : TypeScript 6.0 (typescript-eslint ne supporte pas la 7), Prisma 7.x (Better Auth exige

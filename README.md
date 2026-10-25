@@ -1,9 +1,10 @@
 # Plateforme de mini-jeux pour un serveur Discord
 
-Un portail web réservé aux membres d'un serveur Discord : connexion avec Discord, monnaie interne,
-fil d'activité, notifications, boîte à idées, et des jeux (le premier est **TROIS**, un Wordle
-français à 3 mots par jour). Le nom affiché et celui de la monnaie viennent de
-`packages/config/brand.ts`.
+Un portail web réservé aux membres d'un serveur Discord : connexion avec Discord, monnaie interne
+(« Ma monnaie »), fil d'activité, notifications, avatars pixel art qui se promènent sur une place
+commune, boîte à idées, vote du design des futures cartes, et deux jeux : **TROIS** (un Wordle
+français à 3 mots par jour) et **Agents Doubles** (jeu d'espions coopératif à deux). Le nom affiché
+et celui de la monnaie viennent de `packages/config/brand.ts`.
 
 - Choix techniques et règles d'architecture : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Étapes de réalisation : [docs/ROADMAP.md](docs/ROADMAP.md)
@@ -57,6 +58,7 @@ remplir » demandent une action.
 | `R2_ACCOUNT_ID`                             | Compte Cloudflare (ignoré si `R2_ENDPOINT` est rempli)                   | vide                             |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | Clés d'accès au bucket                                                   | déjà rempli (local)              |
 | `R2_BUCKET`                                 | Bucket privé des images                                                  | `app-local`                      |
+| `VERCEL_ENV` / `DATABASE_URL_UNPOOLED`      | Fournies par Vercel (environnement, URL directe Neon) : rien à déclarer  | absentes                         |
 
 Toute nouvelle variable va dans `.env.example` (documentée) et dans `globalPassThroughEnv` de
 `turbo.json`. Le fichier `.env` n'est jamais versionné.
@@ -124,11 +126,13 @@ packages/
   avatar/        compositeur d'avatars LPC (client et serveur), éditeur, place du dashboard
   avatar-assets/ sprites LPC importés, catalogue, palettes et crédits (pnpm assets:import)
   economy/       monnaie : ledger en ajout seul, wallets
-  ideas/         boîte à idées (lue par les admins seulement)
+  ideas/         boîte à idées (lue par les admins seulement ; une idée exemple visible de tous
+                 sur /cartes)
   storage/       client S3/R2 et URLs présignées
   ui/            thèmes et composants de base
 games/
   agents/        Agents Doubles, le jeu d'espions coopératif à deux
+  tcg/           futur jeu de cartes : vote du design des cartes (/cartes)
   trois/         TROIS, le Wordle à 3 mots par jour
 ```
 
@@ -159,12 +163,16 @@ Exemple pour un jeu `games/monjeu` :
 5. **Branchement dans `apps/web`** :
    - dépendance `"@app/monjeu": "workspace:*"` et entrée dans `transpilePackages` de
      `next.config.ts` ;
-   - `@source "../../../games/monjeu/ui";` dans `app/globals.css` ;
-   - routes `app/api/monjeu/*` qui commencent par `requireMember(request.headers)` et page
+   - `@source "../../../games/monjeu/ui";` dans `app/globals.css`, et
+     `@import "@app/monjeu/ui/monjeu.css";` si le jeu a sa propre feuille de style (exportée dans
+     son `package.json`) ;
+   - routes `app/api/monjeu/*` qui commencent par `requireMember(request.headers)` et répondent
+     avec `json()` de `lib/route.ts` (jamais mises en cache), et page
      `app/(platform)/monjeu/page.tsx` avec `getCurrentMember()` ;
-   - libellé dans `components/Breadcrumb.tsx`, et ces routes ajoutées à `test/access.test.ts`.
-6. **Tuile** : une entrée dans `packages/core/src/apps/registry.ts` (et son icône lucide dans
-   `packages/core/ui/AppGrid.tsx`).
+   - ces routes et la page ajoutées à `test/access.test.ts`.
+6. **Tuile** : une entrée dans `packages/core/src/apps/registry.ts`. Son icône : un nom ajouté à
+   l'union `AppIconName` du même fichier, et l'icône lucide correspondante dans `ICONS` de
+   `packages/core/ui/AppGrid.tsx`. Le fil d'Ariane reprend le nom de la tuile tout seul.
 7. `pnpm install`, puis redémarrer `pnpm dev`. Si Next ne trouve pas le package, vider
    `apps/web/.next/dev`.
 
@@ -200,8 +208,9 @@ await withTx(async (tx) => {
 
 Le bouton volume du header règle tous les sons du site. Un son doit le respecter : `effectiveVolume()`
 de `@app/ui` donne le volume à appliquer (0 à 1, 0 si coupé) et `onVolumeChange(fn)` prévient quand
-il change. Pour un `<audio>` : `audio.volume = effectiveVolume()` ; avec Web Audio : un `GainNode`
-en fin de chaîne (voir `games/trois/ui/sound.ts`).
+il change. Pour un `<audio>` : `audio.volume = effectiveVolume()` (exemple : la boule musicale du
+header, `apps/web/components/SpinOrb.tsx`, qui joue `public/audio/spin2.mp3`) ; avec Web Audio : un
+`GainNode` en fin de chaîne (voir `games/trois/ui/sound.ts`).
 
 ### Ajouter un thème
 
@@ -259,4 +268,8 @@ propose aussitôt.
 - Pas d'ID Discord réel, de domaine de prod ni de contenu de membre dans le code, la doc, les tests
   ou les messages de commit : placeholders uniquement (`<projet>.vercel.app`, `123456789012345678`).
 - Les images de la boîte à idées sont dans un bucket privé, servies aux admins par des URLs
-  présignées de 5 minutes ; la base ne stocke que leur clé.
+  présignées de 5 minutes (et, pour la seule idée exemple `SHOWCASE_IDEA_ID`, à tout membre via
+  `/api/cartes/exemple`) ; la base ne stocke que leur clé. Les images envoyées puis abandonnées
+  sont purgées au bout de 24 h.
+- Pseudo, image et e-mail viennent de Discord : les endpoints de Better Auth qui permettraient de
+  les changer depuis le site sont désactivés.
