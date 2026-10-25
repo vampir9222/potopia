@@ -8,6 +8,12 @@ export {
   type Idea,
 } from "./admin";
 export { InvalidImageError } from "./errors";
+export {
+  getShowcaseIdea,
+  getShowcaseImageUrl,
+  SHOWCASE_IDEA_ID,
+  type ShowcaseIdea,
+} from "./showcase";
 export { countIdeas, createUploadUrl, submitIdea } from "./submit";
 export {
   IMAGE_TYPES,

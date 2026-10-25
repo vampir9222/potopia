@@ -5,8 +5,8 @@ import { errorResponse } from "@/lib/route";
 /** Export des notes sur les propositions de design de carte, en JSON (fichier) : admin uniquement. */
 export async function GET(request: Request): Promise<Response> {
   try {
-    const admin = await requireAdmin(request.headers);
-    const votes = await listDesignVotes(admin);
+    await requireAdmin(request.headers);
+    const votes = await listDesignVotes();
     const users = await getUsersByIds([...new Set(votes.map((v) => v.userId))]);
     const names = new Map(users.map((u) => [u.id, u.name]));
     const exportedAt = new Date();

@@ -6,6 +6,9 @@ import {
   createUploadUrl,
   getIdea,
   getIdeaImageUrl,
+  getShowcaseIdea,
+  getShowcaseImageUrl,
+  SHOWCASE_IDEA_ID,
   InvalidImageError,
   listIdeas,
   submitIdea,
@@ -188,5 +191,33 @@ describe("lecture réservée aux admins", () => {
       "Idée 1",
     ]);
     expect(page2.nextCursor).toBeNull();
+  });
+});
+
+describe("idée exemple du vote des designs", () => {
+  it("lisible sans être admin, avec sa place dans la série ; aucune autre idée", async () => {
+    expect(await getShowcaseIdea()).toBeNull();
+    // dates imposées : la place dans la série ne dépend pas de la vitesse des écritures
+    const at = (day: number) => new Date(Date.UTC(2020, 0, day));
+    await db.idea.createMany({
+      data: [
+        { authorId: MEMBER.id, title: "Avant", description: "Texte", createdAt: at(1) },
+        {
+          id: SHOWCASE_IDEA_ID,
+          authorId: OTHER.id,
+          title: "Exemple",
+          description: "Texte",
+          createdAt: at(2),
+        },
+        { authorId: MEMBER.id, title: "Après", description: "Texte", createdAt: at(3) },
+      ],
+    });
+    expect(await getShowcaseIdea()).toMatchObject({
+      id: SHOWCASE_IDEA_ID,
+      title: "Exemple",
+      rank: 2,
+      total: 3,
+    });
+    expect(await getShowcaseImageUrl()).toBeNull();
   });
 });

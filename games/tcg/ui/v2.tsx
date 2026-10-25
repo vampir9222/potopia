@@ -10,13 +10,13 @@ import { Tilt } from "./Tilt";
  * tarot, Balatro). Même règle : la finition ne change que le look, jamais les stats.
  */
 
-const W = 300;
-const H = 420;
-const R = 22;
-const fill: CSSProperties = { position: "absolute", inset: 0 };
+export const W = 300;
+export const H = 420;
+export const R = 22;
+export const fill: CSSProperties = { position: "absolute", inset: 0 };
 
 /** Carte de base : inclinaison, profondeur, ombre portée et reflet. */
-function Shell({
+export function Shell({
   radius = R,
   card,
   children,
@@ -50,7 +50,7 @@ function Shell({
 }
 
 /** Calque à une profondeur donnée (parallaxe quand la carte s'incline). */
-function Layer({
+export function Layer({
   z,
   style,
   className,
@@ -72,7 +72,7 @@ function Layer({
 }
 
 /** Illustration rognée aux coins de la carte. */
-function Art({
+export function Art({
   card,
   radius = R,
   style,
@@ -138,7 +138,7 @@ function Reveal({
   );
 }
 
-const METAL: Record<SnapFinish, string> = {
+export const METAL: Record<SnapFinish, string> = {
   common:
     "linear-gradient(145deg, #eef1f6 0%, #9aa2b1 30%, #4a505c 60%, #c9ced8 80%, #2c3038 100%)",
   uncommon:
@@ -148,7 +148,7 @@ const METAL: Record<SnapFinish, string> = {
   sr: PEARL,
   ssr: "conic-gradient(from 210deg, #ff6ab5, #ffd36a, #7dffb0, #6ad5ff, #b88bff, #ff6ab5)",
 };
-const ACCENT: Record<SnapFinish, string> = {
+export const ACCENT: Record<SnapFinish, string> = {
   common: "#c9ced8",
   uncommon: "#6ff0b0",
   rare: "#b39cff",
@@ -329,7 +329,7 @@ export function SnapSculpted({
 
 /* ═════════════════════ Snap V3 · Infini ═════════════════════ */
 
-const FLOW: Record<SnapFinish, string> = {
+export const FLOW: Record<SnapFinish, string> = {
   common: "#9aa7ff, #ffffff, #9aa7ff",
   uncommon: "#2bf0a0, #c6fff0, #00c2ff, #2bf0a0",
   rare: "#9b6bff, #ff6ad5, #6ad5ff, #9b6bff",
@@ -512,7 +512,7 @@ export function SnapDepth({ card, finish = card.rarity }: { card: CardData; fini
 
 /* ═════════════════════ Arcanes V2 · Plein cadre ═════════════════════ */
 
-const SET_FILL: Record<SnapFinish, string> = {
+export const SET_FILL: Record<SnapFinish, string> = {
   common: "#1a1a1a",
   uncommon: "linear-gradient(135deg, #fff, #8d99a4)",
   rare: "linear-gradient(135deg, #fff3b8, #c08a22)",
@@ -654,7 +654,7 @@ export function ArcanesFull({
 
 /* ═════════════════════ Taverne V2 · Arche ═════════════════════ */
 
-const GEM: Record<SnapFinish, string> = {
+export const GEM: Record<SnapFinish, string> = {
   common: "#e9ecef",
   uncommon: "#3d8bff",
   rare: "#a155ff",

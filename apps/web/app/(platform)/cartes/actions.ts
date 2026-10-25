@@ -3,12 +3,13 @@
 import { rateDesign } from "@app/tcg";
 import type { RateState } from "@app/tcg/ui";
 import { ZodError } from "zod";
-import { actionAdmin } from "@/lib/session";
+import { actionMember } from "@/lib/session";
 
+/** Vote sur un design de carte : ouvert à tous les membres. */
 export async function rateDesignAction(_prev: RateState, formData: FormData): Promise<RateState> {
-  const admin = await actionAdmin();
+  const member = await actionMember();
   try {
-    await rateDesign(admin, {
+    await rateDesign(member, {
       designId: String(formData.get("designId") ?? ""),
       stars: String(formData.get("stars") ?? ""),
       comment: String(formData.get("comment") ?? ""),

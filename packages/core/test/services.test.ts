@@ -37,11 +37,13 @@ describe("registre des apps", () => {
       "trois",
       "agents",
       "ideas",
+      "cards",
     ]);
     expect(getVisibleApps({ role: "admin" }).map((a) => a.id)).toEqual([
       "trois",
       "agents",
       "ideas",
+      "cards",
       "admin",
     ]);
   });

@@ -12,7 +12,13 @@ import {
   PolaroidCard,
 } from "./cards";
 import { HearthCard, MagicCard, PokeCard, PremiumDefs, SnapCard } from "./premium";
-import { SnapCard as SnapVariant, SnapDefs, type SnapFinish, type SnapStyle } from "./snap";
+import {
+  SNAP_FINISH_LABELS,
+  SnapCard as SnapVariant,
+  SnapDefs,
+  type SnapFinish,
+  type SnapStyle,
+} from "./snap";
 import {
   ArcanesFull,
   BalatroCard,
@@ -26,6 +32,7 @@ import {
   TarotCard,
   TaverneArch,
 } from "./v2";
+import { Captioned, type EffectSet, MixCard, type MixDesign } from "./v3";
 
 const ORDER: DesignId[] = [
   "pixel",
@@ -75,7 +82,27 @@ const ORDER: DesignId[] = [
   "essai-duel",
   "essai-tarot",
   "essai-balatro",
+  "mix-verre",
+  "mix-serti",
+  "mix-plaque",
+  "effets-metaux",
+  "effets-gemmes",
+  "effets-lumiere",
+  "effets-cosmique",
 ];
+
+const MIX: Partial<Record<DesignId, MixDesign>> = {
+  "mix-verre": "verre",
+  "mix-serti": "serti",
+  "mix-plaque": "plaque",
+};
+const EFFECTS: Partial<Record<DesignId, EffectSet>> = {
+  "effets-metaux": "metaux",
+  "effets-gemmes": "gemmes",
+  "effets-lumiere": "lumiere",
+  "effets-cosmique": "cosmique",
+};
+const STAGE = "radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)";
 
 const SNAP_STYLES: Partial<Record<DesignId, SnapStyle>> = {
   "snap-classic": "classic",
@@ -418,6 +445,57 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
           ))}
         </PremiumBoard>
       );
+    case "mix-verre":
+    case "mix-serti":
+    case "mix-plaque": {
+      // Le design seul : rareté commune, sans effet, en carte normale et en full art.
+      const card = pick(pictured, 0);
+      const design = MIX[designId] ?? "verre";
+      return (
+        <Board wrap background={STAGE}>
+          <PremiumDefs />
+          <SnapDefs />
+          <Captioned label="Normale">
+            <MixCard card={card} design={design} layout="normal" finish="common" />
+          </Captioned>
+          <Captioned label="Full art">
+            <MixCard card={card} design={design} layout="fullart" finish="common" />
+          </Captioned>
+        </Board>
+      );
+    }
+    case "effets-metaux":
+    case "effets-gemmes":
+    case "effets-lumiere":
+    case "effets-cosmique": {
+      // Les effets seuls : le même design, des 6 raretés, en carte normale puis en full art.
+      const card = pick(pictured, 0);
+      const effects = EFFECTS[designId] ?? "metaux";
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {(["normal", "fullart"] as const).map((layout) => (
+            <Board key={layout} wrap background={STAGE}>
+              <PremiumDefs />
+              <SnapDefs />
+              {LADDER.map((finish) => (
+                <Captioned
+                  key={finish}
+                  label={`${SNAP_FINISH_LABELS[finish]}${layout === "fullart" ? " · full art" : ""}`}
+                >
+                  <MixCard
+                    card={card}
+                    design="verre"
+                    layout={layout}
+                    effects={effects}
+                    finish={finish}
+                  />
+                </Captioned>
+              ))}
+            </Board>
+          ))}
+        </div>
+      );
+    }
     case "raretes-v3": {
       const card = pick(pictured, 0);
       return (

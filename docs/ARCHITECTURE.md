@@ -205,6 +205,10 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
   prennent le lecteur en premier argument et lèvent `ForbiddenError` s'il n'est pas admin, en plus
   des contrôles de l'app.
 - Le seul événement d'activité émis est `ideas / idea_submitted`, avec un payload vide.
+- Seule exception (décidée le 2026-10-25) : l'idée exemple du vote des designs de cartes
+  (`SHOWCASE_IDEA_ID`). `getShowcaseIdea` et `getShowcaseImageUrl` la renvoient sans contrôle
+  d'admin, et `/cartes` et `/api/cartes/exemple` (requireMember) l'affichent à tous les membres.
+  Aucune autre idée n'est concernée.
 
 **Rate-limit des idées.**
 

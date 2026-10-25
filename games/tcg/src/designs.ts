@@ -252,8 +252,78 @@ export const DESIGNS = [
     summary:
       "La carte se balance, bord blanc épais, image pixelisée en écran cathodique, jetons bleu et rouge.",
   },
+  {
+    id: "mix-verre",
+    title: "Mix · Sculpté et verre fumé",
+    summary:
+      "Le cadre sculpté et les badges sertis du 44, la plaque de nom gravée, le texte des Arcanes en verre fumé (39).",
+  },
+  {
+    id: "mix-serti",
+    title: "Mix · Arcanes serti",
+    summary:
+      "La mise en page des Arcanes (39) : nom en haut, ligne de type, encadré de texte ; dans le cadre sculpté du 44.",
+  },
+  {
+    id: "mix-plaque",
+    title: "Mix · Plaque et parchemin",
+    summary:
+      "Plaque de nom gravée en haut entre les badges, texte sur parchemin ivoire à l'encre sombre.",
+  },
+  {
+    id: "effets-metaux",
+    title: "Effets · Métaux précieux",
+    summary:
+      "Le cadre change de métal : acier, émeraude, améthyste, or, nacre, prisme. Holo dès la rare, reflet sur la légendaire, gravure nacrée sur la SR, SSR lenticulaire. SR et SSR signées.",
+  },
+  {
+    id: "effets-gemmes",
+    title: "Effets · Bronze et gemmes",
+    summary:
+      "Même cadre de bronze pour toutes ; la rareté se lit à la gemme (plus grosse) et au liseré intérieur coloré. Mêmes holo, reflet, gravure et signatures.",
+  },
+  {
+    id: "effets-lumiere",
+    title: "Effets · Lumière vivante",
+    summary:
+      "Cadre d'acier sombre pour toutes ; un liseré de lumière tourne autour de la carte, de plus en plus riche avec la rareté. Mêmes holo, reflet, gravure et signatures.",
+  },
+  {
+    id: "effets-cosmique",
+    title: "Effets · Cosmique",
+    summary:
+      "D'après le 42 (« plutôt pour une rareté ») : métaux jusqu'à la rare, puis une aurore et des étoiles vivantes autour de la carte pour la légendaire, la SR et la SSR. L'image reste intacte ; la lumière déborde du cadre et entre un peu dedans.",
+  },
 ] as const;
 
 export type DesignId = (typeof DESIGNS)[number]["id"];
 
 export const DESIGN_IDS = DESIGNS.map((d) => d.id) as [DesignId, ...DesignId[]];
+
+/** Onglet « Design » : les propositions en cours (mélange de 39 et 44), cartes normales et full art. */
+export const DESIGN_TAB: readonly DesignId[] = ["mix-verre", "mix-serti", "mix-plaque"];
+
+/** Onglet « Effets de rareté » : ce que chaque rareté ajoute, posé sur le design « Mix · Sculpté et verre fumé ». */
+export const EFFECTS_TAB: readonly DesignId[] = [
+  "effets-metaux",
+  "effets-gemmes",
+  "effets-lumiere",
+  "effets-cosmique",
+];
+
+/** Designs retenus comme point de départ du mélange (39 et 44), toujours visibles dans l'onglet Design. */
+export const REFERENCES: readonly DesignId[] = ["arcanes-v2", "raretes-v3"];
+
+/** Numéro affiché d'un design (sa place dans la liste, à partir de 1) : stable, on n'insère qu'à la fin. */
+export function designNumber(id: DesignId): number {
+  return DESIGN_IDS.indexOf(id) + 1;
+}
+
+/**
+ * Mots-clés lus dans les commentaires des admins : « à supprimer » met le design à la corbeille,
+ * « variant » le range dans les variantes à ressortir plus tard. Accents et majuscules ignorés.
+ */
+export function commentTags(comment: string | null): { remove: boolean; variant: boolean } {
+  const text = (comment ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return { remove: /\ba supprimer\b/.test(text), variant: /\bvariant/.test(text) };
+}

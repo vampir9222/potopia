@@ -70,8 +70,9 @@ const uploadUrlRoute = await import("@/app/api/ideas/upload-url/route");
 const ideaImageRoute = await import("@/app/api/admin/ideas/[id]/image/route");
 const ideasExportRoute = await import("@/app/api/admin/ideas/export/route");
 const cardVotesRoute = await import("@/app/api/admin/cards/votes/route");
-const { default: AdminCardsPage } = await import("@/app/(platform)/admin/cards/page");
-const { rateDesignAction } = await import("@/app/(platform)/admin/cards/actions");
+const { default: CardsVotePage } = await import("@/app/(platform)/cartes/page");
+const { rateDesignAction } = await import("@/app/(platform)/cartes/actions");
+const showcaseImageRoute = await import("@/app/api/cartes/exemple/route");
 const agentsGamesRoute = await import("@/app/api/agents/games/route");
 const agentsGameRoute = await import("@/app/api/agents/games/[id]/route");
 const agentsLeaderboardRoute = await import("@/app/api/agents/leaderboard/route");
@@ -157,6 +158,7 @@ const routes: Record<string, () => Promise<Response>> = {
   "GET /api/admin/ideas/[id]/image": requestIdeaImage,
   "GET /api/admin/ideas/export": () => ideasExportRoute.GET(withCookie("/api/admin/ideas/export")),
   "GET /api/admin/cards/votes": () => cardVotesRoute.GET(withCookie("/api/admin/cards/votes")),
+  "GET /api/cartes/exemple": () => showcaseImageRoute.GET(withCookie("/api/cartes/exemple")),
   "GET /api/agents/games": () => agentsGamesRoute.GET(withCookie("/api/agents/games")),
   "POST /api/agents/games": () =>
     agentsGamesRoute.POST(withCookie("/api/agents/games", { partnerId: "inconnu" })),
@@ -205,6 +207,7 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "agents/page": () => AgentsPage(),
   "agents/[id]/page": () => AgentsGamePage({ params: Promise.resolve({ id: "inconnue" }) }),
   "trois/page": () => TroisPage(),
+  "cartes/page": () => CardsVotePage({ searchParams: Promise.resolve({ onglet: "effets" }) }),
   "wallet/page": () => WalletPage({ searchParams: Promise.resolve({}) }),
   "avatar/page": () => AvatarPage(),
   "credits/page": () => CreditsPage(),
@@ -215,7 +218,6 @@ const adminPages: Record<string, () => Promise<unknown>> = {
   "admin/economy/page": () => AdminEconomyPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/page": () => AdminIdeasPage({ searchParams: Promise.resolve({}) }),
   "admin/ideas/[id]/page": () => AdminIdeaPage({ params: Promise.resolve({ id: ideaId }) }),
-  "admin/cards/page": () => AdminCardsPage(),
 };
 
 async function signIn(discordId: string): Promise<string> {
@@ -301,11 +303,10 @@ describe("server actions", () => {
     expect(page.items.map((i) => i.id)).not.toContain(first[0]?.id);
   });
 
-  it("rateDesignAction refuse un membre non admin (403)", async () => {
+  it("rateDesignAction : un membre vote, mais l'export des notes reste réservé aux admins", async () => {
     await signIn(MEMBER_ID);
-    await expect(rateDesignAction({ status: "idle" }, rateForm())).rejects.toBeInstanceOf(
-      ForbiddenError,
-    );
+    expect((await rateDesignAction({ status: "idle" }, rateForm())).status).toBe("ok");
+    expect((await cardVotesRoute.GET(withCookie("/api/admin/cards/votes"))).status).toBe(403);
   });
 
   it("rateDesignAction enregistre la note de l'admin, et refuse une note invalide", async () => {

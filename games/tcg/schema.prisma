@@ -1,7 +1,7 @@
-// Domaine tcg : jeu de cartes, en préparation et réservé aux admins.
+// Domaine tcg : jeu de cartes, en préparation. Seul le vote des designs est ouvert aux membres.
 // `userId` référence core.users sans relation.
 
-// Note d'un admin sur une proposition de design de carte (une par admin et par design).
+// Note d'un membre sur une proposition de design de carte (une par membre et par design).
 model TcgDesignVote {
   id        String   @id @default(uuid(7))
   designId  String   @map("design_id")
