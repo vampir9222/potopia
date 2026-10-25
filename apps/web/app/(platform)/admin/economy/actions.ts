@@ -2,7 +2,13 @@
 
 import { formatCurrency } from "@app/config/brand";
 import { getUser } from "@app/core";
-import { adminAdjust, IdempotencyConflictError, InsufficientFundsError } from "@app/economy";
+import {
+  adminAdjust,
+  BalanceLimitError,
+  IdempotencyConflictError,
+  InsufficientFundsError,
+  MAX_BALANCE,
+} from "@app/economy";
 import type { AdjustState } from "@app/economy/ui";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -39,6 +45,12 @@ export async function adjustBalance(_prev: AdjustState, formData: FormData): Pro
       return {
         status: "error",
         message: `Solde insuffisant : ${member.name} n'a que ${formatCurrency(error.balance)}.`,
+      };
+    }
+    if (error instanceof BalanceLimitError) {
+      return {
+        status: "error",
+        message: `Plafond de solde atteint : ${member.name} a déjà ${formatCurrency(error.balance)}, le maximum est ${formatCurrency(MAX_BALANCE)}.`,
       };
     }
     if (error instanceof IdempotencyConflictError) {
