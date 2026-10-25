@@ -7,14 +7,22 @@ export {
   type ExportedIdea,
   type Idea,
 } from "./admin";
-export { InvalidImageError } from "./errors";
+export { InvalidImageError, UploadRateLimitError } from "./errors";
 export {
   getShowcaseIdea,
   getShowcaseImageUrl,
   SHOWCASE_IDEA_ID,
   type ShowcaseIdea,
 } from "./showcase";
-export { countIdeas, createUploadUrl, submitIdea } from "./submit";
+export {
+  countIdeas,
+  createUploadUrl,
+  purgeStaleUploads,
+  STALE_UPLOAD_MAX_AGE_MS,
+  STALE_UPLOAD_PURGE_BATCH,
+  submitIdea,
+  UPLOAD_RATE_LIMIT,
+} from "./submit";
 export {
   IMAGE_TYPES,
   LIMITS,
