@@ -5,7 +5,7 @@ import { catalog, palettes, type Catalog } from "@app/avatar-assets";
 import { spritesDir } from "@app/avatar-assets/fs";
 import { db } from "@app/db";
 import { truncateTestDb } from "@app/db/testing";
-import { headObject } from "@app/storage";
+import { headObject, putObject } from "@app/storage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AvatarConfigError,
@@ -154,16 +154,20 @@ describe("première visite", () => {
     expect(again.configHash).toBe(avatar.configHash);
   });
 
-  it("recompose la planche quand l'empreinte stockée ne correspond plus (catalogue réimporté)", async () => {
+  it("recompose la planche quand l'empreinte stockée ne correspond plus (catalogue réimporté) et supprime l'ancienne", async () => {
     const userId = await createUser("u1");
     const avatar = await ensureAvatar({ userId, sprites });
+    const oldKey = `avatars/${userId}-ancien.png`;
+    await putObject({ key: oldKey, body: new Uint8Array([1, 2, 3]), contentType: "image/png" });
     await db.avatar.update({
       where: { userId },
-      data: { configHash: "ancien", sheetKey: "avatars/ancien.png" },
+      data: { configHash: "ancien", sheetKey: oldKey },
     });
     const refreshed = await ensureAvatar({ userId, sprites });
     expect(refreshed.configHash).toBe(avatar.configHash);
     expect(refreshed.config).toEqual(avatar.config);
+    expect(await headObject(oldKey)).toBeNull();
+    expect(await headObject(refreshed.sheetKey)).not.toBeNull();
   });
 });
 
@@ -193,5 +197,22 @@ describe("membres sans avatar", () => {
     expect(await db.avatar.count()).toBe(2);
     expect(await ensureMissingAvatars({ sprites, limit: 2 })).toBe(1);
     expect(await ensureMissingAvatars({ sprites })).toBe(0);
+  });
+
+  it("un avatar qui échoue est signalé sans faire échouer le lot", async () => {
+    for (const id of ["u1", "u2"]) await createUser(id);
+    const failing = async () => {
+      throw new Error("sprite illisible");
+    };
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      await expect(ensureMissingAvatars({ sprites: failing })).resolves.toBe(0);
+      expect(error).toHaveBeenCalledTimes(2);
+    } finally {
+      error.mockRestore();
+    }
+    expect(await db.avatar.count()).toBe(0);
+    // Le lot suivant n'est pas bloqué par les échecs précédents.
+    expect(await ensureMissingAvatars({ sprites })).toBe(2);
   });
 });
