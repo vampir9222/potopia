@@ -38,10 +38,21 @@ export async function listRecentEvents(limit = 20): Promise<ActivityEvent[]> {
   });
 }
 
-/** Événements publiés après `since` (exclu), du plus ancien au plus récent, MAX_RECENT_EVENTS au plus. */
+/**
+ * Marge (ms) retranchée à `since` : `createdAt` est posé à l'ouverture de la transaction qui
+ * publie l'événement, qui peut n'être validée que plus tard. Sans marge, un événement antidaté
+ * par rapport au moment où le client a relevé l'heure ne lui serait jamais livré.
+ */
+export const EVENT_COMMIT_GRACE_MS = 10_000;
+
+/**
+ * Événements publiés après `since - EVENT_COMMIT_GRACE_MS`, du plus ancien au plus récent,
+ * MAX_RECENT_EVENTS au plus. À cause de la marge (et de la troncature), un même événement peut
+ * être renvoyé à deux appels successifs : l'appelant dédoublonne par `id`.
+ */
 export async function listEventsSince(since: Date): Promise<ActivityEvent[]> {
   return db.activityEvent.findMany({
-    where: { createdAt: { gt: since } },
+    where: { createdAt: { gt: new Date(since.getTime() - EVENT_COMMIT_GRACE_MS) } },
     orderBy: { createdAt: "asc" },
     take: MAX_RECENT_EVENTS,
   });

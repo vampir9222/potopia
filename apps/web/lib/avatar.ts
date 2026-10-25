@@ -17,13 +17,19 @@ export function avatarSheetUrl(userId: string, hash: string): string {
   return `/api/avatars/${encodeURIComponent(userId)}/${hash}`;
 }
 
-/** Membres de la place et événements publiés depuis `since` (aucun au premier affichage). */
+/**
+ * Membres de la place et événements publiés depuis `since` (aucun au premier affichage).
+ * `now`, que le client renverra comme prochain `since`, est la date du dernier événement livré
+ * (sinon l'heure du serveur) : si la liste est tronquée, le prochain appel reprend là où celle-ci
+ * s'arrête au lieu de sauter les événements les plus récents.
+ */
 export async function getPlaceSnapshot(since?: Date): Promise<PlaceSnapshot> {
   const now = new Date();
   const [members, events] = await Promise.all([
     listPlaceMembers(),
     since ? listEventsSince(since) : Promise.resolve([]),
   ]);
+  const last = events.at(-1)?.createdAt ?? now;
   return {
     members: members.map((m) => ({
       id: m.userId,
@@ -39,7 +45,7 @@ export async function getPlaceSnapshot(since?: Date): Promise<PlaceSnapshot> {
       type: e.type,
       payload: e.payload,
     })),
-    now: now.toISOString(),
+    now: last.toISOString(),
   };
 }
 

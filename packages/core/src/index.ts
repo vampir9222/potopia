@@ -22,6 +22,7 @@ export {
   type SessionUser,
 } from "./access/session";
 export {
+  EVENT_COMMIT_GRACE_MS,
   listEventsSince,
   listRecentEvents,
   MAX_RECENT_EVENTS,
