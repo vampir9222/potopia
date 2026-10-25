@@ -69,6 +69,7 @@ export function SpinOrb() {
     let holdUntil = 0;
     let nextBoost = last + 1500 + Math.random() * 2000;
     let windPhase = 0;
+    let wasFast = false;
 
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
@@ -99,7 +100,12 @@ export function SpinOrb() {
         wind.style.opacity = String(clamp01((speed - 6) / 3));
         wind.style.backgroundPosition = `${-Math.floor(windPhase) * WIND_SIZE}px 0`;
       }
-      setFast(speed > 6.5);
+      // Halo « turbo » : un rendu React seulement quand on franchit le seuil, pas à chaque frame.
+      const isFast = speed > 6.5;
+      if (isFast !== wasFast) {
+        wasFast = isFast;
+        setFast(isFast);
+      }
 
       raf = requestAnimationFrame(tick);
     };

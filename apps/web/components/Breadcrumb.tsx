@@ -1,70 +1,33 @@
-"use client";
+import { apps } from "@app/core";
+import { BreadcrumbNav } from "./BreadcrumbNav";
 
-import { ArrowLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Fragment } from "react";
-
-/** Libellé de chaque segment d'URL. Ajouter ici les nouvelles sections. */
-const LABELS: Record<string, string> = {
-  admin: "Administration",
-  agents: "Agents Doubles",
+/** Libellés des sections qui ne sont pas des apps du registre. Ajouter ici les nouvelles sections. */
+const SECTION_LABELS: Record<string, string> = {
   avatar: "Mon avatar",
-  cartes: "Design des cartes",
   credits: "Crédits",
   economy: "Monnaie",
-  ideas: "Boîte à idées",
-  trois: "TROIS",
   wallet: "Ma monnaie",
 };
 
-/** Libellé d'un segment dynamique (identifiant), selon la section qui le précède. */
-const ITEM_LABELS: Record<string, string> = {
-  agents: "Mission",
-  ideas: "Idée",
+/**
+ * Libellés volontairement plus courts que le nom de l'app dans le registre : le fil d'Ariane doit
+ * tenir sur une ligne, et la page affiche déjà son titre complet.
+ */
+const SHORT_LABELS: Record<string, string> = {
+  cartes: "Design des cartes",
 };
 
-/** Fil d'Ariane avec un bouton retour vers le niveau parent : Accueil › Administration › Monnaie. */
-export function Breadcrumb() {
-  const segments = usePathname().split("/").filter(Boolean);
-  const crumbs = [
-    { href: "/", label: "Accueil" },
-    ...segments.map((segment, i) => ({
-      href: `/${segments.slice(0, i + 1).join("/")}`,
-      label: LABELS[segment] ?? ITEM_LABELS[segments[i - 1] ?? ""] ?? segment,
-    })),
-  ];
-  const parent = crumbs.at(-2);
+/** Apps du registre (`/trois` → « TROIS »), puis sections : une seule source pour les noms d'apps. */
+const LABELS: Record<string, string> = {
+  ...Object.fromEntries(apps.map((app) => [app.route.replace(/^\//, ""), app.name])),
+  ...SHORT_LABELS,
+  ...SECTION_LABELS,
+};
 
-  return (
-    <nav aria-label="Fil d'Ariane" className="flex items-center gap-2 text-sm">
-      {parent && (
-        <Link
-          href={parent.href}
-          aria-label={`Retour : ${parent.label}`}
-          className="border-border text-muted hover:text-text hover:bg-surface-hover rounded-md border p-1.5"
-        >
-          <ArrowLeft size={16} />
-        </Link>
-      )}
-      <ol className="flex flex-wrap items-center gap-1">
-        {crumbs.map((crumb, i) => (
-          <Fragment key={crumb.href}>
-            {i > 0 && <ChevronRight size={14} className="text-muted" aria-hidden />}
-            <li>
-              {i === crumbs.length - 1 ? (
-                <span aria-current="page" className="text-text font-medium">
-                  {crumb.label}
-                </span>
-              ) : (
-                <Link href={crumb.href} className="text-muted hover:text-text">
-                  {crumb.label}
-                </Link>
-              )}
-            </li>
-          </Fragment>
-        ))}
-      </ol>
-    </nav>
-  );
+/**
+ * Fil d'Ariane des pages : composant serveur, qui lit le registre des apps (code serveur) et ne
+ * transmet au composant client que les libellés.
+ */
+export function Breadcrumb() {
+  return <BreadcrumbNav labels={LABELS} />;
 }

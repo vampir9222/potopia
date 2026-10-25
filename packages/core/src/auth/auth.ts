@@ -68,8 +68,20 @@ export function createAuth() {
     session: {
       additionalFields: {
         guildCheckedAt: { type: "date", required: false, input: false },
+        guildUnknownSince: { type: "date", required: false, input: false },
       },
     },
+    // Identité 100 % Discord : les endpoints génériques de Better Auth qui laisseraient un membre
+    // changer son pseudo, son image ou son e-mail (et donc se faire passer pour un autre dans le
+    // fil d'activité ou les classements) répondent 404. Pseudo et avatar sont réappliqués depuis
+    // Discord à chaque connexion (overrideUserInfoOnSignIn).
+    disabledPaths: [
+      "/update-user",
+      "/change-email",
+      "/change-password",
+      "/link-social",
+      "/unlink-account",
+    ],
     account: {
       encryptOAuthTokens: true,
       accountLinking: { enabled: false },

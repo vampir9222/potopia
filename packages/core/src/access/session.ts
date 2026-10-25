@@ -6,6 +6,10 @@ import type { User } from "../users";
 import { isAdmin, roleOf } from "./admin";
 
 export const GUILD_RECHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+/** Après une vérification sans réponse (panne Discord), prochain essai dans ce délai, pas à chaque requête. */
+export const GUILD_RETRY_MS = 15 * 60 * 1000;
+/** Sans réponse de Discord pendant tout ce délai, la session est révoquée malgré tout. */
+export const GUILD_GRACE_MS = 24 * 60 * 60 * 1000;
 
 /** Utilisateur connecté. `role` est calculé depuis ADMIN_DISCORD_IDS, pas lu en base. */
 export type SessionUser = User;
@@ -23,14 +27,17 @@ async function recheckMembership(userId: string): Promise<Membership> {
   if (!account) return "not_member";
   let accessToken: string | undefined;
   try {
-    // Rafraîchit le token s'il a expiré. Un refresh refusé = autorisation retirée côté Discord.
+    // Rafraîchit le token s'il a expiré.
     ({ accessToken } = await getAuth().api.getAccessToken({
       body: { accountId: account.id, userId },
     }));
   } catch {
-    return "not_member";
+    // Better Auth renvoie la même erreur pour un refresh refusé (autorisation retirée) et pour
+    // une panne du endpoint token de Discord : on ne révoque pas sur-le-champ, le délai de grâce
+    // (GUILD_GRACE_MS) finit le travail si c'était un vrai refus.
+    return "unknown";
   }
-  if (!accessToken) return "not_member";
+  if (!accessToken) return "unknown";
   try {
     return (await checkGuildMembership(accessToken)) ? "member" : "not_member";
   } catch (error) {
@@ -45,16 +52,34 @@ async function resolveSession(headers: Headers): Promise<Resolved> {
   if (!result) return { status: "anonymous" };
   const { session, user } = result;
 
+  const now = Date.now();
   const checkedAt = new Date(session.guildCheckedAt ?? session.createdAt).getTime();
-  if (Date.now() - checkedAt > GUILD_RECHECK_INTERVAL_MS) {
+  if (now - checkedAt > GUILD_RECHECK_INTERVAL_MS) {
     const membership = await recheckMembership(user.id);
-    if (membership === "not_member") {
-      // Ex-membre : toutes ses sessions sont révoquées, ses données conservées.
+    const unknownSince = session.guildUnknownSince
+      ? new Date(session.guildUnknownSince).getTime()
+      : now;
+    if (membership === "not_member" || now - unknownSince > GUILD_GRACE_MS) {
+      // Ex-membre (ou Discord muet depuis trop longtemps) : toutes ses sessions sont révoquées,
+      // ses données conservées.
       await db.session.deleteMany({ where: { userId: user.id } });
       return { status: "revoked" };
     }
     if (membership === "member") {
-      await db.session.update({ where: { id: session.id }, data: { guildCheckedAt: new Date() } });
+      await db.session.update({
+        where: { id: session.id },
+        data: { guildCheckedAt: new Date(now), guildUnknownSince: null },
+      });
+    } else {
+      // Panne ou rate-limit Discord : on garde la session et on réessaie dans GUILD_RETRY_MS
+      // (pas à chaque requête, pour ne pas entretenir un rate-limit).
+      await db.session.update({
+        where: { id: session.id },
+        data: {
+          guildCheckedAt: new Date(now - GUILD_RECHECK_INTERVAL_MS + GUILD_RETRY_MS),
+          guildUnknownSince: new Date(unknownSince),
+        },
+      });
     }
   }
 

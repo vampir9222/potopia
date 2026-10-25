@@ -12,6 +12,16 @@ const STATUSES: [new (...args: never[]) => Error, number][] = [
 ];
 
 /**
+ * Réponse JSON d'une route privée : jamais mise en cache (navigateur, proxy, CDN), les données
+ * dépendent du membre connecté. Même signature que `Response.json`.
+ */
+export function json(data: unknown, init?: ResponseInit): Response {
+  const headers = new Headers(init?.headers);
+  if (!headers.has("cache-control")) headers.set("cache-control", "private, no-store");
+  return Response.json(data, { ...init, headers });
+}
+
+/**
  * Traduit les erreurs connues en réponse JSON (401, 403, 400, 429) pour les route handlers.
  * Les autres erreurs remontent (500), sans détail renvoyé au client.
  */

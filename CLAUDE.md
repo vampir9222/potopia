@@ -81,8 +81,9 @@ seulement quand l'utilisateur le demande (« fais la PR », « fusionne »…), 
 permanente notée ici.
 
 **Migrations** : le build Vercel de production applique les migrations (`prisma migrate deploy`,
-tâche `build` de `@app/db`) : fusionner une PR qui en contient une la passe en prod, sans étape
-manuelle. Donc : ne jamais modifier une migration déjà fusionnée (en créer une nouvelle) ; toute
+tâche `deploy:production` de `@app/db`, lancée après `next build`) : fusionner une PR qui en
+contient une la passe en prod, sans étape manuelle. Migration en échec (`P3009`) : voir « Déployer »
+dans le README (`prisma migrate resolve`). Donc : ne jamais modifier une migration déjà fusionnée (en créer une nouvelle) ; toute
 migration qui modifie ou supprime de l'existant (colonne renommée ou supprimée, contrainte ajoutée
 sur des données en place, table supprimée) est signalée en tête de la PR, avec ce qu'elle fait aux
 données, et n'est fusionnée qu'avec l'accord explicite de l'utilisateur. Une migration qui ajoute

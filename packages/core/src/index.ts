@@ -15,7 +15,9 @@ export {
   type PlaceMember,
 } from "./avatar";
 export {
+  GUILD_GRACE_MS,
   GUILD_RECHECK_INTERVAL_MS,
+  GUILD_RETRY_MS,
   getSession,
   requireAdmin,
   requireMember,

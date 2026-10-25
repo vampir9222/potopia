@@ -6,10 +6,32 @@ import { todayParis } from "./words";
 
 /** Un joueur tel que le classement l'affiche : pseudo et avatar Discord du portail. */
 type Who = { id: string; name: string; image: string | null; me: boolean };
-export type Player = Who & { streak: number; today: DayView };
-export type Total = Who & { points: number; found: number; words: number; days: number };
+/** `rank` : rang calculé par le serveur, ex æquo = même rang (1, 1, 3…). */
+export type Player = Who & { rank: number; streak: number; today: DayView };
+export type Total = Who & {
+  rank: number;
+  points: number;
+  found: number;
+  words: number;
+  days: number;
+};
 
 const LIMIT = 200;
+const collator = new Intl.Collator("fr");
+
+/** À score égal : pseudo puis id, pour un ordre identique d'un rafraîchissement à l'autre. */
+const byName = (a: Who, b: Who) => collator.compare(a.name, b.name) || a.id.localeCompare(b.id);
+
+/** Trie par score puis départage, et numérote : les ex æquo partagent le rang, le suivant saute. */
+function rank<T extends Who>(rows: T[], score: (a: T, b: T) => number): (T & { rank: number })[] {
+  rows.sort((a, b) => score(a, b) || byName(a, b));
+  let current = 0;
+  return rows.map((row, i) => {
+    const prev = rows[i - 1];
+    if (!prev || score(prev, row) !== 0) current = i + 1;
+    return { ...row, rank: current };
+  });
+}
 
 /** Premier jour de la période (lundi pour la semaine, le 1er pour le mois). */
 function periodStart(today: string, period: Exclude<Period, "day">): string {
@@ -19,7 +41,7 @@ function periodStart(today: string, period: Exclude<Period, "day">): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Garde les LIMIT premiers, plus ma ligne si elle est au-delà. */
+/** Garde les LIMIT premiers, plus ma ligne si elle est au-delà (elle garde son vrai rang). */
 function top<T extends { me: boolean }>(rows: T[]): T[] {
   const shown = rows.slice(0, LIMIT);
   const mine = rows.findIndex((r) => r.me);
@@ -53,7 +75,7 @@ export async function dayLeaderboard(meId: string): Promise<{ players: Player[];
   const userIds = [...new Set([meId, ...games.map((g) => g.userId)])];
   const [who, streaks] = await Promise.all([identities(userIds, meId), streaksFor(userIds)]);
 
-  const rows: Player[] = [];
+  const rows: Omit<Player, "rank">[] = [];
   for (const id of userIds) {
     const user = who.get(id);
     if (!user) continue;
@@ -67,8 +89,8 @@ export async function dayLeaderboard(meId: string): Promise<{ players: Player[];
       streak: streaks.get(id) ?? 0,
     });
   }
-  rows.sort((a, b) => compareDays(a.today, b.today));
-  return { players: top(rows), total: rows.length };
+  const players = rank(rows, (a, b) => compareDays(a.today, b.today));
+  return { players: top(players), total: players.length };
 }
 
 /** Semaine ou mois : cumul des points des mots terminés. */
@@ -99,12 +121,12 @@ export async function periodLeaderboard(
     }
   }
 
-  const rows: Total[] = [];
+  const rows: Omit<Total, "rank">[] = [];
   for (const [id, a] of acc) {
     const user = who.get(id);
     if (!user) continue;
     rows.push({ ...user, points: a.points, found: a.found, words: a.words, days: a.days.size });
   }
-  rows.sort((a, b) => b.points - a.points || b.found - a.found || a.days - b.days);
-  return { totals: top(rows), from, to: today, total: rows.length };
+  const totals = rank(rows, (a, b) => b.points - a.points || b.found - a.found || a.days - b.days);
+  return { totals: top(totals), from, to: today, total: totals.length };
 }

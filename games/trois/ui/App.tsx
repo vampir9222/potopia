@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { DayView } from "../src/game";
 import { api } from "./api";
 import { Boobzilla } from "./Boobzilla";
@@ -48,7 +48,8 @@ export function TroisApp({ me }: { me: Me }) {
 
   useEffect(() => {
     loadPlayers();
-    const t = setInterval(loadPlayers, 30_000);
+    // pas de requête tant que l'onglet est caché
+    const t = setInterval(() => document.visibilityState === "visible" && loadPlayers(), 30_000);
     return () => clearInterval(t);
   }, [loadPlayers]);
 
@@ -58,6 +59,13 @@ export function TroisApp({ me }: { me: Me }) {
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [load]);
+
+  // la journée affichée a changé : le classement du jour aussi
+  const shownDate = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (day && shownDate.current && shownDate.current !== day.date) loadPlayers();
+    shownDate.current = day?.date;
+  }, [day, loadPlayers]);
 
   return (
     <div className="trois flex justify-center gap-6">
@@ -107,7 +115,8 @@ export function TroisApp({ me }: { me: Me }) {
           </div>
         </header>
 
-        <main className="flex min-h-128 flex-1 flex-col">
+        {/* pas de <main> : le layout du portail en a déjà un */}
+        <section className="flex min-h-128 flex-1 flex-col">
           {error && !day && (
             <p className="m-auto p-4 text-center text-zinc-400">
               Impossible de charger la partie.{" "}
@@ -116,21 +125,24 @@ export function TroisApp({ me }: { me: Me }) {
               </button>
             </p>
           )}
-          {!error && !day && <p className="m-auto text-zinc-500">Chargement…</p>}
+          {!error && !day && <p className="m-auto text-zinc-400">Chargement…</p>}
           {tab === "jeu" && day && (
+            // nouvelle journée = nouveau composant : mot affiché, saisie et mode test repartent de zéro
             <Game
+              key={day.date}
               day={day}
               onUpdate={(d, s) => {
                 setDay(d);
                 if (s) setStats(s);
                 loadPlayers();
               }}
+              onNewDay={load}
               onShowLeaderboard={() => setTab("classement")}
             />
           )}
           {tab === "classement" && day && <Leaderboard players={players} reload={loadPlayers} />}
           {tab === "profil" && stats && <Profile me={me} stats={stats} />}
-        </main>
+        </section>
       </div>
     </div>
   );

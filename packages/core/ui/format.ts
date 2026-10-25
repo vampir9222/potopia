@@ -12,7 +12,11 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
 export function formatRelative(date: Date, now = new Date()): string {
   const diff = date.getTime() - now.getTime();
   if (Math.abs(diff) > 7 * 86_400_000) {
-    return date.toLocaleDateString(BRAND.locale, { day: "numeric", month: "short" });
+    return date.toLocaleDateString(BRAND.locale, {
+      day: "numeric",
+      month: "short",
+      timeZone: BRAND.timeZone,
+    });
   }
   for (const [unit, ms] of UNITS) {
     if (Math.abs(diff) >= ms) return rtf.format(Math.round(diff / ms), unit);
