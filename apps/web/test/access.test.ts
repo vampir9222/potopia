@@ -41,7 +41,7 @@ vi.mock("next/navigation", () => ({
     throw new Interrupt("notFound");
   },
 }));
-vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+vi.mock("next/cache", () => ({ refresh: () => undefined, revalidatePath: () => undefined }));
 // Tâches après la réponse (avatars manquants) : ignorées en test.
 vi.mock("next/server", () => ({ after: () => undefined }));
 // next/font est transformé à la compilation par Next : hors Next, une police factice suffit.

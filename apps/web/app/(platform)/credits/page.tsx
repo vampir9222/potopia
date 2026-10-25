@@ -37,7 +37,7 @@ export default async function CreditsPage() {
             >
               <code>{catalog.source.ref.slice(0, 7)}</code>
             </a>
-            . Seuls les images et leurs données sont reprises, pas le code du générateur.
+            . Seules les images et leurs données sont reprises, pas le code du générateur.
           </p>
           <p>
             Merci à tous les artistes ci-dessous. Licences rencontrées : {licenses.join(", ")}.

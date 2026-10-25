@@ -31,7 +31,7 @@ const DESCRIPTIONS: Record<string, (payload: Payload, nameOf: NameOf) => string>
     const partner = nameOf(stringField(payload, "partnerId"));
     const turns = numberField(payload, "turns");
     const duo = partner ? ` avec ${partner}` : "";
-    if (field(payload, "won") !== true) return `a échoué une mission ${AGENTS_NAME}${duo}`;
+    if (field(payload, "won") !== true) return `a raté une mission ${AGENTS_NAME}${duo}`;
     return turns && turns > 9
       ? `a réussi une mission ${AGENTS_NAME}${duo} en mort subite 🕵️`
       : `a réussi une mission ${AGENTS_NAME}${duo} en ${turns ?? "?"} tours 🕵️`;

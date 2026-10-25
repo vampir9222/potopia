@@ -2,7 +2,7 @@
 
 import type { AvatarSaveState } from "@app/avatar/ui";
 import { AvatarConfigError, saveAvatar } from "@app/core";
-import { revalidatePath } from "next/cache";
+import { refresh } from "next/cache";
 import { sprites } from "@/lib/avatar";
 import { actionMember } from "@/lib/session";
 
@@ -15,7 +15,7 @@ export async function saveAvatarAction(config: unknown): Promise<AvatarSaveState
     if (error instanceof AvatarConfigError) return { status: "error", message: error.message };
     throw error;
   }
-  // Place du dashboard : nouvelle planche.
-  revalidatePath("/", "layout");
+  // Rafraîchit le routeur client (place du dashboard : nouvelle planche, sans recharger la page).
+  refresh();
   return { status: "ok" };
 }
