@@ -22,6 +22,17 @@
 .ag-board {
   perspective: 900px;
 }
+/*
+ * Emplacement d'une carte : porte l'animation de distribution (jouée une fois, à l'arrivée),
+ * séparée du retournement qui, lui, est sur la carte. Les deux ne se chevauchent donc jamais et
+ * retirer la classe de retournement ne rejoue pas la distribution. `preserve-3d` : la carte garde
+ * la perspective de la grille.
+ */
+.ag-slot {
+  min-width: 0;
+  transform-style: preserve-3d;
+  animation: ag-deal 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
 
 /* --- Carte mot --- */
 .ag-card {
@@ -30,6 +41,7 @@
   --ag-beam: transparent;
   position: relative;
   display: flex;
+  width: 100%;
   /* proportions d'une vraie carte, quelle que soit la largeur de l'écran */
   aspect-ratio: 4 / 3;
   min-width: 0;
@@ -233,6 +245,8 @@
     0 2px 0 #b6a274,
     0 16px 22px -10px rgb(0 0 0 / 0.8);
 }
+/* pas à moi de toucher (aria-disabled, reste parcourable au clavier) ou coup en cours (disabled) */
+.ag-card[aria-disabled="true"],
 .ag-card:disabled {
   cursor: default;
 }
@@ -348,7 +362,7 @@
     transform: translateX(120%);
   }
 }
-/* distribution des cartes à l'arrivée sur la page */
+/* distribution des cartes à l'arrivée sur la page (sur .ag-slot, décalée d'une carte à l'autre) */
 @keyframes ag-deal {
   from {
     opacity: 0;
@@ -359,9 +373,7 @@
     transform: none;
   }
 }
-.ag-deal {
-  animation: ag-deal 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
-}
+/* retournement d'une carte qui vient de changer (sur .ag-card) */
 @keyframes agents-flip {
   0% {
     transform: rotateY(0);
@@ -378,7 +390,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ag-deal,
+  .ag-slot,
   .agents-flip,
   .ag-shine,
   .ag-card::after {

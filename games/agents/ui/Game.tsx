@@ -45,7 +45,8 @@ export function AgentsGame({ id }: { id: string }) {
 
   const apply = useCallback((next: GameView) => {
     const prev = shown.current;
-    if (prev?.version === next.version) return;
+    // rien de neuf, ou réponse d'un rafraîchissement parti avant un coup déjà affiché
+    if (prev && next.version <= prev.version) return;
     // les cases qui viennent de changer se retournent
     const changed = new Set<number>();
     next.cards.forEach((c, i) => {
@@ -88,6 +89,14 @@ export function AgentsGame({ id }: { id: string }) {
     return () => clearInterval(t);
   }, [waiting, over, load]);
 
+  // retour sur l'onglet : on recharge tout de suite plutôt que d'attendre le prochain tic
+  useEffect(() => {
+    if (over) return;
+    const onVis = () => document.visibilityState === "visible" && load();
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [over, load]);
+
   useEffect(() => {
     if (!message) return;
     const t = setTimeout(() => setMessage(null), 5_000);
@@ -127,11 +136,12 @@ export function AgentsGame({ id }: { id: string }) {
   }
 
   const canTouch = (c: CardView) =>
-    (view.role === "guess" || view.role === "sudden") && !c.found && !c.bystanderTheirs && !busy;
+    (view.role === "guess" || view.role === "sudden") && !c.found && !c.bystanderTheirs;
   const current = view.history.findLast((h) => h.clue && h.turn === TURNS - view.turnsLeft + 1);
   const lastGuess = view.history.at(-1)?.guesses.at(-1);
+  // mot qui a fait perdre : assassin, ou témoin en mort subite
   const fatal =
-    view.status === "lost" && lastGuess && lastGuess.result !== "agent" ? lastGuess.card : null;
+    view.status === "lost" && lastGuess && lastGuess.result !== "agent" ? lastGuess : null;
 
   return (
     <div className="flex flex-col gap-4 xl:flex-row xl:items-start">
@@ -170,6 +180,12 @@ export function AgentsGame({ id }: { id: string }) {
                   {AGENTS_TOTAL - view.agentsLeft}
                   <span className="text-muted text-xs font-normal"> / {AGENTS_TOTAL} agents</span>
                 </span>
+                {!over && (
+                  <span className="text-muted">
+                    il te reste {view.partnerAgentsLeft} agent
+                    {view.partnerAgentsLeft > 1 ? "s" : ""} de {view.partner.name} à trouver
+                  </span>
+                )}
                 <span className="text-muted">
                   {view.mistakes} témoin{view.mistakes > 1 ? "s" : ""} touché
                   {view.mistakes > 1 ? "s" : ""}
@@ -192,22 +208,26 @@ export function AgentsGame({ id }: { id: string }) {
         <Card className="p-2 sm:p-3">
           <div
             className="ag-board mx-auto grid max-w-3xl grid-cols-5 gap-2.5 p-1 sm:gap-4 sm:p-2"
-            role="grid"
+            // un groupe de boutons, pas une grille ARIA (qui exigerait des lignes et des cellules)
+            role="group"
             aria-label="Grille de mots"
           >
             {view.cards.map((c, i) => (
-              <WordCard
-                key={i}
-                index={i}
-                card={c}
-                partnerName={view.partner.name}
-                showKey={showKey || over}
-                over={over}
-                fatal={fatal === i}
-                selected={selected === i}
-                flip={flipped.has(i)}
-                onClick={canTouch(c) ? () => setSelected(selected === i ? null : i) : undefined}
-              />
+              // cartes distribuées une à une à l'arrivée : le délai ne concerne que la distribution
+              <div key={i} className="ag-slot" style={{ animationDelay: `${i * 28}ms` }}>
+                <WordCard
+                  index={i}
+                  card={c}
+                  partnerName={view.partner.name}
+                  showKey={showKey || over}
+                  over={over}
+                  fatal={fatal?.card === i ? fatal.result : null}
+                  selected={selected === i}
+                  flip={flipped.has(i)}
+                  busy={busy}
+                  onClick={canTouch(c) ? () => setSelected(selected === i ? null : i) : undefined}
+                />
+              </div>
             ))}
           </div>
           <div className="text-muted mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs">
@@ -226,7 +246,7 @@ export function AgentsGame({ id }: { id: string }) {
               <span className="ag-legend ag-legend-assassin" /> mes assassins
             </span>
             <span className="flex items-center gap-1.5">
-              <WalkerIcon className="size-3" /> témoin (chez qui)
+              <WalkerIcon className="size-3" /> témoin (sur la carte de qui)
             </span>
             {over && <span>contour intérieur : carte de {view.partner.name}</span>}
           </div>
@@ -287,6 +307,7 @@ function WordCard({
   fatal,
   selected,
   flip,
+  busy,
   onClick,
 }: {
   card: CardView;
@@ -294,31 +315,43 @@ function WordCard({
   partnerName: string;
   showKey: boolean;
   over: boolean;
-  fatal: boolean;
+  /** Ce mot a fait perdre la mission : assassin, ou témoin touché en mort subite. */
+  fatal: Result | null;
   selected: boolean;
   flip: boolean;
+  busy: boolean;
+  /** Absent quand ce n'est pas à moi de toucher ce mot : la carte reste parcourable au clavier. */
   onClick?: () => void;
 }) {
   const out = card.bystanderMine && card.bystanderTheirs;
   // face visible : carte mot, ou tuile qui la recouvre (agent trouvé, témoin des deux côtés, assassin)
   const tile = card.found ? "found" : fatal ? "fatal" : out ? "out" : null;
   const key = showKey && !tile ? card.mine : "N";
+  // nom accessible complet : le mot, puis ce qu'on sait de lui
+  const label = [
+    card.word,
+    key === "G" && "ton agent",
+    key === "A" && "ton assassin",
+    card.found && "agent trouvé",
+    card.bystanderTheirs && `témoin pour ${partnerName}`,
+    card.bystanderMine && "témoin pour toi",
+    fatal === "assassin" && "assassin, mission perdue",
+    fatal === "bystander" && "témoin en mort subite, mission perdue",
+  ]
+    .filter(Boolean)
+    .join(", ");
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={!onClick}
+      disabled={busy}
+      aria-disabled={!onClick || undefined}
       aria-pressed={selected}
-      aria-label={card.word}
-      // cartes distribuées une à une, reflets du contour décalés d'une carte à l'autre
-      style={
-        {
-          animationDelay: `${index * 28}ms`,
-          "--ag-delay": `-${(index * 1730) % 4500}ms`,
-        } as CSSProperties
-      }
+      aria-label={label}
+      // reflets du contour décalés d'une carte à l'autre
+      style={{ "--ag-delay": `-${(index * 1730) % 4500}ms` } as CSSProperties}
       className={cx(
-        "ag-card ag-deal",
+        "ag-card",
         tile && `ag-tile ag-tile-${tile}`,
         key === "G" && "ag-key-agent",
         key === "A" && "ag-key-assassin",
@@ -333,7 +366,12 @@ function WordCard({
         <>
           {tile === "found" && <SpyIcon className="ag-tile-icon" />}
           {tile === "out" && <WalkerIcon className="ag-tile-icon" />}
-          {tile === "fatal" && <span className="ag-tile-icon text-2xl leading-none">💀</span>}
+          {tile === "fatal" &&
+            (fatal === "bystander" ? (
+              <WalkerIcon className="ag-tile-icon" />
+            ) : (
+              <span className="ag-tile-icon text-2xl leading-none">💀</span>
+            ))}
           {tile === "found" && <span className="ag-shine" aria-hidden />}
           <span className="ag-tile-word">{card.word}</span>
         </>
@@ -358,20 +396,14 @@ function WordCard({
           <span className="ag-label">{card.word}</span>
 
           {(card.bystanderMine || card.bystanderTheirs) && (
+            // témoin sur la carte de qui : la sienne (je l'ai touché sur son indice) ou la mienne
             <span className="ag-witness">
               <WalkerIcon className="size-2.5 shrink-0" />
-              {card.bystanderTheirs ? partnerName : "toi"}
+              pour {card.bystanderTheirs ? partnerName : "toi"}
             </span>
           )}
         </>
       )}
-      <span className="sr-only">
-        {key === "G" && " · ton agent"}
-        {key === "A" && " · ton assassin"}
-        {card.found && " · agent trouvé"}
-        {card.bystanderTheirs && ` · témoin chez ${partnerName}`}
-        {card.bystanderMine && " · témoin chez toi"}
-      </span>
     </button>
   );
 }
@@ -486,7 +518,13 @@ function StatusPanel({
     );
   } else if (view.role === "wait") {
     body =
-      view.phase === "clue" ? (
+      view.phase === "sudden" ? (
+        <p className="text-sm">
+          <strong>Mort subite !</strong> Tu as trouvé tous les agents de {partner} : c'est à{" "}
+          {partner} de jouer. <span className="animate-pulse">⏳</span> Il lui reste{" "}
+          <strong>{view.myAgentsLeft}</strong> des tiens à trouver.
+        </p>
+      ) : view.phase === "clue" ? (
         <p className="text-sm">
           <span className="animate-pulse">⏳</span> {partner} réfléchit à un indice…
         </p>
@@ -532,14 +570,17 @@ function ClueLine({ view, current }: { view: GameView; current: TurnView | undef
 
 function Ending({ view }: { view: GameView }) {
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const again = async () => {
     setBusy(true);
+    setError(null);
     try {
       const { id } = await api<{ id: string }>("/api/agents/games", {
         body: { partnerId: view.partner.id },
       });
       window.location.href = `/agents/${id}`;
-    } catch {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur");
       setBusy(false);
     }
   };
@@ -569,6 +610,7 @@ function Ending({ view }: { view: GameView }) {
           Toutes mes missions
         </a>
       </div>
+      {error && <p className="text-danger text-sm">{error}</p>}
     </div>
   );
 }

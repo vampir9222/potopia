@@ -23,17 +23,23 @@ partie), routes `/api/agents/*`, tuile dans le registre des apps.
 - **9 tours**, en alternant. Si un joueur n'a plus d'agents à faire trouver, l'autre donne tous les
   indices suivants.
 - **Mort subite** après le 9e tour : plus d'indices, chacun touche quand il veut les agents de
-  l'autre, et le moindre témoin ou assassin fait perdre.
+  l'autre, et le moindre témoin ou assassin fait perdre. Un joueur qui a déjà trouvé tous les
+  agents de son partenaire ne touche plus (il ne lui resterait que des témoins et des assassins) :
+  il attend que l'autre finisse.
 - Un indice ne peut pas être un mot encore visible de la grille, ni presque (pluriel, une ou deux
   lettres de plus).
 
 ## Dans le portail
 
 - **Joueurs** : les membres du portail. On lance une mission en invitant un membre ; s'il y a déjà
-  une mission en cours entre les deux, on y retourne au lieu d'en créer une autre.
+  une mission en cours entre les deux, on y retourne au lieu d'en créer une autre. Une seule
+  mission en cours par paire, garantie par la base (index unique partiel `games_running_pair_key`),
+  même si les deux s'invitent au même instant.
 - **Tour par tour** : chacun joue quand il veut. Une notification prévient quand c'est à l'autre
   (invitation, nouvel indice, tour qui lui revient, mort subite, fin). La page se met à jour toute
-  seule toutes les 4 secondes quand on attend le partenaire.
+  seule toutes les 4 secondes quand on attend le partenaire, et dès qu'on revient sur l'onglet.
+- **Salon** : `GET /api/agents/games` ne renvoie que mes parties (sans leurs indices ni leurs coups) ;
+  `?partners=1` ajoute les membres à inviter, demandés au premier affichage seulement.
 - **Classement des duos** : une ligne par paire de joueurs, du mois ou depuis le début. Classé sur
   la meilleure mission réussie (moins de tours, puis moins de témoins touchés), puis le nombre de
   victoires. Les abandons ne comptent pas.

@@ -1,9 +1,9 @@
-import { countUnread, listRecentEvents } from "@app/core";
+import { countUnread, listNotifications, listRecentEvents } from "@app/core";
 import { db } from "@app/db";
 import { truncateTestDb } from "@app/db/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import words from "../data/words.json";
-import { normalize, type GameView } from "../src/game";
+import { normalize, SUDDEN_TURN, type GameView } from "../src/game";
 import {
   AgentsError,
   createGame,
@@ -50,9 +50,32 @@ const guess = (userId: string, gameId: string, card: number) =>
 const stop = (userId: string, gameId: string) =>
   playMove({ userId, gameId, move: { action: "stop" } });
 
-async function expectAgentsError(promise: Promise<unknown>, status: number): Promise<void> {
+async function expectAgentsError(
+  promise: Promise<unknown>,
+  status: number,
+  message?: string | RegExp,
+): Promise<void> {
   await expect(promise).rejects.toBeInstanceOf(AgentsError);
   await expect(promise).rejects.toMatchObject({ status });
+  if (message) await expect(promise).rejects.toThrow(message);
+}
+
+/** Titre de la dernière notification reçue par `userId`. */
+async function lastNotification(userId: string): Promise<string | undefined> {
+  return (await listNotifications(userId, 1))[0]?.title;
+}
+
+/**
+ * Les 9 tours finis chacun sur un témoin commun, sans aucun agent trouvé : A donne les indices aux
+ * tours impairs (témoins 18 à 22 révélés sur sa carte), B aux tours pairs (18 à 21 sur la sienne).
+ */
+async function toSuddenDeath(id: string): Promise<void> {
+  for (let t = 0; t < 9; t++) {
+    const giver = t % 2 === 0 ? A : B;
+    const guesser = giver === A ? B : A;
+    await clue(giver, id);
+    await guess(guesser, id, 18 + Math.floor(t / 2));
+  }
 }
 
 beforeEach(async () => {
@@ -191,20 +214,133 @@ describe("partie", () => {
 
   it("après 9 tours, mort subite : la moindre erreur fait perdre", async () => {
     const id = await newGame();
-    // 9 tours finis sur un témoin commun : A donne les indices aux tours impairs, B aux pairs
-    for (let t = 0; t < 9; t++) {
-      const giver = t % 2 === 0 ? A : B;
-      const guesser = giver === A ? B : A;
-      await clue(giver, id);
-      await guess(guesser, id, 18 + Math.floor(t / 2));
-    }
+    await toSuddenDeath(id);
     let view = await getGame({ userId: A, gameId: id });
     expect(view).toMatchObject({ phase: "sudden", role: "sudden", turnsLeft: 0, mistakes: 9 });
+    expect(await lastNotification(A)).toMatch(/mort subite/);
     await expectAgentsError(clue(A, id), 409);
+    // déjà révélé témoin sur la carte du partenaire : on ne peut pas le retoucher
+    await expectAgentsError(guess(A, id, 18), 409, /déjà un témoin/);
+    await expectAgentsError(guess(B, id, 22), 409, /déjà un témoin/);
     view = await guess(A, id, 8); // agent de B : trouvé
     expect(view.cards[8]?.found).toBe(true);
     view = await guess(B, id, 24); // témoin de A, jamais touché sur sa carte : perdu
     expect(view.status).toBe("lost");
+    expect(view.history.at(-1)).toMatchObject({
+      turn: SUDDEN_TURN,
+      guesses: [
+        { seat: 0, card: 8, result: "agent" },
+        { seat: 1, card: 24, result: "bystander" },
+      ],
+    });
+  });
+
+  it("victoire en mort subite : 10 tours, classée « mort subite », notification", async () => {
+    const id = await newGame();
+    await toSuddenDeath(id);
+    for (const card of [0, 1, 2, 8, 9, 10, 11, 12]) await guess(A, id, card);
+    for (const card of [3, 4, 5, 6, 7, 13]) await guess(B, id, card);
+    const view = await guess(A, id, 14);
+    expect(view).toMatchObject({ status: "won", turnsUsed: SUDDEN_TURN, agentsLeft: 0 });
+    expect(await lastNotification(B)).toMatch(/réussie en mort subite/);
+    const { duos } = await duoLeaderboard(A, "all");
+    expect(duos[0]?.best).toEqual({ turns: SUDDEN_TURN, mistakes: 9 });
+    const [event] = await listRecentEvents(1);
+    expect(event?.payload).toMatchObject({ won: true, turns: SUDDEN_TURN });
+  });
+
+  it("mort subite : celui qui a tout trouvé ne touche plus, l'autre finit", async () => {
+    const id = await newGame();
+    // tour 1 : B trouve les 9 agents de A ; la main passe à B et n'en bouge plus
+    await clue(A, id);
+    for (const card of [0, 1, 2, 3, 4, 5, 6, 7, 13]) await guess(B, id, card);
+    for (const card of [16, 18, 19, 20, 21, 22, 23, 24]) {
+      await clue(B, id);
+      await guess(A, id, card);
+    }
+    const viewB = await getGame({ userId: B, gameId: id });
+    expect(viewB).toMatchObject({ phase: "sudden", role: "wait", partnerAgentsLeft: 0 });
+    expect(await getGame({ userId: A, gameId: id })).toMatchObject({
+      role: "sudden",
+      partnerAgentsLeft: 6,
+    });
+    await expectAgentsError(guess(B, id, 8), 409, /déjà trouvé tous les agents/);
+    expect((await listGames(B))[0]?.myTurn).toBe(false);
+    expect((await listGames(A))[0]?.myTurn).toBe(true);
+    const view = await guess(A, id, 8);
+    expect(view.cards[8]?.found).toBe(true);
+  });
+
+  it("la main reste au même donneur tant que l'autre n'a plus d'agents à faire trouver", async () => {
+    const id = await newGame();
+    await clue(A, id);
+    for (const card of [0, 1, 2, 3, 4, 5, 6, 7]) await guess(B, id, card);
+    let view = await guess(B, id, 13); // dernier agent de A : fin de tour automatique
+    expect(view).toMatchObject({ phase: "clue", clueSeat: 1, turnsLeft: 8 });
+    // témoin : le tour s'arrête, B redonne l'indice puisque A n'a plus rien à faire trouver
+    await clue(B, id);
+    view = await guess(A, id, 18);
+    expect(view).toMatchObject({ phase: "clue", clueSeat: 1, turnsLeft: 7, mistakes: 1 });
+    // stop : pareil, et B est prévenu que c'est encore à lui
+    const before = await countUnread(B);
+    await clue(B, id);
+    await guess(A, id, 8);
+    view = await stop(A, id);
+    expect(view).toMatchObject({ phase: "clue", clueSeat: 1, turnsLeft: 6, role: "wait" });
+    expect(await countUnread(B)).toBe(before + 1);
+    expect(await lastNotification(B)).toMatch(/à toi de donner un indice/);
+  });
+
+  it("agent commun qui vide la carte du toucheur : la main ne lui revient pas", async () => {
+    const id = await newGame();
+    await clue(A, id);
+    await guess(B, id, 3);
+    await stop(B, id);
+    await clue(B, id);
+    for (const card of [8, 9, 10, 11, 12, 14]) await guess(A, id, card); // agents propres de B
+    await stop(A, id);
+    await clue(A, id);
+    await guess(B, id, 0);
+    await guess(B, id, 1);
+    // dernier agent de B (commun) : A en a encore, B continue à chercher
+    let view = await guess(B, id, 2);
+    expect(view).toMatchObject({ phase: "guess", clueSeat: 0, myAgentsLeft: 0, turnGuesses: 3 });
+    view = await stop(B, id);
+    expect(view).toMatchObject({ phase: "clue", clueSeat: 0, role: "wait", turnsLeft: 6 });
+  });
+
+  it("stop : le partenaire n'est prévenu que si la main change de camp", async () => {
+    const id = await newGame();
+    await clue(A, id);
+    await guess(B, id, 0);
+    const before = await countUnread(A);
+    // B s'arrête et c'est à lui de donner l'indice : A n'a rien à faire, pas de notification
+    const view = await stop(B, id);
+    expect(view).toMatchObject({ phase: "clue", clueSeat: 1, role: "clue" });
+    expect(await countUnread(A)).toBe(before);
+  });
+
+  it("deux indices envoyés en même temps : un seul passe, aucune ligne orpheline", async () => {
+    const id = await newGame();
+    const results = await Promise.allSettled([clue(A, id, "un"), clue(A, id, "deux")]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(await db.agentsClue.count({ where: { gameId: id } })).toBe(1);
+    const view = await getGame({ userId: B, gameId: id });
+    expect(view.history).toHaveLength(1);
+    expect(view).toMatchObject({ phase: "guess", version: 1 });
+  });
+
+  it("abandonner une partie finie : 409, et un coup mal formé : 400", async () => {
+    const id = await newGame();
+    await playMove({ userId: B, gameId: id, move: { action: "abandon" } });
+    await expectAgentsError(playMove({ userId: A, gameId: id, move: { action: "abandon" } }), 409);
+    const other = await newGame();
+    await expectAgentsError(
+      playMove({ userId: A, gameId: other, move: { action: "guess", card: "3" } }),
+      400,
+      "Requête invalide",
+    );
+    await expectAgentsError(playMove({ userId: A, gameId: other, move: {} }), 400);
   });
 
   it("deux coups envoyés en même temps : un seul passe", async () => {
@@ -235,5 +371,47 @@ describe("partie", () => {
       [other, false],
     ]);
     expect(games[0]?.partner.name).toBe(B);
+    expect(games.map((g) => g.agentsLeft)).toEqual([15, 15]);
+  });
+
+  it("liste mes parties : les finies après les en cours, même plus récentes", async () => {
+    const withB = await newGame();
+    const withC = (await createGame({ userId: C, partnerId: A })).id;
+    await clue(A, withB);
+    await guess(B, withB, 0);
+    await playMove({ userId: B, gameId: withB, move: { action: "abandon" } });
+    const games = await listGames(A);
+    expect(games.map((g) => [g.id, g.status, g.agentsLeft])).toEqual([
+      [withC, "playing", 15],
+      [withB, "abandoned", 14],
+    ]);
+  });
+
+  it("deux invitations en même temps : une seule partie en cours", async () => {
+    // L'invitation de B est encore en transaction (ligne insérée, pas validée) : celle de A ne la
+    // voit pas, son insertion attend la validation puis échoue sur l'index unique, et A rejoint
+    // la partie de B.
+    let inserted!: () => void;
+    let release!: () => void;
+    const onceInserted = new Promise<void>((r) => (inserted = r));
+    const released = new Promise<void>((r) => (release = r));
+    const holder = db.$transaction(async (tx) => {
+      const g = await tx.agentsGame.create({
+        data: { userA: B, userB: A, words: [], keyA: KEY_B, keyB: KEY_A, clueSeat: 0 },
+      });
+      inserted();
+      await released;
+      return g.id;
+    });
+    await onceInserted;
+    const pending = createGame({ userId: A, partnerId: B });
+    await new Promise((r) => setTimeout(r, 300));
+    release();
+    const [firstId, second] = await Promise.all([holder, pending]);
+    expect(second).toEqual({ id: firstId, created: false });
+    expect(await db.agentsGame.count({ where: { status: "PLAYING" } })).toBe(1);
+    // l'invitation perdante a été annulée avec sa partie
+    expect(await countUnread(B)).toBe(0);
+    await expectAgentsError(createGame({ userId: A, partnerId: 3 }), 400);
   });
 });

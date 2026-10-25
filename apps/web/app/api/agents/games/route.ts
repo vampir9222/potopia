@@ -2,12 +2,19 @@ import { createGame, listGames, listPartners } from "@app/agents";
 import { requireMember } from "@app/core";
 import { errorResponse } from "@/lib/route";
 
-/** Agents Doubles : mes parties et les membres qu'on peut inviter. */
+/**
+ * Agents Doubles : mes parties. Avec `?partners=1`, aussi les membres qu'on peut inviter (demandés
+ * au premier chargement du salon seulement, pas à chaque rafraîchissement).
+ */
 export async function GET(request: Request): Promise<Response> {
   try {
     const user = await requireMember(request.headers);
-    const [games, partners] = await Promise.all([listGames(user.id), listPartners(user.id)]);
-    return Response.json({ games, partners });
+    const withPartners = new URL(request.url).searchParams.get("partners") === "1";
+    const [games, partners] = await Promise.all([
+      listGames(user.id),
+      withPartners ? listPartners(user.id) : undefined,
+    ]);
+    return Response.json(partners ? { games, partners } : { games });
   } catch (error) {
     return errorResponse(error);
   }
