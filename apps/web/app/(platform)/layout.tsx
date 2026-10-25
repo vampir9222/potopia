@@ -15,6 +15,9 @@ import { getCurrentMember } from "@/lib/session";
 
 export default async function PlatformLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentMember();
+  // Seuls le nom, l'image et le rôle partent vers les composants (ProfileMenu est un composant
+  // client : pas d'email ni d'identifiant Discord dans le HTML ni le bundle).
+  const profile = { name: user.name, image: user.image };
   const theme = resolveTheme((await cookies()).get(THEME_COOKIE)?.value);
   const [notifications, unreadCount, balance, feed] = await Promise.all([
     listNotifications(user.id, 15),
@@ -27,7 +30,7 @@ export default async function PlatformLayout({ children }: { children: ReactNode
   // restante de l'écran ; dans le menu latéral sur mobile, où elle garde ses 10 lignes.
   const sidePanels = (fill: boolean) => (
     <div className={fill ? "flex h-full flex-col gap-4" : "flex flex-col gap-4"}>
-      <AccountPanel user={user}>
+      <AccountPanel user={{ ...profile, role: user.role }}>
         <BalanceCard balance={balance} />
         <SideNav isAdmin={user.role === "admin"} />
       </AccountPanel>
@@ -43,7 +46,7 @@ export default async function PlatformLayout({ children }: { children: ReactNode
   return (
     <>
       <Header
-        user={user}
+        user={profile}
         signOut={signOut}
         menuButton={<MobileMenu>{sidePanels(false)}</MobileMenu>}
         actions={

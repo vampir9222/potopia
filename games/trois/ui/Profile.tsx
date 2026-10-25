@@ -32,7 +32,7 @@ export function Profile({ me, stats }: { me: Me; stats: Stats }) {
         ).map(([v, l]) => (
           <div key={l} className="rounded-xl bg-zinc-900 p-2">
             <p className="text-2xl font-bold">{v}</p>
-            <p className="text-[11px] leading-tight text-zinc-500">{l}</p>
+            <p className="text-[11px] leading-tight text-zinc-400">{l}</p>
           </div>
         ))}
       </div>
@@ -44,7 +44,7 @@ export function Profile({ me, stats }: { me: Me; stats: Stats }) {
             <div key={i} className="flex items-center gap-2 text-sm">
               <span className="w-3 text-zinc-400">{i + 1}</span>
               <div
-                className="bg-good rounded px-2 py-0.5 text-right font-semibold text-white"
+                className="bg-good rounded px-2 py-0.5 text-right font-semibold text-zinc-900"
                 style={{ width: `${Math.max(8, (n / max) * 100)}%` }}
               >
                 {n}
@@ -54,7 +54,7 @@ export function Profile({ me, stats }: { me: Me; stats: Stats }) {
         </div>
       </section>
 
-      <p className="text-center text-xs text-zinc-500">
+      <p className="text-center text-xs text-zinc-400">
         Ta progression suit ton compte Discord : tu retrouves ta partie sur tous tes appareils.
       </p>
     </div>

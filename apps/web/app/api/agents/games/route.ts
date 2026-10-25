@@ -1,6 +1,6 @@
 import { createGame, listGames, listPartners } from "@app/agents";
 import { requireMember } from "@app/core";
-import { errorResponse } from "@/lib/route";
+import { errorResponse, json } from "@/lib/route";
 
 /**
  * Agents Doubles : mes parties. Avec `?partners=1`, aussi les membres qu'on peut inviter (demandés
@@ -14,7 +14,7 @@ export async function GET(request: Request): Promise<Response> {
       listGames(user.id),
       withPartners ? listPartners(user.id) : undefined,
     ]);
-    return Response.json(partners ? { games, partners } : { games });
+    return json(partners ? { games, partners } : { games });
   } catch (error) {
     return errorResponse(error);
   }
@@ -25,7 +25,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const user = await requireMember(request.headers);
     const body = (await request.json().catch(() => ({}))) as { partnerId?: unknown };
-    return Response.json(await createGame({ userId: user.id, partnerId: body.partnerId }));
+    return json(await createGame({ userId: user.id, partnerId: body.partnerId }));
   } catch (error) {
     return errorResponse(error);
   }

@@ -19,10 +19,11 @@ import { sfx } from "./sound";
 const EMPTY_WORD: WordView = { status: "playing", tries: 0, marks: [] };
 
 const ROWS = ["azertyuiop", "qsdfghjklm", "wxcvbn"];
+// texte sombre sur les cases colorées (le blanc n'atteint pas 4,5:1 sur le vert ni sur l'orange)
 const TILE: Record<Mark, string> = {
-  correct: "bg-good border-good",
-  present: "bg-near border-near",
-  absent: "bg-miss border-miss",
+  correct: "bg-good border-good text-zinc-900",
+  present: "bg-near border-near text-zinc-900",
+  absent: "bg-miss border-miss text-white",
 };
 const RANK: Record<Mark, number> = { absent: 0, present: 1, correct: 2 };
 const FLIP_STEP = 120;
@@ -63,13 +64,20 @@ function celebrate(perfect: boolean) {
 const playReveal = (marks: Mark[]) =>
   marks.forEach((m, i) => sfx.tile(m, (i * FLIP_STEP + 250) / 1000));
 
+/**
+ * La journée affichée. Le parent la monte avec `key={day.date}` : au changement de jour tout
+ * l'état local (mot affiché, saisie, mode test) repart de zéro.
+ */
 export function Game({
   day,
   onUpdate,
+  onNewDay,
   onShowLeaderboard,
 }: {
   day: DayView;
   onUpdate: (d: DayView, s?: Stats) => void;
+  /** La journée affichée n'est plus celle du serveur : à recharger. */
+  onNewDay: () => void;
   onShowLeaderboard: () => void;
 }) {
   const current = day.words.findIndex((w) => w.status === "playing");
@@ -154,6 +162,8 @@ export function Game({
 
       // le serveur fait tout : validation du mot + feedback lettre par lettre
       const r = await api("/api/trois/guess", { body: { guess: input, slot: current } });
+      // minuit est passé entre-temps : l'essai a compté pour la nouvelle journée, on l'affiche
+      if (r.day.date !== day.date) return onNewDay();
       const row = r.day.words[r.slot].tries - 1;
       setRevealing({ slot: r.slot, row });
       setInput("");
@@ -177,6 +187,9 @@ export function Game({
       }, REVEAL_MS);
     } catch (e) {
       fail((e as Error).message);
+      // 409 : l'état affiché ne correspond plus au serveur (mot en cours d'hier après minuit,
+      // journée finie sur un autre appareil, essai en double) : on recharge la journée
+      if ((e as { status?: number }).status === 409) onNewDay();
     } finally {
       setBusy(false);
     }
@@ -185,10 +198,12 @@ export function Game({
     input,
     practice,
     view,
+    day.date,
     day.maxTries,
     real.answer,
     current,
     onUpdate,
+    onNewDay,
     flash,
     fail,
     dance,
@@ -362,11 +377,7 @@ export function Game({
                           : undefined
                     }
                     className={`grid h-14 w-14 place-items-center rounded-md border-2 text-3xl font-bold uppercase sm:h-16 sm:w-16 ${
-                      mark
-                        ? `${TILE[mark]} text-white`
-                        : letter
-                          ? "animate-pop border-zinc-500"
-                          : "border-zinc-800"
+                      mark ? TILE[mark] : letter ? "animate-pop border-zinc-500" : "border-zinc-800"
                     } ${isRevealing ? "animate-flip" : isDancing ? "animate-dance" : ""}`}
                   >
                     {letter}
@@ -389,7 +400,12 @@ export function Game({
       )}
 
       {day.over && !practice ? (
-        <DayOver day={day} onShowLeaderboard={onShowLeaderboard} flash={flash} />
+        <DayOver
+          day={day}
+          onNewDay={onNewDay}
+          onShowLeaderboard={onShowLeaderboard}
+          flash={flash}
+        />
       ) : (
         <Keyboard colors={keyColors} onKey={press} disabled={!playable} />
       )}
@@ -457,11 +473,12 @@ function Key({
       className={`h-14 rounded-md text-sm font-bold uppercase transition active:scale-95 ${
         wide ? "flex-[1.6] px-1 text-xs" : "max-w-11 flex-1"
       } ${
-        // lettre absente : nettement plus sombre qu'une touche pas encore jouée
+        // lettre absente : fond nettement plus sombre qu'une touche pas encore jouée, mais lettre
+        // encore lisible (zinc-400 sur zinc-900 = 6,7:1)
         mark === "absent"
-          ? "border-zinc-900 bg-zinc-900 text-zinc-600"
+          ? "border-zinc-900 bg-zinc-900 text-zinc-400"
           : mark
-            ? TILE[mark] + " text-white"
+            ? TILE[mark]
             : "bg-zinc-700 text-zinc-100"
       }`}
     >
@@ -470,35 +487,59 @@ function Key({
   );
 }
 
+/** Heure de Paris : date au format AAAA-MM-JJ et secondes restantes avant minuit. */
+function parisClock(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+  const p = (t: string) => parts.find((x) => x.type === t)?.value ?? "00";
+  return {
+    date: `${p("year")}-${p("month")}-${p("day")}`,
+    left: 86400 - (Number(p("hour")) * 3600 + Number(p("minute")) * 60 + Number(p("second"))),
+  };
+}
+
 function DayOver({
   day,
+  onNewDay,
   onShowLeaderboard,
   flash,
 }: {
   day: DayView;
+  onNewDay: () => void;
   onShowLeaderboard: () => void;
   flash: (m: string) => void;
 }) {
   const [left, setLeft] = useState("");
   useEffect(() => {
+    let asked = 0;
     const tick = () => {
-      // temps restant avant minuit à Paris
-      const parts = new Intl.DateTimeFormat("fr-FR", {
-        timeZone: "Europe/Paris",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hourCycle: "h23",
-      }).formatToParts(new Date());
-      const n = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
-      const s = 86400 - (n("hour") * 3600 + n("minute") * 60 + n("second"));
+      const clock = parisClock();
+      // minuit est passé (compte à rebours à zéro, ou onglet resté ouvert sans tic à 00:00:00) :
+      // on affiche 00:00:00 et on charge les nouveaux mots (réessayé toutes les 30 s si ça échoue)
+      if (clock.date !== day.date) {
+        setLeft("00:00:00");
+        if (Date.now() - asked > 30_000) {
+          asked = Date.now();
+          onNewDay();
+        }
+        return;
+      }
+      const s = clock.left;
       const pad = (x: number) => String(x).padStart(2, "0");
       setLeft(`${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`);
     };
     tick();
     const t = setInterval(tick, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [day.date, onNewDay]);
 
   const found = day.words.filter((w) => w.status === "won").length;
 
@@ -534,10 +575,13 @@ function DayOver({
           </span>
         ))}
       </div>
-      <p className="mt-4 text-xs tracking-wide text-zinc-500 uppercase">Prochains mots dans</p>
+      <p className="mt-4 text-xs tracking-wide text-zinc-400 uppercase">Prochains mots dans</p>
       <p className="font-mono text-3xl">{left}</p>
       <div className="mt-4 flex gap-2">
-        <button onClick={share} className="bg-good flex-1 rounded-xl py-3 font-semibold text-white">
+        <button
+          onClick={share}
+          className="bg-good flex-1 rounded-xl py-3 font-semibold text-zinc-900"
+        >
           Partager
         </button>
         <button

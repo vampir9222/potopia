@@ -1,7 +1,7 @@
 import { requireMember } from "@app/core";
 import { createUploadUrl } from "@app/ideas";
 import { z } from "zod";
-import { errorResponse } from "@/lib/route";
+import { errorResponse, json } from "@/lib/route";
 
 const body = z.object({ contentType: z.string().max(100), size: z.number() });
 
@@ -10,7 +10,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const user = await requireMember(request.headers);
     const input = body.parse(await request.json().catch(() => null));
-    return Response.json(await createUploadUrl(user.id, input));
+    return json(await createUploadUrl(user.id, input));
   } catch (error) {
     return errorResponse(error);
   }

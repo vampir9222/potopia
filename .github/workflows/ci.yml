@@ -1,6 +1,6 @@
 # Intégration continue de main : à chaque pull request vers main (et à la fusion), le projet doit
-# installer, passer le format, le lint, le typecheck, le contrôle des frontières et les tests
-# (Postgres et stockage S3 réels). Le build est fait par Vercel au déploiement.
+# installer, passer le format, le lint, le typecheck, le contrôle des frontières, les tests
+# (Postgres et stockage S3 réels) et le build du site (sans migration : VERCEL_ENV absent).
 name: CI
 
 on:
@@ -82,3 +82,6 @@ jobs:
 
       - name: Tests
         run: pnpm test
+
+      - name: Build du site
+        run: pnpm build

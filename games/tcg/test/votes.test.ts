@@ -94,4 +94,44 @@ describe("commentTags", () => {
     expect(commentTags("rien à signaler")).toEqual({ remove: false, variant: false });
     expect(commentTags(null)).toEqual({ remove: false, variant: false });
   });
+
+  it("reconnaît les formes courantes des commentaires", () => {
+    expect(commentTags("A supprimer")).toEqual({ remove: true, variant: false });
+    expect(commentTags("A supprimer.")).toEqual({ remove: true, variant: false });
+    expect(commentTags("Garde l'idée du pixel pour des variants")).toEqual({
+      remove: false,
+      variant: true,
+    });
+    expect(commentTags("A garder pour une variante.")).toEqual({ remove: false, variant: true });
+    expect(commentTags("A garder pour des variantes surtout.")).toEqual({
+      remove: false,
+      variant: true,
+    });
+    expect(commentTags("A garder pour une variante")).toEqual({ remove: false, variant: true });
+    expect(commentTags("Pas mal, mais à supprimer")).toEqual({ remove: true, variant: false });
+    expect(commentTags("Pas convaincu : à supprimer")).toEqual({ remove: true, variant: false });
+  });
+
+  it("ignore un mot-clé précédé d'une négation", () => {
+    const none = { remove: false, variant: false };
+    expect(commentTags("pas à supprimer")).toEqual(none);
+    expect(commentTags("surtout pas à supprimer !")).toEqual(none);
+    expect(commentTags("rien à supprimer")).toEqual(none);
+    expect(commentTags("Ce n'est pas à supprimer")).toEqual(none);
+    expect(commentTags("jamais à supprimer")).toEqual(none);
+    expect(commentTags("sans variante")).toEqual(none);
+    expect(commentTags("aucune variante")).toEqual(none);
+    expect(commentTags("pas en variante")).toEqual(none);
+    expect(commentTags("plutôt qu'une variante")).toEqual(none);
+    expect(commentTags("plutôt que variant")).toEqual(none);
+    // La négation ne porte que sur le même membre de phrase.
+    expect(commentTags("Pas mal. À supprimer quand même")).toEqual({
+      remove: true,
+      variant: false,
+    });
+    expect(commentTags("Pas pour le jeu de base, variante possible")).toEqual({
+      remove: false,
+      variant: true,
+    });
+  });
 });

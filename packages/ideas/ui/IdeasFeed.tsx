@@ -28,7 +28,11 @@ type Props = {
   loadMore: (cursor: string) => Promise<IdeaPage>;
 };
 
-const date = new Intl.DateTimeFormat(BRAND.locale, { dateStyle: "short", timeStyle: "short" });
+const date = new Intl.DateTimeFormat(BRAND.locale, {
+  dateStyle: "short",
+  timeStyle: "short",
+  timeZone: BRAND.timeZone,
+});
 
 /**
  * Liste des idées qui se charge au défilement : arrivé en bas, la page suivante s'ajoute à la

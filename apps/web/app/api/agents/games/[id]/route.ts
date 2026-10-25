@@ -1,6 +1,6 @@
 import { getGame, playMove } from "@app/agents";
 import { requireMember } from "@app/core";
-import { errorResponse } from "@/lib/route";
+import { errorResponse, json } from "@/lib/route";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(request: Request, { params }: Params): Promise<Response> {
   try {
     const user = await requireMember(request.headers);
-    return Response.json(await getGame({ userId: user.id, gameId: (await params).id }));
+    return json(await getGame({ userId: user.id, gameId: (await params).id }));
   } catch (error) {
     return errorResponse(error);
   }
@@ -19,7 +19,7 @@ export async function POST(request: Request, { params }: Params): Promise<Respon
   try {
     const user = await requireMember(request.headers);
     const move = await request.json().catch(() => ({}));
-    return Response.json(await playMove({ userId: user.id, gameId: (await params).id, move }));
+    return json(await playMove({ userId: user.id, gameId: (await params).id, move }));
   } catch (error) {
     return errorResponse(error);
   }

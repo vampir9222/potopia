@@ -55,6 +55,24 @@ export function Place({
 }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // `initial` et `layout` arrivent du serveur : nouveaux objets à chaque rendu (rafraîchissement
+  // du routeur après une action), au contenu identique ou presque. Ils passent par des refs pour
+  // que la scène ne soit pas reconstruite (avatars téléportés, planches rechargées) à chaque fois.
+  const initialRef = useRef(initial);
+  const layoutRef = useRef(layout);
+  const applyRef = useRef<((snapshot: PlaceSnapshot) => void) | null>(null);
+
+  useEffect(() => {
+    layoutRef.current = layout;
+  }, [layout]);
+
+  // Nouveau rendu serveur : les membres sont mis à jour en place (un avatar modifié change de
+  // planche sans bouger), les événements éventuels sont joués ; le polling continue d'où il était.
+  useEffect(() => {
+    if (initial === initialRef.current) return;
+    initialRef.current = initial;
+    applyRef.current?.(initial);
+  }, [initial]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -68,7 +86,7 @@ export function Place({
     let confetti: Confetti[] = [];
     let scene: Scene = buildScene(wrap.clientWidth || 600, wrap.clientHeight);
     let ground: HTMLCanvasElement | null = null;
-    let since = initial.now;
+    let since = initialRef.current.now;
     let hovered: string | null = null;
     let clock = 0;
     let last = performance.now();
@@ -174,6 +192,7 @@ export function Place({
             ctx.fill();
             if (!sheet) return;
             const animation = animationOf(walker);
+            const layout = layoutRef.current;
             const frame = reduced ? 0 : frameAt(layout, animation, clock + walker.phase);
             // Assis : face à la caméra. Le bas de la frame LPC touche les pieds à ~2 px du bord.
             const direction = walker.asleep && !walker.action ? "down" : walker.direction;
@@ -281,7 +300,11 @@ export function Place({
     };
 
     resize();
-    setMembers(initial.members);
+    setMembers(initialRef.current.members);
+    applyRef.current = (snapshot) => {
+      setMembers(snapshot.members);
+      react(snapshot.events);
+    };
     const observer = new ResizeObserver(resize);
     observer.observe(wrap);
     canvas.addEventListener("pointermove", onMove);
@@ -291,6 +314,7 @@ export function Place({
     raf = requestAnimationFrame(tick);
 
     return () => {
+      applyRef.current = null;
       cancelAnimationFrame(raf);
       window.clearInterval(interval);
       observer.disconnect();
@@ -298,7 +322,7 @@ export function Place({
       canvas.removeEventListener("pointerleave", onLeave);
       canvas.removeEventListener("click", onClick);
     };
-  }, [initial, layout, endpoint, pollMs]);
+  }, [endpoint, pollMs]);
 
   return (
     <div

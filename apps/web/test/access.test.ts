@@ -41,7 +41,7 @@ vi.mock("next/navigation", () => ({
     throw new Interrupt("notFound");
   },
 }));
-vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
+vi.mock("next/cache", () => ({ refresh: () => undefined, revalidatePath: () => undefined }));
 // Tâches après la réponse (avatars manquants) : ignorées en test.
 vi.mock("next/server", () => ({ after: () => undefined }));
 // next/font est transformé à la compilation par Next : hors Next, une police factice suffit.
@@ -207,7 +207,7 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "agents/page": () => AgentsPage(),
   "agents/[id]/page": () => AgentsGamePage({ params: Promise.resolve({ id: "inconnue" }) }),
   "trois/page": () => TroisPage(),
-  "cartes/page": () => CardsVotePage({ searchParams: Promise.resolve({ onglet: "effets" }) }),
+  "cartes/page": () => CardsVotePage({ searchParams: Promise.resolve({ onglet: "archives" }) }),
   "wallet/page": () => WalletPage({ searchParams: Promise.resolve({}) }),
   "avatar/page": () => AvatarPage(),
   "credits/page": () => CreditsPage(),

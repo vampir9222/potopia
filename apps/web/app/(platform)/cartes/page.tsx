@@ -1,3 +1,4 @@
+import { BRAND } from "@app/config/brand";
 import { getUsersByIds, isAdmin } from "@app/core";
 import { getShowcaseIdea, type ShowcaseIdea } from "@app/ideas";
 import {
@@ -26,7 +27,8 @@ export const metadata: Metadata = { title: "Vote pour le design des cartes" };
 type Tab = "design" | "effets" | "variantes" | "archives";
 /**
  * Onglets de la page. `hidden` : masqué pour l'instant mais gardé tel quel (propositions, votes et
- * code intacts) ; repasser à false pour le remettre.
+ * code intacts) ; repasser à false pour le remettre. Tant qu'un onglet est masqué, ses designs
+ * restent visibles et notables dans les Archives, dans une carte à part.
  */
 const TABS: { id: Tab; label: string; hidden?: boolean }[] = [
   { id: "design", label: "Design" },
@@ -35,6 +37,7 @@ const TABS: { id: Tab; label: string; hidden?: boolean }[] = [
   { id: "archives", label: "Archives" },
 ];
 const SHOWN_TABS = TABS.filter((t) => !t.hidden);
+const isHidden = (t: Tab) => TABS.some((x) => x.id === t && x.hidden);
 
 /** Coût de 1 à 6, stable pour une idée donnée. La rareté n'influence jamais les stats. */
 function costOf(id: string): number {
@@ -55,7 +58,7 @@ function sampleCard(idea: ShowcaseIdea | null, author: string): CardData {
       cost: 2,
       power: 4,
       imageUrl: null,
-      author: "Potopia",
+      author: BRAND.name,
       serial: "01/01",
     };
   }
@@ -83,15 +86,22 @@ function average(votes: DesignVote[]): number | null {
   return rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : null;
 }
 
+/** Un design compte comme « noté » avec au moins une étoile ou un commentaire (note retirée = non). */
+function isRated(vote: DesignVote | undefined): boolean {
+  return !!vote && (vote.stars > 0 || !!vote.comment);
+}
+
 export default async function CardsVotePage({
   searchParams,
 }: {
-  searchParams: Promise<{ onglet?: string; masquer?: string }>;
+  searchParams: Promise<{ onglet?: string; masquer?: string; voir?: string }>;
 }) {
   const member = await getCurrentMember();
   const params = await searchParams;
   const tab = SHOWN_TABS.find((t) => t.id === params.onglet)?.id ?? "design";
   const hideVoted = params.masquer === "1";
+  // Design archivé dont l'aperçu est ouvert (les autres n'affichent que titre et résumé).
+  const seen = DESIGNS.find((d) => d.id === params.voir)?.id ?? null;
 
   const [idea, votes] = await Promise.all([getShowcaseIdea(), listDesignVotes()]);
   const users = await getUsersByIds([
@@ -99,7 +109,7 @@ export default async function CardsVotePage({
   ]);
   const byId = new Map(users.map((u) => [u.id, u]));
   const name = (id: string) => byId.get(id)?.name ?? "Membre inconnu";
-  const cards = [sampleCard(idea, idea ? name(idea.authorId) : "Potopia")];
+  const cards = [sampleCard(idea, idea ? name(idea.authorId) : BRAND.name)];
 
   // « à supprimer » et « variant » ne comptent que dans les commentaires des admins.
   const tagsOf = (id: DesignId) => {
@@ -113,11 +123,13 @@ export default async function CardsVotePage({
   };
   const row = (id: DesignId) => {
     const forDesign = votes.filter((v) => v.designId === id);
+    const mine = forDesign.find((v) => v.userId === member.id);
     return {
       design: DESIGNS.find((d) => d.id === id) ?? DESIGNS[0],
       number: designNumber(id),
       avg: average(forDesign),
-      mine: forDesign.find((v) => v.userId === member.id),
+      mine,
+      rated: isRated(mine),
       others: forDesign.filter((v) => v.userId !== member.id),
     };
   };
@@ -132,11 +144,19 @@ export default async function CardsVotePage({
     archives: old.filter((id) => !tagsOf(id).variant && !tagsOf(id).remove),
   };
   const trash = DESIGNS.map((d) => d.id).filter((id) => tagsOf(id).remove);
-  const toVote = (t: Tab) => lists[t].filter((id) => !row(id).mine).length;
-  const visible = (ids: DesignId[]) => ids.map(row).filter((r) => !hideVoted || !r.mine);
+  // Ce que chaque onglet donne à noter : l'onglet Design compte aussi ses deux références.
+  const countable: Record<Tab, DesignId[]> = {
+    ...lists,
+    design: [...lists.design, ...kept(REFERENCES)],
+  };
+  const toVote = (t: Tab) => countable[t].filter((id) => !row(id).rated).length;
+  const visible = (ids: DesignId[]) => ids.map(row).filter((r) => !hideVoted || !r.rated);
 
   const href = (t: Tab, hide = hideVoted) =>
-    `/cartes?onglet=${t}${hide ? "&masquer=1" : ""}` as const;
+    `/cartes?onglet=${t}${hide ? "&masquer=1" : ""}${t === "archives" && seen ? `&voir=${seen}` : ""}`;
+  /** Lien qui ouvre l'aperçu d'un design archivé, en gardant les autres paramètres. */
+  const seeHref = (id: DesignId) =>
+    `/cartes?onglet=archives${hideVoted ? "&masquer=1" : ""}&voir=${id}#design-${id}`;
 
   return (
     <div className={`${designFonts} flex flex-col gap-4`}>
@@ -223,7 +243,16 @@ export default async function CardsVotePage({
       )}
 
       {tab === "archives" ? (
-        <Archives rows={visible(lists.archives)} trash={visible(trash)} cards={cards} name={name} />
+        <Archives
+          variants={isHidden("variantes") ? visible(lists.variantes) : []}
+          effects={isHidden("effets") ? visible(lists.effets) : []}
+          rows={visible(lists.archives)}
+          trash={visible(trash)}
+          seen={seen}
+          seeHref={seeHref}
+          cards={cards}
+          name={name}
+        />
       ) : (
         <>
           {visible(lists[tab]).map((r) => (
@@ -259,40 +288,72 @@ export default async function CardsVotePage({
   );
 }
 
-/** Onglet Archives : anciennes propositions repliées, puis la corbeille. */
+/**
+ * Onglet Archives : les designs des onglets masqués (variantes, effets), les anciennes propositions
+ * repliées, puis la corbeille. Seul le design « ouvert » (`?voir=`) rend sa planche : les autres
+ * n'affichent que leur titre et leur résumé, avec un lien vers l'aperçu.
+ */
 function Archives({
+  variants,
+  effects,
   rows,
   trash,
+  seen,
+  seeHref,
   cards,
   name,
 }: {
+  variants: RowProps["row"][];
+  effects: RowProps["row"][];
   rows: RowProps["row"][];
   trash: RowProps["row"][];
+  seen: DesignId | null;
+  seeHref: (id: DesignId) => string;
   cards: CardData[];
   name: (id: string) => string;
 }) {
+  const list = (items: RowProps["row"][]) => (
+    <div className="flex flex-col gap-2">
+      {items.map((r) => (
+        <Folded
+          key={r.design.id}
+          row={r}
+          cards={cards}
+          name={name}
+          lazy={{ open: seen === r.design.id, href: seeHref(r.design.id) }}
+        />
+      ))}
+    </div>
+  );
   return (
     <>
-      <Card title="Mis de côté">
-        <p className="text-muted mb-3 text-sm">
-          Les anciennes propositions. Pour en ressortir une, commente-la « variant » ; pour la
-          jeter, « à supprimer ».
-        </p>
-        <div className="flex flex-col gap-2">
-          {rows.map((r) => (
-            <Folded key={r.design.id} row={r} cards={cards} name={name} />
-          ))}
-        </div>
-      </Card>
-      {trash.length > 0 && (
-        <Card title="Corbeille (« à supprimer »)">
-          <div className="flex flex-col gap-2">
-            {trash.map((r) => (
-              <Folded key={r.design.id} row={r} cards={cards} name={name} />
-            ))}
-          </div>
+      {variants.length > 0 && (
+        <Card title="Variantes (gardées pour plus tard)">
+          <p className="text-muted mb-3 text-sm">
+            Les anciennes propositions commentées « variant » par un admin : à ressortir plus tard
+            comme variantes de cartes, toujours à noter.
+          </p>
+          {list(variants)}
         </Card>
       )}
+      {effects.length > 0 && (
+        <Card title="Effets de rareté (en pause)">
+          <p className="text-muted mb-3 text-sm">
+            Ce que chaque rareté ajoute, posé sur le design « Mix · Sculpté et verre fumé ». On y
+            reviendra une fois le design choisi ; tu peux déjà les noter.
+          </p>
+          {list(effects)}
+        </Card>
+      )}
+      <Card title="Mis de côté">
+        <p className="text-muted mb-3 text-sm">
+          Les anciennes propositions. Clique sur un titre pour voir sa planche et la noter. Un admin
+          qui la commente « variant » la range dans les variantes gardées pour plus tard ; « à
+          supprimer » la met à la corbeille.
+        </p>
+        {list(rows)}
+      </Card>
+      {trash.length > 0 && <Card title="Corbeille (« à supprimer »)">{list(trash)}</Card>}
     </>
   );
 }
@@ -307,12 +368,22 @@ function Average({ avg }: { avg: number | null }) {
   );
 }
 
+function ToRate() {
+  return (
+    <span className="bg-accent/15 text-accent rounded-full px-2 py-0.5 text-xs font-semibold">
+      À noter
+    </span>
+  );
+}
+
 type RowProps = {
   row: {
     design: (typeof DESIGNS)[number];
     number: number;
     avg: number | null;
     mine: DesignVote | undefined;
+    /** Vrai avec au moins une étoile ou un commentaire. */
+    rated: boolean;
     others: DesignVote[];
   };
   cards: CardData[];
@@ -321,42 +392,76 @@ type RowProps = {
 
 /** Une proposition : aperçu, ma note et les avis des autres. */
 function DesignCard({ row, cards, name, wide = false }: RowProps & { wide?: boolean }) {
-  const { design, number, avg, mine } = row;
+  const { design, number, avg, rated } = row;
   return (
     <Card
       title={`${number} · ${design.title}`}
       action={
         <span className="flex items-center gap-2 text-xs">
-          {!mine && (
-            <span className="bg-accent/15 text-accent rounded-full px-2 py-0.5 font-semibold">
-              À noter
-            </span>
-          )}
+          {!rated && <ToRate />}
           <Average avg={avg} />
         </span>
       }
     >
       <p className="text-muted mb-3 text-sm">{design.summary}</p>
       {/* Cartes réduites pour voir une planche entière d'un coup d'œil. */}
-      <div style={{ zoom: wide ? 0.6 : 0.72 }}>
-        <DesignPreview designId={design.id} cards={cards} />
-      </div>
+      <DesignPreview designId={design.id} cards={cards} zoom={wide ? 0.6 : 0.72} />
       <Opinions row={row} name={name} />
     </Card>
   );
 }
 
-/** Proposition repliée (références, archives, corbeille) : on la déplie pour la revoir et la noter. */
-function Folded({ row, cards, name }: RowProps) {
-  const { design, number, avg } = row;
+/**
+ * Proposition repliée (références, archives, corbeille) : on la déplie pour la revoir et la noter.
+ * En mode `lazy` (archives), la planche n'est rendue que si `open` ; sinon le titre est un lien
+ * (`href`) qui ouvre la page sur cette proposition.
+ */
+function Folded({ row, cards, name, lazy }: RowProps & { lazy?: { open: boolean; href: string } }) {
+  const { design, number, avg, rated } = row;
+  const title = (
+    <>
+      {number} · {design.title} {avg !== null && `(${Math.round(avg * 10) / 10} ★)`}
+    </>
+  );
+  const id = `design-${design.id}`;
+  if (lazy && !lazy.open) {
+    return (
+      <details id={id} className="border-border rounded-md border px-3 py-2">
+        <summary className="text-muted cursor-pointer text-sm">
+          <Link href={lazy.href} className="hover:text-text underline-offset-4 hover:underline">
+            {title}
+          </Link>
+          {!rated && (
+            <>
+              {" "}
+              <ToRate />
+            </>
+          )}
+        </summary>
+        <p className="text-muted mt-2 text-sm">{design.summary}</p>
+        <Link
+          href={lazy.href}
+          className="text-accent mt-2 inline-block text-sm underline-offset-4 hover:underline"
+        >
+          Voir l&apos;aperçu
+        </Link>
+      </details>
+    );
+  }
   return (
-    <details className="border-border rounded-md border px-3 py-2">
+    <details id={id} open={lazy?.open} className="border-border rounded-md border px-3 py-2">
       <summary className="text-muted cursor-pointer text-sm">
-        {number} · {design.title} {avg !== null && `(${Math.round(avg * 10) / 10} ★)`}
+        {title}
+        {!rated && (
+          <>
+            {" "}
+            <ToRate />
+          </>
+        )}
       </summary>
       <p className="text-muted mt-2 text-sm">{design.summary}</p>
-      <div className="mt-3" style={{ zoom: 0.6 }}>
-        <DesignPreview designId={design.id} cards={cards} />
+      <div className="mt-3">
+        <DesignPreview designId={design.id} cards={cards} zoom={0.6} />
       </div>
       <Opinions row={row} name={name} />
     </details>

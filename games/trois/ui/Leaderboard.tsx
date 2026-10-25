@@ -39,20 +39,22 @@ export function Leaderboard({ players, reload }: { players: Player[] | null; rel
       return;
     }
     loadTotals();
-    const t = setInterval(loadTotals, 60_000);
+    // pas de requête tant que l'onglet est caché
+    const t = setInterval(() => document.visibilityState === "visible" && loadTotals(), 60_000);
     return () => clearInterval(t);
   }, [period, loadTotals, reload]);
 
   const current = PERIODS[period];
   const loaded = period === "day" ? players : totals;
-  const ranked = <T,>(rows: T[] | null) => (rows ?? []).map((x, i) => ({ ...x, rank: i + 1 }));
+  // rang calculé par le serveur : les ex æquo partagent la médaille
+  const medal = (rank: number) => MEDALS[rank - 1] ?? rank;
 
   const row = (w: Who, rankLabel: ReactNode, sub: ReactNode, right?: ReactNode) => (
     <li
       key={w.id}
       className={`flex items-center gap-3 rounded-xl border p-3 ${w.me ? "border-zinc-600 bg-zinc-900" : "border-zinc-800"}`}
     >
-      <span className="w-7 text-center font-mono text-zinc-500">{rankLabel}</span>
+      <span className="w-7 text-center font-mono text-zinc-400">{rankLabel}</span>
       {w.image ? (
         <img src={w.image} alt="" width={28} height={28} className="shrink-0 rounded-full" />
       ) : (
@@ -63,9 +65,9 @@ export function Leaderboard({ players, reload }: { players: Player[] | null; rel
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold">
           {w.name}
-          {w.me && <span className="ml-1 text-xs text-zinc-500">(toi)</span>}
+          {w.me && <span className="ml-1 text-xs text-zinc-400">(toi)</span>}
         </p>
-        <p className="text-xs text-zinc-500">{sub}</p>
+        <p className="text-xs text-zinc-400">{sub}</p>
       </div>
       {right}
     </li>
@@ -99,24 +101,24 @@ export function Leaderboard({ players, reload }: { players: Player[] | null; rel
       <section>
         <h2 className="mb-2 font-bold">{current.heading}</h2>
         {period !== "day" && (
-          <p className="mb-2 text-xs text-zinc-500">
+          <p className="mb-2 text-xs text-zinc-400">
             Mot trouvé : {wordPoints(1)} points en 1 essai, un de moins par essai, {wordPoints(6)}{" "}
             en 6. Raté : 0.
           </p>
         )}
-        {!loaded && <p className="text-zinc-500">Chargement…</p>}
+        {!loaded && <p className="text-zinc-400">Chargement…</p>}
         {loaded && loaded.length <= 1 && (
-          <p className="mb-3 text-sm text-zinc-500">
+          <p className="mb-3 text-sm text-zinc-400">
             Personne d&apos;autre n&apos;a joué pour l&apos;instant.
           </p>
         )}
         <ol className="flex flex-col gap-2">
           {period === "day"
-            ? ranked(players).map((p) => {
+            ? (players ?? []).map((p) => {
                 const s = dayScore(p.today);
                 return row(
                   p,
-                  !s.started ? "–" : (MEDALS[p.rank - 1] ?? p.rank),
+                  !s.started ? "–" : medal(p.rank),
                   <>
                     {!s.started
                       ? "Pas encore joué"
@@ -130,16 +132,16 @@ export function Leaderboard({ players, reload }: { players: Player[] | null; rel
                   </div>,
                 );
               })
-            : ranked(totals).map((t) =>
+            : (totals ?? []).map((t) =>
                 row(
                   t,
-                  t.points === 0 ? "–" : (MEDALS[t.rank - 1] ?? t.rank),
+                  t.points === 0 ? "–" : medal(t.rank),
                   t.days === 0
                     ? "Pas encore joué"
                     : `${t.found}/${t.words} mots trouvés · ${t.days} jour${t.days > 1 ? "s" : ""}`,
                   <span className="font-mono text-lg font-bold">
                     {t.points}
-                    <span className="ml-0.5 text-xs font-normal text-zinc-500">pts</span>
+                    <span className="ml-0.5 text-xs font-normal text-zinc-400">pts</span>
                   </span>,
                 ),
               )}

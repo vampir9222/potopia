@@ -3,8 +3,11 @@ import { truncateTestDb } from "@app/db/testing";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   ForbiddenError,
+  getAuth,
   getSession,
+  GUILD_GRACE_MS,
   GUILD_RECHECK_INTERVAL_MS,
+  GUILD_RETRY_MS,
   requireAdmin,
   requireMember,
   UnauthorizedError,
@@ -23,6 +26,8 @@ beforeEach(async () => {
   discord.users.clear();
   discord.guildsStatus = 200;
   discord.guildsCalls = 0;
+  discord.tokenStatus = 200;
+  discord.tokenCalls = 0;
 });
 afterEach(() => {
   process.env.ADMIN_DISCORD_IDS = ADMIN_ID;
@@ -34,6 +39,26 @@ async function ageSessions(userDiscordId: string): Promise<void> {
     where: { userId: user.id },
     data: { guildCheckedAt: new Date(Date.now() - GUILD_RECHECK_INTERVAL_MS - 60_000) },
   });
+}
+
+/** Fait expirer le token d'accès Discord : la prochaine vérification doit le rafraîchir. */
+async function expireAccessToken(): Promise<void> {
+  await db.account.updateMany({ data: { accessTokenExpiresAt: new Date(Date.now() - 1000) } });
+}
+
+/** Requête à l'API Better Auth avec les cookies d'une session. */
+function authRequest(path: string, headers: Headers, body: unknown): Promise<Response> {
+  return getAuth().handler(
+    new Request(`http://localhost:3000/api/auth${path}`, {
+      method: "POST",
+      headers: {
+        cookie: headers.get("cookie") ?? "",
+        "content-type": "application/json",
+        origin: "http://localhost:3000",
+      },
+      body: JSON.stringify(body),
+    }),
+  );
 }
 
 describe("connexion Discord", () => {
@@ -67,6 +92,22 @@ describe("connexion Discord", () => {
     expect(account.accountId).toBe(MEMBER_ID);
     expect(account.accessToken).toBeTruthy();
     expect(account.accessToken).not.toContain(`token-${MEMBER_ID}`);
+  });
+
+  it("ne laisse pas un membre changer son pseudo ou son image par l'API Better Auth", async () => {
+    discord.add(fakeUser(MEMBER_ID));
+    const { headers } = await signInWithDiscord(MEMBER_ID);
+    const before = await db.user.findUniqueOrThrow({ where: { discordId: MEMBER_ID } });
+
+    const res = await authRequest("/update-user", headers, {
+      name: "Admin",
+      image: "https://example.test/pixel.png",
+    });
+    expect(res.status).toBe(404);
+    const after = await db.user.findUniqueOrThrow({ where: { discordId: MEMBER_ID } });
+    expect([after.name, after.image]).toEqual([before.name, before.image]);
+    const email = await authRequest("/change-email", headers, { newEmail: "x@example.test" });
+    expect(email.status).toBe(404);
   });
 
   it("synchronise le miroir role depuis ADMIN_DISCORD_IDS à la connexion", async () => {
@@ -142,7 +183,7 @@ describe("revérification toutes les 6 h", () => {
     expect(Date.now() - session.guildCheckedAt.getTime()).toBeLessThan(60_000);
   });
 
-  it("garde la session si Discord est en panne, et réessaie ensuite", async () => {
+  it("garde la session si Discord est en panne, et ne réessaie qu'après un délai", async () => {
     discord.add(fakeUser(MEMBER_ID));
     const { headers } = await signInWithDiscord(MEMBER_ID);
     discord.guildsStatus = 503;
@@ -150,7 +191,44 @@ describe("revérification toutes les 6 h", () => {
 
     await requireMember(headers);
     const calls = discord.guildsCalls;
+    const session = await db.session.findFirstOrThrow();
+    expect(session.guildUnknownSince).not.toBeNull();
+    // Prochain essai dans GUILD_RETRY_MS : la requête suivante ne rappelle pas Discord.
     await requireMember(headers);
-    expect(discord.guildsCalls).toBe(calls + 1);
+    expect(discord.guildsCalls).toBe(calls);
+    const retryIn = session.guildCheckedAt.getTime() + GUILD_RECHECK_INTERVAL_MS - Date.now();
+    expect(retryIn).toBeGreaterThan(GUILD_RETRY_MS - 60_000);
+    expect(retryIn).toBeLessThanOrEqual(GUILD_RETRY_MS);
+
+    // Discord revenu : la vérification réussit et le marqueur de panne disparaît.
+    discord.guildsStatus = 200;
+    await ageSessions(MEMBER_ID);
+    await requireMember(headers);
+    expect((await db.session.findFirstOrThrow()).guildUnknownSince).toBeNull();
+  });
+
+  it("garde la session si le rafraîchissement du token échoue (panne), sans la révoquer", async () => {
+    discord.add(fakeUser(MEMBER_ID));
+    const { headers } = await signInWithDiscord(MEMBER_ID);
+    await expireAccessToken();
+    discord.tokenStatus = 503;
+    await ageSessions(MEMBER_ID);
+
+    await requireMember(headers);
+    expect(discord.tokenCalls).toBeGreaterThan(0);
+    expect(await db.session.count()).toBe(1);
+  });
+
+  it("révoque la session si Discord ne répond plus depuis le délai de grâce", async () => {
+    discord.add(fakeUser(MEMBER_ID));
+    const { headers } = await signInWithDiscord(MEMBER_ID);
+    discord.guildsStatus = 503;
+    await ageSessions(MEMBER_ID);
+    await db.session.updateMany({
+      data: { guildUnknownSince: new Date(Date.now() - GUILD_GRACE_MS - 60_000) },
+    });
+
+    await expect(requireMember(headers)).rejects.toBeInstanceOf(ForbiddenError);
+    expect(await db.session.count()).toBe(0);
   });
 });

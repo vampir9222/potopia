@@ -44,6 +44,8 @@ export function Tilt({
       className="tcg-tilt"
       onPointerMove={move}
       onPointerLeave={leave}
+      // Sur mobile, un début de défilement annule le pointeur sans « leave » : on remet la carte à plat.
+      onPointerCancel={leave}
       style={{ borderRadius: radius, ...style }}
     >
       {children}

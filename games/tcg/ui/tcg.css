@@ -27,6 +27,15 @@
   transition: transform 0.08s linear;
 }
 
+/* Planche de cartes (<Board>) : sur mobile, les cartes passent à la ligne au lieu de dépasser à
+   droite sans indice visuel. */
+@media (max-width: 639px) {
+  .tcg-board {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
 /* Reflet de lumière qui suit le pointeur. */
 .tcg-glare {
   position: absolute;
