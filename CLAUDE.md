@@ -45,7 +45,9 @@ testés un par un : `turbo run test --concurrency=1`). API Discord toujours mock
 8. **Ledger economy en ajout seul** : jamais d'UPDATE/DELETE sur `transactions` ; correction = transaction
    inverse.
 9. **Boîte à idées = boîte noire** : aucun membre ne lit d'idée (même les siennes), aucun contenu
-   d'idée dans l'activité, les notifications ou les logs.
+   d'idée dans l'activité, les notifications ou les logs. Seule exception (décidée le 2026-10-25) :
+   l'idée exemple du vote des designs de cartes (`SHOWCASE_IDEA_ID`, `packages/ideas`) est visible
+   de tous les membres sur `/cartes`, image comprise.
 
 ## Conventions
 

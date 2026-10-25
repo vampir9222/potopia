@@ -330,6 +330,23 @@
   opacity: clamp(0, calc((var(--x, 0.2) - 0.45) * 6), 1);
   transition: opacity 0.15s linear;
 }
+/* SSR lenticulaire automatique (troisième vague) : bascule toute seule, sans survol. */
+.tcg-lenti-auto {
+  animation: tcg-lenti-cycle 7s ease-in-out infinite;
+}
+@keyframes tcg-lenti-cycle {
+  0%,
+  38% {
+    opacity: 0;
+  }
+  50%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 .tcg-lenti-lines {
   position: absolute;
   inset: 0;

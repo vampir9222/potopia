@@ -1,4 +1,3 @@
-import { ForbiddenError, isAdmin } from "@app/core";
 import { db, type DbTx } from "@app/db";
 import { z } from "zod";
 import { DESIGN_IDS, type DesignId } from "./designs";
@@ -11,12 +10,8 @@ export type DesignVote = {
   updatedAt: Date;
 };
 
-/** Utilisateur qui note ou lit : seuls les admins (ADMIN_DISCORD_IDS) y ont droit. */
-type Admin = { id: string; discordId: string | null };
-
-function assertAdmin(reader: Admin): void {
-  if (!isAdmin(reader.discordId)) throw new ForbiddenError("Réservé aux admins.");
-}
+/** Membre qui note : le vote des designs est ouvert à tous les membres (contrôle fait par l'app). */
+type Voter = { id: string };
 
 const rateInput = z.object({
   designId: z.enum(DESIGN_IDS, "Design inconnu."),
@@ -47,25 +42,23 @@ function toVote(row: {
 /** Note telle qu'envoyée (formulaire) : validée par rateInput. */
 export type RateInput = { designId: string; stars: number | string; comment?: string | null };
 
-/** Enregistre (ou remplace) la note de l'admin sur un design. Lève ForbiddenError pour un non-admin. */
+/** Enregistre (ou remplace) la note du membre sur un design. */
 export async function rateDesign(
-  admin: Admin,
+  voter: Voter,
   input: RateInput,
   opts?: { tx?: DbTx },
 ): Promise<DesignVote> {
-  assertAdmin(admin);
   const { designId, stars, comment } = rateInput.parse(input);
   const row = await (opts?.tx ?? db).tcgDesignVote.upsert({
-    where: { designId_userId: { designId, userId: admin.id } },
-    create: { designId, userId: admin.id, stars, comment },
+    where: { designId_userId: { designId, userId: voter.id } },
+    create: { designId, userId: voter.id, stars, comment },
     update: { stars, comment },
   });
   return toVote(row);
 }
 
-/** Toutes les notes de tous les admins, la plus récente d'abord. Lève ForbiddenError pour un non-admin. */
-export async function listDesignVotes(reader: Admin): Promise<DesignVote[]> {
-  assertAdmin(reader);
+/** Toutes les notes de tous les membres, la plus récente d'abord. */
+export async function listDesignVotes(): Promise<DesignVote[]> {
   const rows = await db.tcgDesignVote.findMany({ orderBy: { updatedAt: "desc" } });
   return rows.map(toVote);
 }
