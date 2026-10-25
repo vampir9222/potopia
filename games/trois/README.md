@@ -6,6 +6,11 @@ Chaque jour, **3 mots de 5 lettres** (toutes différentes), les mêmes pour tout
 🟩 bonne lettre au bon endroit · 🟧 bonne lettre au mauvais endroit · ⬛ absente. 6 essais par mot,
 les 3 mots se jouent dans l'ordre.
 
+**Lettres répétées** : une lettre répétée dans l'essai est orange à chaque occurrence dès que la
+réponse la contient (verte si elle est à sa place) ; les solutions n'ont jamais de lettre double,
+donc deux fois la même lettre dans un essai ne peut jamais donner deux 🟩. Exemple : NONNE contre
+NOIRS donne N vert, O vert, N orange, N orange, E noir.
+
 Jeu intégré au portail : page `/trois`, routes `/api/trois/*`, tuile dans le registre des apps.
 
 ## Dans le portail
@@ -39,7 +44,9 @@ Jeu intégré au portail : page `/trois`, routes `/api/trois/*`, tuile dans le r
 - Victoire : les cases sautent et des confettis tombent (désactivé si l'appareil demande moins
   d'animations). Pour un 3 sur 3, grosse pluie de confettis et fanfare.
 - Sons synthétisés avec Web Audio (`ui/sound.ts`), sans fichier audio. Bouton 🔊/🔇 mémorisé sur
-  l'appareil.
+  l'appareil. Le bouton volume du portail (header) s'applique par-dessus : il règle ou coupe les
+  sons du jeu même quand le 🔊 du jeu est actif, et un jeu en 🔇 reste muet quel que soit le volume
+  du portail.
 - 🤫 Un mode secret se déclenche en tapant un mot caché. Purement visuel et sonore : rien n'est
   envoyé au serveur.
 
