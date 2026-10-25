@@ -207,7 +207,7 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "agents/page": () => AgentsPage(),
   "agents/[id]/page": () => AgentsGamePage({ params: Promise.resolve({ id: "inconnue" }) }),
   "trois/page": () => TroisPage(),
-  "cartes/page": () => CardsVotePage({ searchParams: Promise.resolve({ onglet: "effets" }) }),
+  "cartes/page": () => CardsVotePage({ searchParams: Promise.resolve({ onglet: "archives" }) }),
   "wallet/page": () => WalletPage({ searchParams: Promise.resolve({}) }),
   "avatar/page": () => AvatarPage(),
   "credits/page": () => CreditsPage(),

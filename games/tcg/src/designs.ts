@@ -1,5 +1,5 @@
 /**
- * Propositions de design de carte, notées par les admins. L'identifiant est stocké avec chaque
+ * Propositions de design de carte, notées par les membres. L'identifiant est stocké avec chaque
  * note : ne jamais le renommer (ajouter une nouvelle entrée à la place).
  */
 export const DESIGNS = [
@@ -319,11 +319,46 @@ export function designNumber(id: DesignId): number {
   return DESIGN_IDS.indexOf(id) + 1;
 }
 
+/** Mots qui annulent un mot-clé placé juste après (« pas à supprimer », « rien à supprimer »…). */
+const NEGATIONS = new Set(["pas", "ne", "n'", "rien", "jamais", "sans", "aucun", "aucune"]);
+/** Nombre de mots lus avant un mot-clé pour y chercher une négation. */
+const NEGATION_WINDOW = 4;
+
+/** Vrai si un des mots qui précèdent le mot n° `index` (même membre de phrase) est une négation. */
+function negated(words: string[], index: number): boolean {
+  for (let i = index - 1; i >= Math.max(0, index - NEGATION_WINDOW); i--) {
+    const word = words[i];
+    if (word === undefined) break;
+    // « mais » ouvre une nouvelle proposition : « pas mal mais à supprimer » compte.
+    if (word === "mais") return false;
+    if (NEGATIONS.has(word)) return true;
+    // « plutôt qu'une variante », « plutôt que variant ».
+    if (word === "plutot" && (words[i + 1] === "que" || words[i + 1] === "qu'")) return true;
+  }
+  return false;
+}
+
 /**
  * Mots-clés lus dans les commentaires des admins : « à supprimer » met le design à la corbeille,
- * « variant » le range dans les variantes à ressortir plus tard. Accents et majuscules ignorés.
+ * « variant » le range dans les variantes à ressortir plus tard. Accents et majuscules ignorés ;
+ * un mot-clé précédé d'une négation dans le même membre de phrase (« pas à supprimer », « rien à
+ * supprimer », « plutôt qu'une variante ») ne compte pas.
  */
 export function commentTags(comment: string | null): { remove: boolean; variant: boolean } {
-  const text = (comment ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  return { remove: /\ba supprimer\b/.test(text), variant: /\bvariant/.test(text) };
+  const text = (comment ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    // Une apostrophe termine un mot (« n'est » → « n' », « est ») pour reconnaître « n' » et « qu' ».
+    .replace(/[’']/g, "' ");
+  const tags = { remove: false, variant: false };
+  // Membres de phrase : la négation d'un membre ne porte pas sur le suivant.
+  for (const segment of text.split(/[.!?;:,\n]+/)) {
+    const words = segment.split(/[^a-z0-9']+/).filter(Boolean);
+    words.forEach((word, i) => {
+      if (word === "a" && words[i + 1] === "supprimer" && !negated(words, i)) tags.remove = true;
+      if (word.startsWith("variant") && !negated(words, i)) tags.variant = true;
+    });
+  }
+  return tags;
 }

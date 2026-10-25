@@ -1,3 +1,4 @@
+import { BRAND } from "@app/config/brand";
 import type { CSSProperties, ReactNode } from "react";
 import { Art, type CardData, type CardRarity, font, RARITY_LABELS } from "./cards";
 import { Cost, Power } from "./snap";
@@ -805,7 +806,7 @@ export function PokeCard({ card }: { card: CardData }) {
               fontWeight: 700,
             }}
           >
-            <span>Illus. {card.author ?? "Potopia"}</span>
+            <span>Illus. {card.author ?? BRAND.name}</span>
             <span>
               {card.serial ?? ""}{" "}
               <span
@@ -1064,9 +1065,9 @@ export function MagicCard({
         >
           <span>
             {card.serial ?? "—"} · {card.rarity[0]?.toUpperCase()} · POT · FR — Illus.{" "}
-            {card.author ?? "Potopia"}
+            {card.author ?? BRAND.name}
           </span>
-          <span>™ & © Potopia</span>
+          <span>™ & © {BRAND.name}</span>
         </div>
         {snapBadges && (
           <div

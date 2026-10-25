@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { DesignId } from "../src/designs";
+import { type DesignId, designNumber } from "../src/designs";
 import {
   Board,
   type CardData,
@@ -33,63 +33,6 @@ import {
   TaverneArch,
 } from "./v2";
 import { Captioned, type EffectSet, MixCard, type MixDesign } from "./v3";
-
-const ORDER: DesignId[] = [
-  "pixel",
-  "comics",
-  "fantasy",
-  "minimal",
-  "polaroid",
-  "speciales",
-  "raretes",
-  "snap",
-  "hearth",
-  "poke",
-  "magic",
-  "snap-classic",
-  "snap-ink",
-  "snap-neon",
-  "snap-pixel",
-  "snap-prism",
-  "snap-raretes",
-  "snap-gold",
-  "snap-kawaii",
-  "snap-popart",
-  "snap-glitch",
-  "snap-watercolor",
-  "snap-sketch",
-  "snap-cosmic",
-  "snap-borderless",
-  "snap-stained",
-  "snap-theme",
-  "snap-edition",
-  "snap-raretes-v2",
-  "snap-gold-spot",
-  "snap-cosmic-frame",
-  "snap-watercolor-frame",
-  "snap-variantes",
-  "hearth-snap",
-  "magic-snap",
-  "snap-v2-sculpte",
-  "snap-v3-infini",
-  "snap-v4-profondeur",
-  "arcanes-v2",
-  "taverne-v2",
-  "potomon",
-  "cosmique-v3",
-  "neon-v2",
-  "raretes-v3",
-  "essai-duel",
-  "essai-tarot",
-  "essai-balatro",
-  "mix-verre",
-  "mix-serti",
-  "mix-plaque",
-  "effets-metaux",
-  "effets-gemmes",
-  "effets-lumiere",
-  "effets-cosmique",
-];
 
 const MIX: Partial<Record<DesignId, MixDesign>> = {
   "mix-verre": "verre",
@@ -134,39 +77,56 @@ function showcase(cards: CardData[], designId: DesignId): CardData[] {
   return trio(cards, designId).map((c, i) => ({ ...c, rarity: SHOWCASE[i] ?? c.rarity }));
 }
 
-function PremiumBoard({ children }: { children: ReactNode }) {
+function PremiumBoard({ zoom, children }: { zoom: number; children: ReactNode }) {
   return (
-    <Board background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)">
+    <Board zoom={zoom} background={STAGE}>
       {children}
     </Board>
   );
 }
 
-/** Carte n° i du lot, en boucle. */
+/** Carte n° i du lot, en boucle (un indice négatif reboucle aussi). */
 function pick(cards: CardData[], i: number): CardData {
-  const card = cards[i % cards.length];
+  const n = cards.length;
+  const card = cards[((i % n) + n) % n];
   if (!card) throw new Error("Lot de cartes vide.");
   return card;
 }
 
 /** Trois cartes du lot, différentes d'un design à l'autre quand le lot est assez grand. */
 function trio(cards: CardData[], designId: DesignId): CardData[] {
-  const start = ORDER.indexOf(designId) * 3;
+  const start = (designNumber(designId) - 1) * 3;
   return [0, 1, 2].map((i) => pick(cards, start + i));
 }
 
 const withImage = (cards: CardData[]) => cards.filter((c) => c.imageUrl);
 
+type Props = {
+  designId: DesignId;
+  cards: CardData[];
+  /** Réduction CSS (`zoom`) de la planche, pour en voir une entière d'un coup d'œil. */
+  zoom?: number;
+};
+
 /**
  * Aperçu d'une proposition de design, rempli avec un lot de cartes (les idées de la boîte, ou des
  * exemples fictifs). `cards` ne doit pas être vide.
  */
-export function DesignPreview({ designId, cards }: { designId: DesignId; cards: CardData[] }) {
+export function DesignPreview({ designId, cards, zoom = 1 }: Props) {
+  return (
+    <div style={{ zoom }}>
+      <Sheet designId={designId} cards={cards} zoom={zoom} />
+    </div>
+  );
+}
+
+/** La planche elle-même ; `zoom` est transmis aux cartes pour que l'agrandissement le compense. */
+function Sheet({ designId, cards, zoom }: Required<Props>) {
   const pictured = withImage(cards).length > 0 ? withImage(cards) : cards;
   switch (designId) {
     case "pixel":
       return (
-        <Board background="#12142a">
+        <Board zoom={zoom} background="#12142a">
           {trio(cards, designId).map((c, i) => (
             <PixelCard key={i} card={c} />
           ))}
@@ -174,7 +134,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "comics":
       return (
-        <Board background="#f4ecd8">
+        <Board zoom={zoom} background="#f4ecd8">
           {trio(cards, designId).map((c, i) => (
             <ComicsCard key={i} card={c} index={i} />
           ))}
@@ -182,7 +142,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "fantasy":
       return (
-        <Board background="#1b1410">
+        <Board zoom={zoom} background="#1b1410">
           {trio(cards, designId).map((c, i) => (
             <FantasyCard key={i} card={c} />
           ))}
@@ -190,7 +150,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "minimal":
       return (
-        <Board background="#e9e9ec">
+        <Board zoom={zoom} background="#e9e9ec">
           {trio(pictured, designId).map((c, i) => (
             <MinimalCard key={i} card={c} />
           ))}
@@ -198,7 +158,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "polaroid":
       return (
-        <Board background="#c9a77c">
+        <Board zoom={zoom} background="#c9a77c">
           {trio(pictured, designId).map((c, i) => (
             <PolaroidCard key={i} card={c} index={i} />
           ))}
@@ -209,7 +169,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       const legendary = pictured.find((c) => c.rarity === "legendary") ?? pick(pictured, 0);
       const fusion = cards.find((c) => c.rarity === "uncommon" && c !== location) ?? pick(cards, 1);
       return (
-        <Board background="#12142a">
+        <Board zoom={zoom} background="#12142a">
           <PixelLocationCard card={location} />
           <PixelFullArtCard card={{ ...legendary, rarity: "legendary" }} />
           <PixelCard card={fusion} label={`${fusion.tag} · Fusion`} />
@@ -218,7 +178,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
     }
     case "snap":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           {showcase(pictured, designId).map((c, i) => (
             <SnapCard key={i} card={c} />
@@ -227,7 +187,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "hearth":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           {showcase(pictured, designId).map((c, i) => (
             <HearthCard key={i} card={c} />
@@ -236,7 +196,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "poke":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           {showcase(cards, designId).map((c, i) => (
             <PokeCard key={i} card={c} />
@@ -245,7 +205,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "magic":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           {showcase(cards, designId).map((c, i) => (
             <MagicCard key={i} card={c} />
@@ -271,7 +231,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
     case "snap-cosmic-frame":
     case "snap-watercolor-frame":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
             <SnapVariant key={i} card={c} style={SNAP_STYLES[designId]} />
@@ -280,7 +240,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "snap-edition":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
             <SnapVariant key={i} card={c} edition />
@@ -291,6 +251,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       const card = pick(pictured, 0);
       return (
         <Board
+          zoom={zoom}
           wrap
           background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)"
         >
@@ -305,6 +266,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       const card = pick(pictured, 0);
       return (
         <Board
+          zoom={zoom}
           wrap
           background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)"
         >
@@ -317,7 +279,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
     }
     case "hearth-snap":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -327,7 +289,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "magic-snap":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(cards, designId).map((c, i) => (
@@ -337,7 +299,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "snap-v2-sculpte":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -347,7 +309,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "snap-v3-infini":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -357,7 +319,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "snap-v4-profondeur":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -367,7 +329,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "arcanes-v2":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -377,7 +339,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "taverne-v2":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -387,7 +349,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "potomon":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -397,7 +359,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "cosmique-v3":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -407,7 +369,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "neon-v2":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -417,7 +379,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "essai-duel":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -427,7 +389,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "essai-tarot":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -437,7 +399,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       );
     case "essai-balatro":
       return (
-        <PremiumBoard>
+        <PremiumBoard zoom={zoom}>
           <PremiumDefs />
           <SnapDefs />
           {showcase(pictured, designId).map((c, i) => (
@@ -452,7 +414,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       const card = pick(pictured, 0);
       const design = MIX[designId] ?? "verre";
       return (
-        <Board wrap background={STAGE}>
+        <Board zoom={zoom} wrap background={STAGE}>
           <PremiumDefs />
           <SnapDefs />
           <Captioned label="Normale">
@@ -474,7 +436,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {(["normal", "fullart"] as const).map((layout) => (
-            <Board key={layout} wrap background={STAGE}>
+            <Board key={layout} zoom={zoom} wrap background={STAGE}>
               <PremiumDefs />
               <SnapDefs />
               {LADDER.map((finish) => (
@@ -500,6 +462,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       const card = pick(pictured, 0);
       return (
         <Board
+          zoom={zoom}
           wrap
           background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)"
         >
@@ -519,6 +482,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
       const card = pick(pictured, 0);
       return (
         <Board
+          zoom={zoom}
           wrap
           background="radial-gradient(ellipse at 50% 0%, #2a2f55 0%, #12142a 55%, #07080f 100%)"
         >
@@ -532,7 +496,7 @@ export function DesignPreview({ designId, cards }: { designId: DesignId; cards: 
     case "raretes": {
       const card = pick(pictured, 0);
       return (
-        <Board background="#12142a">
+        <Board zoom={zoom} background="#12142a">
           <PixelCard card={{ ...card, rarity: "common" }} />
           <PixelCard card={{ ...card, rarity: "uncommon" }} />
           <PixelCard card={{ ...card, rarity: "rare" }} />
