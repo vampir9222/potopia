@@ -3,8 +3,10 @@ import { truncateTestDb } from "@app/db/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   countUnread,
+  EVENT_COMMIT_GRACE_MS,
   getUsersByIds,
   getVisibleApps,
+  listEventsSince,
   listNotifications,
   listRecentEvents,
   markAllAsRead,
@@ -125,6 +127,23 @@ describe("activité", () => {
       })),
     });
     expect(await listRecentEvents(1000)).toHaveLength(MAX_RECENT_EVENTS);
+  });
+
+  it("listEventsSince livre un événement antidaté de quelques secondes (transaction validée tard)", async () => {
+    const userId = await createUser("100000000000000002");
+    const since = new Date();
+    await db.activityEvent.createMany({
+      data: [
+        { userId, app: "ideas", type: "late", createdAt: new Date(since.getTime() - 5_000) },
+        {
+          userId,
+          app: "ideas",
+          type: "old",
+          createdAt: new Date(since.getTime() - EVENT_COMMIT_GRACE_MS - 1_000),
+        },
+      ],
+    });
+    expect((await listEventsSince(since)).map((e) => e.type)).toEqual(["late"]);
   });
 
   it("publishEvent respecte la transaction passée en option", async () => {

@@ -39,8 +39,13 @@ export const db: Db = new Proxy({} as Db, {
  * Exécute `fn` dans une transaction. Si `opts.tx` est fourni, `fn` s'exécute dans cette
  * transaction existante au lieu d'en ouvrir une nouvelle : c'est ce qui permet aux fonctions
  * d'écriture (`fn(input, opts?: { tx?: DbTx })`) de se composer entre modules.
+ * `timeout` (ms) remplace la limite par défaut de Prisma (5 s) pour la transaction ouverte ici ;
+ * il est sans effet dans une transaction existante, dont la limite est fixée par son ouvreur.
  */
-export function withTx<T>(fn: (tx: DbTx) => Promise<T>, opts?: { tx?: DbTx }): Promise<T> {
+export function withTx<T>(
+  fn: (tx: DbTx) => Promise<T>,
+  opts?: { tx?: DbTx; timeout?: number },
+): Promise<T> {
   if (opts?.tx) return fn(opts.tx);
-  return db.$transaction(fn);
+  return db.$transaction(fn, opts?.timeout === undefined ? undefined : { timeout: opts.timeout });
 }

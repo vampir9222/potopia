@@ -1,7 +1,8 @@
 import { ForbiddenError, listNotifications, listRecentEvents } from "@app/core";
 import { db } from "@app/db";
 import { truncateTestDb } from "@app/db/testing";
-import { beforeEach, describe, expect, it } from "vitest";
+import { headObject, putObject } from "@app/storage";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createUploadUrl,
   getIdea,
@@ -11,7 +12,11 @@ import {
   SHOWCASE_IDEA_ID,
   InvalidImageError,
   listIdeas,
+  purgeStaleUploads,
+  STALE_UPLOAD_MAX_AGE_MS,
   submitIdea,
+  UPLOAD_RATE_LIMIT,
+  UploadRateLimitError,
 } from "../src/index";
 
 const ADMIN = { id: "user-admin", discordId: "100000000000000001" };
@@ -139,6 +144,16 @@ describe("images", () => {
     );
   });
 
+  it("refuse une image dont le type ne correspond pas à celui annoncé", async () => {
+    // Objet écrit directement dans le stockage avec un autre type que celui de la demande.
+    const { key } = await createUploadUrl(MEMBER.id, { contentType: "image/png", size: 10 });
+    await putObject({ key, body: png, contentType: "image/webp" });
+    await expect(submitIdea(MEMBER.id, { ...idea(), imageKey: key })).rejects.toBeInstanceOf(
+      InvalidImageError,
+    );
+    expect(await db.idea.count()).toBe(0);
+  });
+
   it("refuse une clé émise mais dont l'image n'a jamais été envoyée", async () => {
     const { key } = await createUploadUrl(MEMBER.id, { contentType: "image/png", size: 10 });
     await expect(submitIdea(MEMBER.id, { ...idea(), imageKey: key })).rejects.toBeInstanceOf(
@@ -159,6 +174,96 @@ describe("images", () => {
     await expect(
       createUploadUrl(MEMBER.id, { contentType: "image/png", size: 0 }),
     ).rejects.toThrow();
+  });
+});
+
+describe("demandes d'envoi d'image", () => {
+  const STALE_MS = STALE_UPLOAD_MAX_AGE_MS + 60_000;
+  const request = (userId: string) =>
+    createUploadUrl(userId, { contentType: "image/png", size: 10 });
+
+  /** Lignes d'upload créées directement (clés `ideas/<tag>-<i>.png`), datées de `ageMs` dans le passé. */
+  async function seedUploads(
+    tag: string,
+    userId: string,
+    n: number,
+    { ageMs = 0, usedAt = null as Date | null, withObject = false } = {},
+  ): Promise<string[]> {
+    const keys = Array.from({ length: n }, (_, i) => `ideas/${tag}-${i}.png`);
+    await db.ideaUpload.createMany({
+      data: keys.map((key) => ({
+        key,
+        userId,
+        contentType: "image/png",
+        size: png.length,
+        createdAt: new Date(Date.now() - ageMs),
+        usedAt,
+      })),
+    });
+    if (withObject) {
+      for (const key of keys) await putObject({ key, body: png, contentType: "image/png" });
+    }
+    return keys;
+  }
+
+  it("refuse la demande au-delà de UPLOAD_RATE_LIMIT par heure glissante et par membre", async () => {
+    await seedUploads("recent", MEMBER.id, UPLOAD_RATE_LIMIT - 1);
+    await request(MEMBER.id);
+    await expect(request(MEMBER.id)).rejects.toBeInstanceOf(UploadRateLimitError);
+    expect(await db.ideaUpload.count({ where: { userId: MEMBER.id } })).toBe(UPLOAD_RATE_LIMIT);
+
+    // Un autre membre n'est pas concerné ; les demandes de plus d'une heure ne comptent plus.
+    await expect(request(OTHER.id)).resolves.toBeTruthy();
+    await db.ideaUpload.updateMany({
+      where: { userId: MEMBER.id },
+      data: { createdAt: new Date(Date.now() - 61 * 60 * 1000) },
+    });
+    await expect(request(MEMBER.id)).resolves.toBeTruthy();
+  });
+
+  it("la purge supprime l'objet et la ligne des uploads périmés, pas les récents ni les utilisés", async () => {
+    const stale = await seedUploads("stale", MEMBER.id, 3, { ageMs: STALE_MS, withObject: true });
+    const kept = [
+      ...(await seedUploads("used", MEMBER.id, 1, {
+        ageMs: STALE_MS,
+        usedAt: new Date(),
+        withObject: true,
+      })),
+      ...(await seedUploads("fresh", OTHER.id, 1, { ageMs: 60_000, withObject: true })),
+    ];
+
+    // `limit` borne chaque passage.
+    expect(await purgeStaleUploads(2)).toBe(2);
+    expect(await purgeStaleUploads(20)).toBe(1);
+    expect(await purgeStaleUploads(20)).toBe(0);
+
+    for (const key of stale) expect(await headObject(key)).toBeNull();
+    for (const key of kept) expect(await headObject(key)).not.toBeNull();
+    expect((await db.ideaUpload.findMany()).map((u) => u.key).sort()).toEqual(kept.sort());
+  });
+
+  it("une demande d'URL purge au passage ; un objet non supprimable laisse sa ligne sans faire échouer la demande", async () => {
+    await seedUploads("stale", MEMBER.id, 2, { ageMs: STALE_MS });
+    // Clé que le stockage refuse (espace) : la suppression de l'objet échoue, la ligne reste.
+    await db.ideaUpload.create({
+      data: {
+        key: "ideas/cle invalide.png",
+        userId: MEMBER.id,
+        contentType: "image/png",
+        size: 1,
+        createdAt: new Date(Date.now() - STALE_MS),
+      },
+    });
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const { key } = await request(MEMBER.id);
+      expect((await db.ideaUpload.findMany()).map((u) => u.key).sort()).toEqual(
+        ["ideas/cle invalide.png", key].sort(),
+      );
+      expect(error).toHaveBeenCalledTimes(1);
+    } finally {
+      error.mockRestore();
+    }
   });
 });
 

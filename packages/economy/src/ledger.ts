@@ -1,7 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { db, withTx, type DbTx } from "@app/db";
 import { z } from "zod";
-import { IdempotencyConflictError, InsufficientFundsError } from "./errors";
+import {
+  BalanceLimitError,
+  IdempotencyConflictError,
+  InsufficientFundsError,
+  MAX_BALANCE,
+} from "./errors";
 
 export type Transaction = {
   id: string;
@@ -41,7 +46,7 @@ function toTransaction(row: TransactionRow): Transaction {
   };
 }
 
-// Plafond par opération, loin de la limite d'une colonne integer (2^31 - 1).
+// Plafond par opération ; le solde lui-même est plafonné à MAX_BALANCE (errors.ts).
 export const MAX_AMOUNT = 1_000_000_000;
 
 const operationInput = z.object({
@@ -58,8 +63,9 @@ export type OperationInput = z.input<typeof operationInput>;
 
 /**
  * Crédit (delta > 0) ou débit (delta < 0), en une transaction SQL :
- * wallet créé si besoin puis verrouillé (FOR UPDATE), rejeu idempotent, contrôle du solde,
- * INSERT … ON CONFLICT (idempotency_key) DO NOTHING, mise à jour du solde.
+ * wallet créé si besoin puis verrouillé (FOR UPDATE), rejeu idempotent, contrôle du solde (jamais
+ * négatif, jamais au-dessus de MAX_BALANCE), INSERT … ON CONFLICT (idempotency_key) DO NOTHING,
+ * mise à jour du solde.
  * SQL brut plutôt que rattraper l'erreur P2002 : une erreur annule toute la transaction Postgres.
  */
 export async function applyOperation(
@@ -84,6 +90,7 @@ export async function applyOperation(
 
     const balanceAfter = wallet.balance + delta;
     if (balanceAfter < 0) throw new InsufficientFundsError(wallet.balance, op.amount);
+    if (balanceAfter > MAX_BALANCE) throw new BalanceLimitError(wallet.balance, op.amount);
 
     const [inserted] = await tx.$queryRaw<TransactionRow[]>`
       INSERT INTO "economy"."transactions"
@@ -123,6 +130,7 @@ function checkReplay(
   return { transaction: existing, replayed: true };
 }
 
+/** Lève BalanceLimitError si le solde dépasserait MAX_BALANCE. */
 export async function credit(input: OperationInput, opts?: { tx?: DbTx }): Promise<Transaction> {
   return (await applyOperation(input, 1, opts)).transaction;
 }

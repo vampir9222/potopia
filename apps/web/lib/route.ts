@@ -1,6 +1,6 @@
 import { AgentsError } from "@app/agents";
 import { ForbiddenError, UnauthorizedError } from "@app/core";
-import { InvalidImageError } from "@app/ideas";
+import { InvalidImageError, UploadRateLimitError } from "@app/ideas";
 import { TroisError } from "@app/trois";
 import { ZodError } from "zod";
 
@@ -8,6 +8,7 @@ const STATUSES: [new (...args: never[]) => Error, number][] = [
   [UnauthorizedError, 401],
   [ForbiddenError, 403],
   [InvalidImageError, 400],
+  [UploadRateLimitError, 429],
 ];
 
 /**
@@ -21,7 +22,7 @@ export function json(data: unknown, init?: ResponseInit): Response {
 }
 
 /**
- * Traduit les erreurs connues en réponse JSON (401, 403, 400) pour les route handlers.
+ * Traduit les erreurs connues en réponse JSON (401, 403, 400, 429) pour les route handlers.
  * Les autres erreurs remontent (500), sans détail renvoyé au client.
  */
 export function errorResponse(error: unknown): Response {

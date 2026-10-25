@@ -137,12 +137,22 @@ export async function saveAvatar(
     return row;
   }, opts);
 
-  // Ancienne planche : plus servie. Supprimée seulement hors transaction externe (sinon on ne sait
-  // pas si l'enregistrement sera validé).
-  if (previous && previous.sheetKey !== sheetKey && !opts?.tx) {
-    await deleteObject(previous.sheetKey).catch(() => undefined);
-  }
+  if (previous && !opts?.tx) await deletePreviousSheet(previous.sheetKey, sheetKey);
   return toAvatar(saved);
+}
+
+/**
+ * Ancienne planche : plus servie, donc supprimée. À n'appeler qu'hors transaction externe (sinon on
+ * ne sait pas si l'enregistrement sera validé). Un échec n'annule rien : la planche orpheline est
+ * seulement signalée.
+ */
+async function deletePreviousSheet(previousKey: string, currentKey: string): Promise<void> {
+  if (previousKey === currentKey) return;
+  try {
+    await deleteObject(previousKey);
+  } catch (error) {
+    console.error(`Ancienne planche d'avatar ${previousKey} non supprimée :`, error);
+  }
 }
 
 /**
@@ -179,6 +189,8 @@ export async function ensureAvatar(
   const data = { config: config as Prisma.InputJsonObject, configHash: hash, sheetKey };
   if (current) {
     await client.avatar.update({ where: { userId }, data });
+    // Planche recomposée : l'ancienne n'est plus servie.
+    if (!opts?.tx) await deletePreviousSheet(current.sheetKey, sheetKey);
   } else {
     // Deux premières visites simultanées : la première écriture gagne.
     await client.avatar.createMany({ data: [{ userId, ...data }], skipDuplicates: true });
@@ -219,17 +231,26 @@ export async function listPlaceMembers(): Promise<PlaceMember[]> {
 /**
  * Crée l'avatar aléatoire des membres qui n'en ont pas encore (inscrits avant les avatars, ou pas
  * revenus depuis), quelques-uns à la fois pour ne pas ralentir la requête qui s'en charge.
+ * Les membres sont pris dans un ordre aléatoire et traités indépendamment : un avatar qui échoue
+ * est signalé sans bloquer les autres, ni le lot suivant. Renvoie le nombre d'avatars créés.
  */
 export async function ensureMissingAvatars(input: {
   sprites: SpriteLoader;
   limit?: number;
 }): Promise<number> {
-  const users = await db.user.findMany({
-    where: { avatar: null },
-    select: { id: true },
-    orderBy: { createdAt: "asc" },
-    take: input.limit ?? 5,
+  const users = await db.$queryRaw<{ id: string }[]>`
+    SELECT u."id" FROM "core"."users" u
+    LEFT JOIN "core"."avatars" a ON a."user_id" = u."id"
+    WHERE a."user_id" IS NULL
+    ORDER BY random()
+    LIMIT ${input.limit ?? 5}`;
+  const results = await Promise.allSettled(
+    users.map((user) => ensureAvatar({ userId: user.id, sprites: input.sprites })),
+  );
+  let created = 0;
+  results.forEach((result, i) => {
+    if (result.status === "fulfilled") created++;
+    else console.error(`Avatar du membre ${users[i]?.id} non créé :`, result.reason);
   });
-  for (const user of users) await ensureAvatar({ userId: user.id, sprites: input.sprites });
-  return users.length;
+  return created;
 }

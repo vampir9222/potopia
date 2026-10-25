@@ -6,3 +6,12 @@ export class InvalidImageError extends Error {
     this.name = "InvalidImageError";
   }
 }
+
+/** Trop de demandes d'envoi d'image sur une heure : à traduire en 429. */
+export class UploadRateLimitError extends Error {
+  readonly status = 429;
+  constructor(message = "Trop d'images envoyées en une heure : réessaie un peu plus tard.") {
+    super(message);
+    this.name = "UploadRateLimitError";
+  }
+}

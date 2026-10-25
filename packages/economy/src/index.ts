@@ -1,5 +1,10 @@
 export { adminAdjust } from "./admin";
-export { IdempotencyConflictError, InsufficientFundsError } from "./errors";
+export {
+  BalanceLimitError,
+  IdempotencyConflictError,
+  InsufficientFundsError,
+  MAX_BALANCE,
+} from "./errors";
 export {
   credit,
   debit,

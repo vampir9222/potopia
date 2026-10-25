@@ -5,6 +5,7 @@ import { truncateTestDb } from "@app/db/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   adminAdjust,
+  BalanceLimitError,
   credit,
   debit,
   getBalance,
@@ -12,6 +13,8 @@ import {
   getHistory,
   IdempotencyConflictError,
   InsufficientFundsError,
+  MAX_AMOUNT,
+  MAX_BALANCE,
 } from "../src/index";
 
 const USER = "user-1";
@@ -87,6 +90,20 @@ describe("credit / debit", () => {
     expect(await db.transaction.count()).toBe(1);
     // Le wallet créé pour le débit refusé a été annulé avec la transaction.
     expect(await db.wallet.findUnique({ where: { userId: OTHER } })).toBeNull();
+  });
+
+  it("un crédit qui dépasserait le plafond de solde est refusé et ne laisse aucune trace", async () => {
+    await credit({ userId: USER, amount: MAX_BALANCE, reason: "Gain", idempotencyKey: key() });
+    await expect(
+      credit({ userId: USER, amount: 1, reason: "Gain", idempotencyKey: key() }),
+    ).rejects.toBeInstanceOf(BalanceLimitError);
+    // Plusieurs crédits au plafond par opération : la colonne integer ne déborde jamais.
+    await expect(
+      credit({ userId: USER, amount: MAX_AMOUNT, reason: "Gain", idempotencyKey: key() }),
+    ).rejects.toBeInstanceOf(BalanceLimitError);
+
+    expect(await getBalance(USER)).toBe(MAX_BALANCE);
+    expect(await db.transaction.count()).toBe(1);
   });
 
   it("refuse les montants nuls, négatifs ou non entiers", async () => {
