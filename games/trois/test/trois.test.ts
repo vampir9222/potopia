@@ -224,4 +224,30 @@ describe("classement", () => {
     const { totals } = await periodLeaderboard(ME, "week");
     expect(totals.find((t) => t.me)).toMatchObject({ points: 11, found: 2, words: 3, days: 1 });
   });
+
+  it("ex æquo : même rang, ordre par pseudo (pas « moi » d'abord), le suivant saute un rang", async () => {
+    const THIRD = "user-third";
+    await db.user.create({ data: { id: THIRD, name: THIRD, email: `${THIRD}@example.test` } });
+    // OTHER et ME trouvent le 1er mot du premier coup, THIRD a seulement commencé
+    await playGuess({ userId: OTHER, guess: "faire" });
+    await playGuess({ userId: ME, guess: "faire" });
+    await playGuess({ userId: THIRD, guess: WRONG });
+
+    const { players } = await dayLeaderboard(ME);
+    expect(players.map((p) => [p.id, p.rank])).toEqual([
+      [ME, 1],
+      [OTHER, 1],
+      [THIRD, 3],
+    ]);
+    // vu par un autre joueur, le même ordre
+    const seenByOther = await dayLeaderboard(OTHER);
+    expect(seenByOther.players.map((p) => p.id)).toEqual([ME, OTHER, THIRD]);
+
+    // semaine : 6 points chacun pour ME et OTHER (THIRD n'a aucun mot terminé, donc absent)
+    const { totals } = await periodLeaderboard(ME, "week");
+    expect(totals.map((t) => [t.id, t.rank, t.points])).toEqual([
+      [ME, 1, 6],
+      [OTHER, 1, 6],
+    ]);
+  });
 });
