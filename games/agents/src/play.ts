@@ -5,6 +5,7 @@ import { z } from "zod";
 import words from "../data/words.json";
 import { AgentsError } from "./errors";
 import {
+  AGENTS_TOTAL,
   GRID,
   NAME,
   SUDDEN_TURN,
@@ -25,6 +26,7 @@ import {
   applyClue,
   applyGuess,
   applyStop,
+  canTouchSudden,
   cell,
   checkClue,
   checkCount,
@@ -76,7 +78,7 @@ function seatOf(game: { userA: string; userB: string }, userId: string): Seat {
 }
 
 /** État des cases rejoué à partir des mots touchés. */
-function boardOf(game: GameRow): Board {
+function boardOf(game: Pick<GameRow, "keyA" | "keyB" | "guesses">): Board {
   const board: Board = {
     keys: [game.keyA, game.keyB],
     found: Array<boolean>(GRID).fill(false),
@@ -102,9 +104,19 @@ function turnOf(game: GameRow): Turn {
   };
 }
 
-function roleOf(phase: Phase, status: Status, clueSeat: Seat, seat: Seat): Role {
+/**
+ * Ce que `seat` doit faire. `canTouch` : en mort subite, il lui reste des agents du partenaire à
+ * trouver (sinon il attend que l'autre finisse, voir `canTouchSudden`).
+ */
+function roleOf(
+  phase: Phase,
+  status: Status,
+  clueSeat: Seat,
+  seat: Seat,
+  canTouch: () => boolean,
+): Role {
   if (status !== "playing") return "over";
-  if (phase === "sudden") return "sudden";
+  if (phase === "sudden") return canTouch() ? "sudden" : "wait";
   if (phase === "clue") return clueSeat === seat ? "clue" : "wait";
   return other(clueSeat) === seat ? "guess" : "wait";
 }
@@ -155,7 +167,7 @@ function viewOf(game: GameRow, seat: Seat, users: Map<string, Who>): GameView {
     })),
     status,
     phase,
-    role: roleOf(phase, status, game.clueSeat as Seat, seat),
+    role: roleOf(phase, status, game.clueSeat as Seat, seat, () => canTouchSudden(board, seat)),
     clueSeat: game.clueSeat as Seat,
     turnsLeft: game.turnsLeft,
     turnGuesses: game.turnGuesses,
@@ -177,25 +189,56 @@ export async function listPartners(userId: string): Promise<Who[]> {
     .map((u) => ({ id: u.id, name: u.name, image: u.image }));
 }
 
-/** Mes parties, en cours d'abord (celles où c'est à moi de jouer en tête), puis les dernières finies. */
+/**
+ * Mes parties, en cours d'abord (celles où c'est à moi de jouer en tête), puis les dernières finies.
+ * Interrogée à chaque rafraîchissement du salon : on ne charge ni indices ni coups, seulement le
+ * nombre d'agents trouvés (et, pour les rares parties en mort subite, les cases trouvées, afin de
+ * savoir si c'est encore à moi de toucher).
+ */
 export async function listGames(userId: string): Promise<LobbyGame[]> {
   const games = await db.agentsGame.findMany({
     where: { OR: [{ userA: userId }, { userB: userId }] },
     orderBy: { updatedAt: "desc" },
     take: 40,
-    include,
+    select: {
+      id: true,
+      userA: true,
+      userB: true,
+      keyA: true,
+      keyB: true,
+      status: true,
+      phase: true,
+      clueSeat: true,
+      turnsLeft: true,
+      turnsUsed: true,
+      updatedAt: true,
+      _count: { select: { guesses: { where: { result: "AGENT" } } } },
+    },
   });
+  const suddenIds = games.filter((g) => g.phase === "SUDDEN").map((g) => g.id);
+  const foundInSudden =
+    suddenIds.length === 0
+      ? []
+      : await db.agentsGuess.findMany({
+          where: { gameId: { in: suddenIds }, result: "AGENT" },
+          select: { gameId: true, card: true },
+        });
   const users = await identities(games.flatMap((g) => [g.userA, g.userB]));
   const rows = games.map((g) => {
     const seat = seatOf(g, userId);
-    const role = roleOf(PHASE[g.phase], STATUS[g.status], g.clueSeat as Seat, seat);
+    const canTouch = () => {
+      const found = Array<boolean>(GRID).fill(false);
+      for (const f of foundInSudden) if (f.gameId === g.id) found[f.card] = true;
+      return canTouchSudden({ keys: [g.keyA, g.keyB], found, bystander: [[], []] }, seat);
+    };
+    const role = roleOf(PHASE[g.phase], STATUS[g.status], g.clueSeat as Seat, seat, canTouch);
     return {
       id: g.id,
       partner: who(users, seat === 0 ? g.userB : g.userA),
       status: STATUS[g.status],
       myTurn: role !== "wait" && role !== "over",
       turnsLeft: g.turnsLeft,
-      agentsLeft: agentsLeft(boardOf(g)),
+      agentsLeft: AGENTS_TOTAL - g._count.guesses,
       turnsUsed: g.turnsUsed,
       updatedAt: g.updatedAt.toISOString(),
     };
@@ -212,21 +255,13 @@ export async function getGame(input: { userId: string; gameId: string }): Promis
 
 const createInput = z.object({ userId: z.string().min(1), partnerId: z.string().min(1) });
 
-/**
- * Nouvelle partie avec un membre. Grille et cartes tirées côté serveur. S'il existe déjà une partie
- * en cours entre les deux, on la renvoie au lieu d'en créer une deuxième.
- */
-export async function createGame(
-  input: { userId: string; partnerId: unknown },
-  opts?: { tx?: DbTx; rand?: Rand },
-): Promise<{ id: string; created: boolean }> {
-  const { userId, partnerId } = createInput.parse(input);
-  if (partnerId === userId) throw new AgentsError(400, "Choisis un autre membre que toi");
-  const partner = await getUser(partnerId);
-  if (!partner) throw new AgentsError(404, "Membre introuvable");
-
-  const client = opts?.tx ?? db;
-  const running = await client.agentsGame.findFirst({
+/** Partie en cours entre deux membres, s'il y en a une (une seule possible : index `games_running_pair_key`). */
+async function findRunning(
+  client: DbTx | typeof db,
+  userId: string,
+  partnerId: string,
+): Promise<{ id: string } | null> {
+  return client.agentsGame.findFirst({
     where: {
       status: "PLAYING",
       OR: [
@@ -236,33 +271,63 @@ export async function createGame(
     },
     select: { id: true },
   });
+}
+
+/**
+ * Nouvelle partie avec un membre. Grille et cartes tirées côté serveur. S'il existe déjà une partie
+ * en cours entre les deux, on la renvoie au lieu d'en créer une deuxième ; deux invitations
+ * simultanées sont départagées par l'index unique partiel de la base.
+ */
+export async function createGame(
+  input: { userId: string; partnerId: unknown },
+  opts?: { tx?: DbTx; rand?: Rand },
+): Promise<{ id: string; created: boolean }> {
+  const parsed = createInput.safeParse(input);
+  if (!parsed.success) throw new AgentsError(400, "Choisis un membre à inviter");
+  const { userId, partnerId } = parsed.data;
+  if (partnerId === userId) throw new AgentsError(400, "Choisis un autre membre que toi");
+  const partner = await getUser(partnerId);
+  if (!partner) throw new AgentsError(404, "Membre introuvable");
+
+  const client = opts?.tx ?? db;
+  const running = await findRunning(client, userId, partnerId);
   if (running) return { id: running.id, created: false };
 
   const rand = opts?.rand ?? cryptoRand;
   const [keyA, keyB] = dealKeys(rand);
   const me = await getUser(userId);
-  const id = await withTx(async (tx) => {
-    const game = await tx.agentsGame.create({
-      data: {
-        userA: userId,
-        userB: partnerId,
-        words: drawWords(POOL, rand),
-        keyA,
-        keyB,
-        clueSeat: rand(2),
-      },
-    });
-    await notify(
-      {
-        userId: partnerId,
-        title: `${me?.name ?? "Un membre"} t'invite à une mission ${NAME}`,
-        link: `/agents/${game.id}`,
-      },
-      { tx },
-    );
-    return game.id;
-  }, opts);
-  return { id, created: true };
+  try {
+    const id = await withTx(async (tx) => {
+      const game = await tx.agentsGame.create({
+        data: {
+          userA: userId,
+          userB: partnerId,
+          words: drawWords(POOL, rand),
+          keyA,
+          keyB,
+          clueSeat: rand(2),
+        },
+      });
+      await notify(
+        {
+          userId: partnerId,
+          title: `${me?.name ?? "Un membre"} t'invite à une mission ${NAME}`,
+          link: `/agents/${game.id}`,
+        },
+        { tx },
+      );
+      return game.id;
+    }, opts);
+    return { id, created: true };
+  } catch (error) {
+    // l'autre invitation est passée juste avant : on rejoint sa partie (hors d'une transaction
+    // fournie par l'appelant, que Postgres aurait de toute façon annulée)
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const winner = await findRunning(db, userId, partnerId);
+      if (winner) return { id: winner.id, created: false };
+    }
+    throw error;
+  }
 }
 
 export const moveInput = z.discriminatedUnion("action", [
@@ -281,7 +346,9 @@ export async function playMove(
   input: { userId: string; gameId: string; move: unknown },
   opts?: { tx?: DbTx },
 ): Promise<GameView> {
-  const move = moveInput.parse(input.move);
+  const parsed = moveInput.safeParse(input.move);
+  if (!parsed.success) throw new AgentsError(400, "Requête invalide");
+  const move = parsed.data;
   const game = await loadGame(input.gameId);
   const seat = seatOf(game, input.userId);
   const partnerId = seat === 0 ? game.userB : game.userA;
@@ -325,7 +392,7 @@ export async function playMove(
         const visible = game.words.filter((_, i) => !board.found[i]);
         const word = checkClue(move.word, visible);
         const count = checkCount(move.count);
-        const next = applyClue(turn, seat);
+        const next = applyClue(turn, board, seat);
         await tx.agentsClue.create({
           data: { gameId: game.id, turn: TURNS - turn.turnsLeft + 1, seat, word, count },
         });
@@ -356,9 +423,11 @@ export async function playMove(
       if (r.ended) {
         await update(r.turn, { status: r.ended, turnsUsed: r.turnsUsed });
         await tell(
-          r.ended === "won"
-            ? `${NAME} : mission réussie en ${r.turnsUsed} tours !`
-            : `${NAME} : mission échouée`,
+          r.ended !== "won"
+            ? `${NAME} : mission échouée`
+            : r.turnsUsed > TURNS
+              ? `${NAME} : mission réussie en mort subite !`
+              : `${NAME} : mission réussie en ${r.turnsUsed} tours !`,
         );
         await publishEvent(
           {

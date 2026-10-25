@@ -31,18 +31,21 @@ export function AgentsLobby() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  /** Mes parties ; les membres à inviter seulement au premier chargement (la liste ne bouge pas). */
+  const load = useCallback(async (withPartners = false) => {
     try {
-      const r = await api<{ games: LobbyGame[]; partners: Who[] }>("/api/agents/games");
+      const r = await api<{ games: LobbyGame[]; partners?: Who[] }>(
+        withPartners ? "/api/agents/games?partners=1" : "/api/agents/games",
+      );
       setGames(r.games);
-      setPartners(r.partners);
+      if (r.partners) setPartners(r.partners);
     } catch {
       setGames((g) => g ?? []);
     }
   }, []);
 
   useEffect(() => {
-    load();
+    load(true);
     const t = setInterval(() => document.visibilityState === "visible" && load(), POLL_MS);
     return () => clearInterval(t);
   }, [load]);

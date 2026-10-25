@@ -24,7 +24,7 @@ export function Rules() {
         </li>
         <li>
           Vous avez {TURNS} tours, en alternant. Ensuite, mort subite : plus d'indices, et la
-          moindre erreur fait perdre.
+          moindre erreur fait perdre. Celui qui a déjà tout trouvé laisse l'autre finir.
         </li>
       </ul>
       <p>

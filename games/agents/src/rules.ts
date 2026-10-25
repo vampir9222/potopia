@@ -135,17 +135,28 @@ export function turnsUsed(turn: Turn): number {
   return turn.phase === "sudden" ? TURNS + 1 : TURNS - turn.turnsLeft + 1;
 }
 
-export function applyClue(turn: Turn, seat: Seat): Turn {
+export function applyClue(turn: Turn, board: Board, seat: Seat): Turn {
   if (turn.status !== "playing") throw new AgentsError(409, "La partie est terminée");
   if (turn.phase !== "clue" || turn.clueSeat !== seat) {
     throw new AgentsError(409, "Ce n'est pas à toi de donner l'indice");
   }
+  // garde-fou : `endTurn` ne donne jamais la main à un joueur sans agent à faire trouver
+  if (agentsLeftOf(board, seat) === 0) {
+    throw new AgentsError(409, "Tu n'as plus d'agents à faire trouver");
+  }
   return { ...turn, phase: "guess", turnGuesses: 0 };
+}
+
+/** En mort subite, seul un joueur à qui il reste des agents du partenaire à trouver peut toucher. */
+export function canTouchSudden(board: Board, seat: Seat): boolean {
+  return agentsLeftOf(board, other(seat)) > 0;
 }
 
 /**
  * Un mot touché. Pendant un tour, il est jugé sur la carte de celui qui a donné l'indice ;
  * en mort subite, sur la carte du partenaire de celui qui touche, et tout sauf un agent fait perdre.
+ * Un joueur qui a déjà trouvé tous les agents de son partenaire ne touche plus : il ne lui
+ * resterait que des témoins et des assassins, donc une défaite assurée.
  */
 export function applyGuess(
   turn: Turn,
@@ -159,6 +170,12 @@ export function applyGuess(
   const sudden = turn.phase === "sudden";
   if (!sudden && (turn.phase !== "guess" || other(turn.clueSeat) !== seat)) {
     throw new AgentsError(409, "Ce n'est pas à toi de toucher un mot");
+  }
+  if (sudden && !canTouchSudden(board, seat)) {
+    throw new AgentsError(
+      409,
+      "Tu as déjà trouvé tous les agents de ton partenaire : c'est à lui de toucher",
+    );
   }
   const giver = other(seat);
   if (board.found[card]) throw new AgentsError(409, "Cet agent est déjà trouvé");
