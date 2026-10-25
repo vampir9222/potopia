@@ -30,6 +30,8 @@ const NEBULA =
 /** Épaisseur du cadre : la carte full art a un cadre fin, pour laisser plus de place à l'image. */
 const FRAME = 12;
 const FRAME_FULL = 7;
+/** Badges de coût et de puissance un peu plus petits que ceux du Snap. */
+const BADGE: CSSProperties = { scale: "0.86" };
 
 type Look = {
   /** Fond du cadre et des sertissages. */
@@ -245,31 +247,6 @@ function Footer({ card, finish, color }: { card: CardData; finish: SnapFinish; c
   );
 }
 
-/** Badge serti dans le métal du cadre (rond pour le coût, hexagone pour la puissance). */
-function Setting({
-  look,
-  hex = false,
-  children,
-}: {
-  look: Look;
-  hex?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      style={{
-        padding: 4,
-        background: look.frame,
-        borderRadius: hex ? undefined : "50%",
-        clipPath: hex ? "polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)" : undefined,
-        boxShadow: hex ? undefined : "0 4px 10px rgb(0 0 0 / 0.6)",
-      }}
-    >
-      <div style={{ margin: -4 }}>{children}</div>
-    </div>
-  );
-}
-
 /** Zone de l'illustration : toute la carte en full art, une fenêtre en carte normale. */
 function artBox(design: MixDesign, layout: MixLayout): CSSProperties {
   if (layout === "fullart") return { ...fill, borderRadius: R };
@@ -427,25 +404,6 @@ export function MixCard({
           {look.shine && <div className="tcg-shine" />}
         </Layer>
 
-        {/* Coût en haut à gauche ; puissance en haut à droite, ou en bas à droite pour « serti ». */}
-        <Layer z={56} style={{ left: -4, top: -4 }}>
-          <Setting look={look}>
-            <Cost value={card.cost} />
-          </Setting>
-        </Layer>
-        <Layer
-          z={56}
-          style={
-            design === "serti"
-              ? { right: -2, bottom: -2, transform: "scale(0.85)", transformOrigin: "100% 100%" }
-              : { right: -4, top: -3 }
-          }
-        >
-          <Setting look={look} hex>
-            <Power value={card.power} />
-          </Setting>
-        </Layer>
-
         {design === "verre" && (
           <>
             <Layer z={46} style={{ left: 30, right: 30, top: full ? 196 : 222 }}>
@@ -558,6 +516,26 @@ export function MixCard({
           finish={finish}
           color={design === "plaque" && !full ? "#cdbb93" : "#d8d2c4"}
         />
+        {/*
+          Coût (rond bleu) et puissance (hexagone jaune) : dessinés en dernier, toujours au-dessus
+          du reste, un peu réduits, sans sertissage ni couleur de cadre autour.
+          Puissance en haut à droite, ou en bas à droite pour « serti ».
+        */}
+        <Layer z={80} style={{ left: -2, top: -2, zIndex: 5, ...BADGE, transformOrigin: "0 0" }}>
+          <Cost value={card.cost} />
+        </Layer>
+        <Layer
+          z={80}
+          style={{
+            zIndex: 5,
+            ...BADGE,
+            ...(design === "serti"
+              ? { right: -2, bottom: -2, transformOrigin: "100% 100%" }
+              : { right: -2, top: -2, transformOrigin: "100% 0" }),
+          }}
+        >
+          <Power value={card.power} />
+        </Layer>
       </Shell>
     </Cosmic>
   );
