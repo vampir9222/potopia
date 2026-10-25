@@ -101,12 +101,20 @@ actions aux composants en props.
   - `discordId` est recopié depuis le compte Discord lié (`accounts.account_id`) à chaque création
     de session. Il n'est jamais modifiable par l'utilisateur (`input: false`), sinon un membre
     pourrait se donner l'ID d'un admin via l'API Better Auth.
+  - Pseudo, image et e-mail viennent de Discord et ne se modifient pas depuis le site : les
+    endpoints génériques de Better Auth qui le permettraient (`/update-user`, `/change-email`,
+    `/change-password`, `/link-social`, `/unlink-account`) sont désactivés (`disabledPaths`) et
+    répondent 404, sinon un membre pourrait prendre le pseudo d'un autre dans le fil d'activité
+    ou les classements.
 - **Revérification toutes les 6 h** (champ `guildCheckedAt` sur la session). Un membre qui a quitté
   le serveur voit sa session révoquée ; ses données sont conservées.
-  - Le token Discord est rafraîchi au besoin. Un refresh refusé ou un 401 de Discord vaut révocation
-    (l'utilisateur a retiré l'autorisation).
-  - Une panne ou un rate-limit de Discord ne révoque rien : la session est gardée et la vérification
-    retentée à la requête suivante.
+  - Le token Discord est rafraîchi au besoin. Un 401 de Discord sur la liste des serveurs vaut
+    révocation immédiate (l'utilisateur a retiré l'autorisation).
+  - Une panne ou un rate-limit de Discord ne révoque rien : la session est gardée, la date de la
+    première panne est notée (`guildUnknownSince`) et la vérification n'est retentée qu'après
+    15 min (`GUILD_RETRY_MS`), pas à chaque requête. Better Auth ne distingue pas un refresh de
+    token refusé d'une panne du endpoint token : ce cas est traité comme une panne. Au bout de
+    24 h sans vérification réussie (`GUILD_GRACE_MS`), la session est révoquée malgré tout.
   - `requireMember` renvoie 401 sans session, 403 quand la session vient d'être révoquée.
 - **Pas de bot Discord.** La plateforme ne connaît donc que les membres déjà connectés au moins une
   fois. Un bot pourra être ajouté plus tard si besoin.

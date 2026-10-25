@@ -33,6 +33,9 @@ export class FakeDiscord {
   /** Statut forcé pour /users/@me/guilds (panne Discord, token révoqué…). */
   guildsStatus = 200;
   guildsCalls = 0;
+  /** Statut forcé pour /api/oauth2/token (panne du rafraîchissement de token). */
+  tokenStatus = 200;
+  tokenCalls = 0;
   private readonly realFetch = globalThis.fetch;
 
   install(): void {
@@ -59,6 +62,8 @@ export class FakeDiscord {
 
   private async handle(url: URL, init?: RequestInit): Promise<Response> {
     if (url.pathname === "/api/oauth2/token") {
+      this.tokenCalls++;
+      if (this.tokenStatus !== 200) return Response.json({}, { status: this.tokenStatus });
       const body = new URLSearchParams(String(init?.body ?? ""));
       const code = body.get("code") ?? body.get("refresh_token")?.replace(/^refresh-/, "");
       if (!code || !this.users.has(code))

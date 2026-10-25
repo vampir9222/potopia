@@ -42,6 +42,9 @@ model Session {
   userAgent      String?  @map("user_agent")
   // Dernière vérification de l'appartenance au serveur Discord (revérifiée toutes les 6 h).
   guildCheckedAt DateTime @default(now()) @map("guild_checked_at")
+  // Depuis quand Discord ne répond plus pour cette session (panne, rate-limit) : au-delà d'un
+  // délai de grâce sans vérification réussie, la session est révoquée. Null quand tout va bien.
+  guildUnknownSince DateTime? @map("guild_unknown_since")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
