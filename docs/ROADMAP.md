@@ -391,7 +391,7 @@ section « Vote du design des cartes » de [ARCHITECTURE.md](ARCHITECTURE.md).
 - `games/tcg` : schéma Postgres `tcg` (`design_votes`), `rateDesign` (tout membre),
   `listDesignVotes`, propositions dans `src/designs.ts` (numéro = place dans la liste),
   `commentTags` (« à supprimer », « variant », négations ignorées).
-- UI : aperçus de cartes (`ui/DesignPreview.tsx`, vagues `cards`, `premium`, `snap`, `v2`, `v3`),
+- UI : aperçus de cartes (`ui/DesignPreview.tsx`, vagues `cards`, `premium`, `snap`, `v2`, `v3`, `v4`),
   notation par étoiles et commentaire (`DesignRating`), zoom sur une carte, inclinaison au pointeur.
 - Web : page `/cartes` (onglets Design, Effets de rareté et Variantes masqués pour l'instant,
   Archives), tuile « Vote design des cartes », `/api/cartes/exemple` (image de l'idée exemple),

@@ -306,12 +306,18 @@ rafraîchit le routeur client sans recharger la page.
 
 **Vote du design des cartes** (`/cartes`, module `games/tcg`).
 
-- Les propositions sont dans `games/tcg/src/designs.ts` (`DESIGNS`, 55 aujourd'hui). Leur numéro
+- Les propositions sont dans `games/tcg/src/designs.ts` (`DESIGNS`, 67 aujourd'hui). Leur numéro
   affiché est leur place dans la liste : on n'ajoute qu'à la fin et on ne renomme jamais un id
   (il est stocké avec chaque note).
 - Onglets (`TABS` dans la page) : **Design** (les propositions en cours, `DESIGN_TAB`, montrées
-  sans effet de rareté, en carte normale et en full art, plus les deux points de départ 39 et 44,
-  `REFERENCES`), **Effets de rareté** (`EFFECTS_TAB`) et **Variantes**, tous deux masqués pour
+  sans effet de rareté, plus les trois points de départ 39, 44 et 48, `REFERENCES`). Vague en
+  cours (56 à 67, `ui/v4.tsx`) : titre en haut, et une grille fixe (titre, mana, puissance, ligne
+  de type, texte) identique en carte normale et en full art ; en full art les encadrés sont
+  translucides et floutés. Chaque ligne montre quatre versions : normale puis full art, puissance
+  en bas à droite puis en haut à droite. Les 12 styles (`TOP_STYLES`) varient la fenêtre
+  d'illustration (creusée, fondue, gravée, au niveau de la bordure, d'un bord à l'autre, arche,
+  coins coupés, cadre fin), les encadrés (nuit, givre, parchemin, ardoise) et le titre (barre,
+  plaque gravée, bandeau), **Effets de rareté** (`EFFECTS_TAB`) et **Variantes**, tous deux masqués pour
   l'instant (`hidden: true`), et **Archives**. Tant qu'un onglet est masqué, ses designs restent
   visibles et notables dans les Archives, dans une carte à part ; repasser `hidden` à false les
   renvoie dans leur onglet.

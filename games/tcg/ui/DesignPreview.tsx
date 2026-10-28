@@ -33,6 +33,7 @@ import {
   TaverneArch,
 } from "./v2";
 import { Captioned, type EffectSet, MixCard, type MixDesign } from "./v3";
+import { TOP_STYLES, TOP_VARIANTS, TopCard } from "./v4";
 
 const MIX: Partial<Record<DesignId, MixDesign>> = {
   "mix-verre": "verre",
@@ -123,6 +124,23 @@ export function DesignPreview({ designId, cards, zoom = 1 }: Props) {
 /** La planche elle-même ; `zoom` est transmis aux cartes pour que l'agrandissement le compense. */
 function Sheet({ designId, cards, zoom }: Required<Props>) {
   const pictured = withImage(cards).length > 0 ? withImage(cards) : cards;
+  // Quatrième vague : titre en haut, quatre versions par ligne (puissance en bas puis en haut,
+  // carte normale et full art), sans effet de rareté.
+  if (designId in TOP_STYLES) {
+    const style = TOP_STYLES[designId as keyof typeof TOP_STYLES];
+    const card = pick(pictured, 0);
+    return (
+      <Board zoom={zoom} wrap background={STAGE}>
+        <PremiumDefs />
+        <SnapDefs />
+        {TOP_VARIANTS.map((v) => (
+          <Captioned key={v.label} label={v.label}>
+            <TopCard card={card} style={style} layout={v.layout} power={v.power} />
+          </Captioned>
+        ))}
+      </Board>
+    );
+  }
   switch (designId) {
     case "pixel":
       return (

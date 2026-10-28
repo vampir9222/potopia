@@ -80,7 +80,7 @@ describe("DESIGNS", () => {
   });
 
   it("garde les numéros affichés : 39 et 44 sont les deux références", () => {
-    expect(REFERENCES.map(designNumber)).toEqual([39, 44]);
+    expect(REFERENCES.map(designNumber)).toEqual([39, 44, 48]);
     expect([...DESIGN_TAB, ...EFFECTS_TAB].every((id) => designNumber(id) > 47)).toBe(true);
   });
 });
