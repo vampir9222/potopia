@@ -483,6 +483,34 @@
 .tcg-sway {
   animation: tcg-sway 3.4s ease-in-out infinite;
 }
+/* SSR de la première vague (n°17) : l'image est découpée en éclats qui s'écartent en 3D au survol. */
+.tcg-shard {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(0, 0, var(--z, 0px));
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tcg-tilt[data-active] .tcg-shard {
+  transform: translate3d(var(--dx, 0px), var(--dy, 0px), calc(var(--z, 0px) + 32px));
+}
+.tcg-crack {
+  transition: opacity 0.4s;
+  opacity: 0.55;
+}
+.tcg-tilt[data-active] .tcg-crack {
+  opacity: 1;
+}
+
+/* Lent zoom de l'illustration (SSR de la première vague). */
+.tcg-drift {
+  animation: tcg-drift 14s ease-in-out infinite alternate;
+}
+@keyframes tcg-drift {
+  to {
+    transform: scale(1.12) translate(-2%, -2%);
+  }
+}
+
 @keyframes tcg-sway {
   0%,
   100% {
@@ -509,7 +537,12 @@
   .tcg-stars,
   .tcg-flicker,
   .tcg-sway,
+  .tcg-drift,
   .tcg-shine::before {
     animation: none;
+  }
+  .tcg-shard,
+  .tcg-tilt[data-active] .tcg-shard {
+    transform: none;
   }
 }

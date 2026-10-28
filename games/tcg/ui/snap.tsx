@@ -349,9 +349,174 @@ function LenticularArt({ card, style }: { card: CardData; style: SnapStyle }) {
   );
 }
 
+/** SR de la première vague (n°17) : fenêtre intérieure d'où le haut du sujet déborde. */
+const WIN = { top: 70, side: 16, bottom: 16, over: 24, below: 26 };
+
+/**
+ * SR de la première vague (n°17), gardée telle qu'elle a été notée : l'image est cadrée dans une
+ * fenêtre intérieure, puis le haut de la même image, aligné au pixel près, est redessiné devant le
+ * bord supérieur de la fenêtre et au-delà du haut de la carte, avec un fondu sur les côtés.
+ */
+function WindowedBreakoutArt({ card, style }: { card: CardData; style: SnapStyle }) {
+  const box: CSSProperties = {
+    position: "absolute",
+    left: WIN.side,
+    right: WIN.side,
+    top: -WIN.over,
+    bottom: WIN.bottom,
+  };
+  const reach = WIN.top + WIN.over + WIN.below;
+  return (
+    <>
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: R,
+          background: "linear-gradient(160deg, #3a3050 0%, #1a1530 55%, #0c0a18 100%)",
+        }}
+      />
+      <div className="tcg-grain" style={{ borderRadius: R, opacity: 0.3 }} />
+      <div
+        style={{
+          position: "absolute",
+          left: WIN.side,
+          right: WIN.side,
+          top: WIN.top,
+          bottom: WIN.bottom,
+          overflow: "hidden",
+          borderRadius: 10,
+        }}
+      >
+        <div
+          style={{ position: "absolute", left: 0, right: 0, top: -(WIN.top + WIN.over), bottom: 0 }}
+        >
+          <StyledArt card={card} style={style} />
+        </div>
+      </div>
+      <div
+        aria-hidden
+        className="tcg-layer"
+        style={
+          {
+            ...box,
+            "--z": "30px",
+            pointerEvents: "none",
+            WebkitMaskImage:
+              "radial-gradient(ellipse 58% 44% at 50% 28%, #000 52%, transparent 100%)",
+            maskImage: "radial-gradient(ellipse 58% 44% at 50% 28%, #000 52%, transparent 100%)",
+            filter: "drop-shadow(0 6px 8px rgb(0 0 0 / 0.55))",
+          } as CSSProperties
+        }
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            clipPath: `inset(0 0 calc(100% - ${reach}px) 0)`,
+          }}
+        >
+          <StyledArt card={card} style={style} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Éclats de la SSR de la première vague : la même image découpée, chaque morceau à sa profondeur. */
+const SHARDS = [
+  { clip: "polygon(0 0, 58% 0, 40% 38%, 0 52%)", dx: -9, dy: -7, z: 6 },
+  { clip: "polygon(58% 0, 100% 0, 100% 44%, 40% 38%)", dx: 9, dy: -8, z: 14 },
+  { clip: "polygon(0 52%, 40% 38%, 62% 66%, 0 100%)", dx: -10, dy: 6, z: 2 },
+  { clip: "polygon(40% 38%, 100% 44%, 100% 100%, 62% 66%)", dx: 10, dy: 5, z: 10 },
+  { clip: "polygon(0 100%, 62% 66%, 100% 100%)", dx: 0, dy: 11, z: 4 },
+];
+
+/** SSR de la première vague (n°17) : l'image vole en éclats au survol (classes `tcg-shard`). */
+function ShatteredArt({ card, style }: { card: CardData; style: SnapStyle }) {
+  return (
+    <>
+      {SHARDS.map((s, i) => (
+        <div
+          key={i}
+          className="tcg-shard"
+          style={
+            {
+              clipPath: s.clip,
+              "--dx": `${s.dx}px`,
+              "--dy": `${s.dy}px`,
+              "--z": `${s.z}px`,
+            } as CSSProperties
+          }
+        >
+          <div style={{ position: "absolute", inset: 0, borderRadius: R, overflow: "hidden" }}>
+            <div className="tcg-drift" style={{ position: "absolute", inset: 0 }}>
+              <StyledArt card={card} style={style} />
+            </div>
+          </div>
+        </div>
+      ))}
+      <svg
+        className="tcg-crack"
+        width={W}
+        height={H}
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+        aria-hidden
+      >
+        <g
+          stroke="#fff"
+          strokeWidth="0.7"
+          fill="none"
+          vectorEffect="non-scaling-stroke"
+          style={{ filter: "drop-shadow(0 0 3px #b8ecff)" }}
+        >
+          <polyline points="58,0 40,38 0,52" vectorEffect="non-scaling-stroke" />
+          <polyline points="40,38 100,44" vectorEffect="non-scaling-stroke" />
+          <polyline points="40,38 62,66 0,100" vectorEffect="non-scaling-stroke" />
+          <polyline points="62,66 100,100" vectorEffect="non-scaling-stroke" />
+        </g>
+      </svg>
+    </>
+  );
+}
+
 /** Cadre selon le style et la finition. */
-function Frame({ style, finish, card }: { style: SnapStyle; finish: SnapFinish; card: CardData }) {
+function Frame({
+  style,
+  finish,
+  card,
+  firstWave,
+}: {
+  style: SnapStyle;
+  finish: SnapFinish;
+  card: CardData;
+  firstWave: boolean;
+}) {
   const f = faction(card.tag);
+  if (finish === "sr" && firstWave) {
+    return (
+      <>
+        <Ring background={PEARL} width={7} />
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            left: WIN.side,
+            right: WIN.side,
+            top: WIN.top,
+            bottom: WIN.bottom,
+            borderRadius: 10,
+            boxShadow:
+              "0 0 0 3px #fff4fb, 0 0 0 5px rgb(0 0 0 / 0.55), 0 0 18px rgb(255 200 235 / 0.6), inset 0 0 14px rgb(0 0 0 / 0.5)",
+            pointerEvents: "none",
+          }}
+        />
+      </>
+    );
+  }
   if (finish === "ssr" || style === "prism") {
     return (
       <>
@@ -517,12 +682,19 @@ export function SnapCard({
   style = "classic",
   finish = finishOf(card),
   edition = false,
+  firstWave = false,
 }: {
   card: CardData;
   style?: SnapStyle;
   finish?: SnapFinish;
   /** Bandeau du bas : numéro dans la série, symbole de rareté, auteur de l'idée. */
   edition?: boolean;
+  /**
+   * SR et SSR de la première vague, gardées telles qu'elles ont été notées (n°17) : SR dans une
+   * fenêtre intérieure, SSR qui vole en éclats au survol. Sinon : SR qui sort de la carte, SSR
+   * lenticulaire.
+   */
+  firstWave?: boolean;
 }) {
   const name = nameStyle(style, finish, card.title.length);
   const accent = FINISH_ACCENT[finish];
@@ -545,9 +717,17 @@ export function SnapCard({
       >
         {/* Illustration (ou éclats pour la SSR), rognée aux coins de la carte. */}
         {finish === "ssr" ? (
-          <LenticularArt card={card} style={style} />
+          firstWave ? (
+            <ShatteredArt card={card} style={style} />
+          ) : (
+            <LenticularArt card={card} style={style} />
+          )
         ) : finish === "sr" ? (
-          <BreakoutArt card={card} style={style} />
+          firstWave ? (
+            <WindowedBreakoutArt card={card} style={style} />
+          ) : (
+            <BreakoutArt card={card} style={style} />
+          )
         ) : (
           <div
             style={{
@@ -574,12 +754,12 @@ export function SnapCard({
           }}
         />
         {(finish === "rare" || finish === "sr" || finish === "ssr") && <div className="tcg-holo" />}
-        {finish === "sr" && <div className="tcg-etched" />}
+        {finish === "sr" && !firstWave && <div className="tcg-etched" />}
         <div
           className="tcg-layer"
           style={
             {
-              "--z": "10px",
+              "--z": firstWave && finish === "ssr" ? "20px" : "10px",
               position: "absolute",
               inset: 0,
               borderRadius: radius,
@@ -587,7 +767,7 @@ export function SnapCard({
             } as CSSProperties
           }
         >
-          <Frame style={style} finish={finish} card={card} />
+          <Frame style={style} finish={finish} card={card} firstWave={firstWave} />
           {(finish === "legendary" || finish === "ssr") && <div className="tcg-shine" />}
         </div>
         <div
