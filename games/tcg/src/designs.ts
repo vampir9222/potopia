@@ -294,14 +294,102 @@ export const DESIGNS = [
     summary:
       "D'après le 42 (« plutôt pour une rareté ») : métaux jusqu'à la rare, puis une aurore et des étoiles vivantes autour de la carte pour la légendaire, la SR et la SSR. L'image reste intacte ; la lumière déborde du cadre et entre un peu dedans.",
   },
+  {
+    id: "haut-creuse",
+    title: "Titre en haut · fenêtre creusée",
+    summary:
+      "La base du 48, titre en haut ; l'image est enfoncée dans la carte (ombre intérieure), sans cadre autour. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-fondu",
+    title: "Titre en haut · image fondue",
+    summary:
+      "Pas de bord à la fenêtre : le bas de l'image se fond dans le panneau sombre de la carte. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-grave",
+    title: "Titre en haut · fenêtre gravée",
+    summary:
+      "La fenêtre est taillée dans la carte : biseau inversé, ombre en haut à gauche, lumière en bas à droite. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-continu",
+    title: "Titre en haut · cadre au niveau de la bordure",
+    summary:
+      "Un fin cadre du même métal que la bordure, au même niveau qu'elle, plutôt qu'un cadre posé dessus. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-large",
+    title: "Titre en haut · image d'un bord à l'autre",
+    summary:
+      "L'image va d'un bord à l'autre du cadre, sans marge ni cadre, enfoncée entre le titre et la ligne de type. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-arche",
+    title: "Titre en haut · fenêtre en arche",
+    summary:
+      "Le haut de la fenêtre forme une arche, enfoncée dans la carte. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-coins",
+    title: "Titre en haut · coins coupés",
+    summary:
+      "Fenêtre à coins coupés, enfoncée dans la carte. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-givre",
+    title: "Titre en haut · verre givré",
+    summary:
+      "Encadrés en verre givré clair ; en full art, verre dépoli qui laisse deviner l'image. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-parchemin",
+    title: "Titre en haut · parchemin",
+    summary:
+      "Titre, type et texte sur parchemin ivoire, encre sombre ; en full art, parchemin translucide. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-plaque",
+    title: "Titre en haut · plaque gravée",
+    summary:
+      "Le titre dans la plaque de métal gravée du 44, au centre entre le mana et la puissance. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-bandeau",
+    title: "Titre en haut · bandeau",
+    summary:
+      "Le titre dans un bandeau qui occupe tout le haut de la carte, sous le mana et la puissance. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
+  {
+    id: "haut-fin",
+    title: "Titre en haut · cadre fin",
+    summary:
+      "Bordure fine (7 px), fenêtre arrondie avec une simple ombre légère : le plus épuré. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
+  },
 ] as const;
 
 export type DesignId = (typeof DESIGNS)[number]["id"];
 
 export const DESIGN_IDS = DESIGNS.map((d) => d.id) as [DesignId, ...DesignId[]];
 
-/** Onglet « Design » : les propositions en cours (mélange de 39 et 44), cartes normales et full art. */
-export const DESIGN_TAB: readonly DesignId[] = ["mix-verre", "mix-serti", "mix-plaque"];
+/**
+ * Onglet « Design » : les propositions en cours (quatrième vague, titre en haut, `ui/v4.tsx`),
+ * chacune en carte normale et full art, puissance en bas et en haut.
+ */
+export const DESIGN_TAB: readonly DesignId[] = [
+  "haut-creuse",
+  "haut-fondu",
+  "haut-grave",
+  "haut-continu",
+  "haut-large",
+  "haut-arche",
+  "haut-coins",
+  "haut-givre",
+  "haut-parchemin",
+  "haut-plaque",
+  "haut-bandeau",
+  "haut-fin",
+];
 
 /** Onglet « Effets de rareté » : ce que chaque rareté ajoute, posé sur le design « Mix · Sculpté et verre fumé ». */
 export const EFFECTS_TAB: readonly DesignId[] = [
@@ -311,8 +399,11 @@ export const EFFECTS_TAB: readonly DesignId[] = [
   "effets-cosmique",
 ];
 
-/** Designs retenus comme point de départ du mélange (39 et 44), toujours visibles dans l'onglet Design. */
-export const REFERENCES: readonly DesignId[] = ["arcanes-v2", "raretes-v3"];
+/**
+ * Points de départ des propositions en cours, toujours visibles dans l'onglet Design : 39 et 44
+ * (les deux préférés), puis 48 (préféré pour la carte normale).
+ */
+export const REFERENCES: readonly DesignId[] = ["arcanes-v2", "raretes-v3", "mix-verre"];
 
 /** Numéro affiché d'un design (sa place dans la liste, à partir de 1) : stable, on n'insère qu'à la fin. */
 export function designNumber(id: DesignId): number {
