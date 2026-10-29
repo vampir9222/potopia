@@ -506,7 +506,7 @@ function Sheet({ designId, cards, zoom }: Required<Props>) {
         >
           <SnapDefs />
           {LADDER.map((finish) => (
-            <SnapVariant key={finish} card={card} finish={finish} />
+            <SnapVariant key={finish} card={card} finish={finish} firstWave />
           ))}
         </Board>
       );

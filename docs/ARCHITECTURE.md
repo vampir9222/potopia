@@ -306,12 +306,17 @@ rafraîchit le routeur client sans recharger la page.
 
 **Vote du design des cartes** (`/cartes`, module `games/tcg`).
 
-- Les propositions sont dans `games/tcg/src/designs.ts` (`DESIGNS`, 67 aujourd'hui). Leur numéro
+- Les propositions sont dans `games/tcg/src/designs.ts` (`DESIGNS`, 66 aujourd'hui). Leur numéro
   affiché est leur place dans la liste : on n'ajoute qu'à la fin et on ne renomme jamais un id
   (il est stocké avec chaque note).
+- Une proposition garde le rendu sur lequel on l'a notée et commentée : une nouvelle vague ne
+  modifie jamais un composant partagé en place, elle ajoute une option. Exemple : `SnapCard` a
+  `firstWave` pour la n°17 (SR dans une fenêtre, SSR qui vole en éclats au survol, classes
+  `tcg-shard`, `tcg-crack`, `tcg-drift`), les vagues suivantes ont la SR qui sort de la carte et la
+  SSR lenticulaire.
 - Onglets (`TABS` dans la page) : **Design** (les propositions en cours, `DESIGN_TAB`, montrées
   sans effet de rareté, plus les trois points de départ 39, 44 et 48, `REFERENCES`). Vague en
-  cours (56 à 67, `ui/v4.tsx`) : titre en haut, et une grille fixe (titre, mana, puissance, ligne
+  cours (55 à 66, `ui/v4.tsx`) : titre en haut, et une grille fixe (titre, mana, puissance, ligne
   de type, texte) identique en carte normale et en full art ; en full art les encadrés sont
   translucides et floutés. Chaque ligne montre quatre versions : normale puis full art, puissance
   en bas à droite puis en haut à droite. Les 12 styles (`TOP_STYLES`) varient la fenêtre
