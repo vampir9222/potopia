@@ -22,6 +22,8 @@ export type PlaceMemberView = {
   name: string;
   /** URL de la planche courante (change avec l'empreinte de l'avatar). */
   sheetUrl: string;
+  /** Phrase choisie par le membre, dite par son personnage (null : aucune). */
+  phrase: string | null;
   lastSeenAt: string;
 };
 
@@ -38,9 +40,21 @@ type Props = {
 };
 
 type Confetti = { x: number; y: number; vx: number; vy: number; color: string; until: number };
-type Entry = { member: PlaceMemberView; walker: Walker; sheet: ImageBitmap | null };
+type Entry = {
+  member: PlaceMemberView;
+  walker: Walker;
+  sheet: ImageBitmap | null;
+  /** Prochain moment où le personnage dit sa phrase (horloge de la scène). */
+  nextPhraseAt: number;
+};
 
 const CONFETTI_COLORS = ["#f4d35e", "#ee6c9a", "#5fb3e0", "#7fca86", "#9b7bf0"];
+
+/** Durée d'affichage de la phrase d'un membre (ms). */
+const PHRASE_MS = 5000;
+/** Intervalle entre deux phrases spontanées d'un même personnage (ms) : 30 s à 75 s. */
+const PHRASE_EVERY_MS = 30_000;
+const PHRASE_JITTER_MS = 45_000;
 
 /**
  * La place : les avatars des membres se promènent sous la grille des apps. Scène décorative
@@ -95,6 +109,11 @@ export function Place({
     const isAsleep = (m: PlaceMemberView) =>
       Date.now() - new Date(m.lastSeenAt).getTime() > INACTIVE_AFTER_MS;
 
+    const sayPhrase = (entry: Entry, phrase: string) => {
+      say(entry.walker, phrase, clock, PHRASE_MS);
+      entry.nextPhraseAt = clock + PHRASE_EVERY_MS + rng() * PHRASE_JITTER_MS;
+    };
+
     const setMembers = (members: PlaceMemberView[]) => {
       const ids = new Set(members.map((m) => m.id));
       for (const id of entries.keys()) if (!ids.has(id)) entries.delete(id);
@@ -102,6 +121,10 @@ export function Place({
         const entry = entries.get(member.id);
         if (entry) {
           entry.walker.asleep = isAsleep(member);
+          // Nouvelle phrase : dite tout de suite.
+          if (member.phrase && member.phrase !== entry.member.phrase) {
+            sayPhrase(entry, member.phrase);
+          }
           if (entry.member.sheetUrl === member.sheetUrl) {
             entry.member = member;
             continue;
@@ -112,6 +135,8 @@ export function Place({
           member,
           walker: createWalker(member.id, scene.world, rng, isAsleep(member)),
           sheet: null,
+          // Première phrase dans les 25 s : on la voit sans attendre.
+          nextPhraseAt: clock + 3000 + rng() * 22_000,
         };
         entries.set(member.id, target);
         // Avatar modifié : nouvelle planche, sans recharger la page.
@@ -257,6 +282,13 @@ export function Place({
         rng,
         reduced,
       );
+      // Phrases spontanées, sauf pour les endormis (« zzz ») ; une bulle en cours n'est pas coupée.
+      for (const entry of entries.values()) {
+        const { walker, member } = entry;
+        if (!member.phrase || walker.asleep || clock < entry.nextPhraseAt) continue;
+        if (walker.bubble) entry.nextPhraseAt = walker.bubble.until + 1000;
+        else sayPhrase(entry, member.phrase);
+      }
       confetti = confetti.filter((c) => c.until > clock);
       for (const c of confetti) {
         c.vy += 300 * (dt / 1000);
@@ -287,12 +319,16 @@ export function Place({
       const entry = walkerAt(e.clientX, e.clientY);
       if (!entry) return;
       if (!reduced) act(entry.walker, "jump", clock);
-      say(
-        entry.walker,
-        CLICK_LINES[Math.floor(rng() * CLICK_LINES.length)] ?? "Salut !",
-        clock,
-        1800,
-      );
+      // Sa phrase s'il en a une, sinon une réplique au hasard.
+      if (entry.member.phrase) sayPhrase(entry, entry.member.phrase);
+      else {
+        say(
+          entry.walker,
+          CLICK_LINES[Math.floor(rng() * CLICK_LINES.length)] ?? "Salut !",
+          clock,
+          1800,
+        );
+      }
     };
 
     const poll = async () => {

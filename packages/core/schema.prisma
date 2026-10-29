@@ -133,6 +133,8 @@ model Avatar {
   configHash String   @map("config_hash")
   // Clé R2 de la planche : avatars/<userId>-<hash>.png. Jamais une URL.
   sheetKey   String   @map("sheet_key")
+  // Phrase du membre, dite par son personnage sur la place (AVATAR_PHRASE_MAX caractères au plus).
+  phrase     String?
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id])

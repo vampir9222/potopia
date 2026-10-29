@@ -24,3 +24,12 @@ export class AvatarConfigError extends Error {
     this.name = "AvatarConfigError";
   }
 }
+
+/** Phrase d'avatar refusée (trop longue, pas d'avatar) : à traduire en 400. */
+export class AvatarPhraseError extends Error {
+  readonly status = 400;
+  constructor(message: string) {
+    super(message);
+    this.name = "AvatarPhraseError";
+  }
+}

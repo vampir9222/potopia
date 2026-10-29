@@ -383,7 +383,7 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 **Données** (module core) :
 
 - `Avatar` : userId (PK), config (Json), configHash, sheetKey (`avatars/<userId>-<hash>.png`),
-  updatedAt.
+  phrase (facultative), updatedAt.
 - `UserAvatarItem` : userId, itemId, acquiredAt. Vide pour l'instant : tous les éléments sont
   `unlock: "free"`, la validation exige déjà la possession des autres.
 
@@ -399,6 +399,10 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 - Enregistrement (server action) : validation zod puis catalogue (`checkConfig`), composition,
   envoi dans R2 (`putObject`, `Cache-Control: immutable`), upsert, événement `avatar/updated`, puis
   suppression de l'ancienne planche. Même config : rien ne se passe.
+- Phrase (`/avatar`, carte « Ma phrase », server action séparée) : `setAvatarPhrase` la ramène sur
+  une ligne (retours à la ligne et caractères de contrôle → espaces, espaces réduits), refuse plus
+  de `AVATAR_PHRASE_MAX` (60) caractères ; vide = pas de phrase. Pas d'événement d'activité : elle
+  n'apparaît que sur la place. Changer d'avatar la garde.
 - Lecture : `GET /api/avatars/[userId]/[hash]` (requireMember) vérifie que l'empreinte est la
   courante puis redirige (302) vers une URL GET présignée de 15 min. La redirection est gardée
   10 min (`private, max-age=600`), moins longtemps que la validité de l'URL ; une nouvelle planche a
@@ -415,9 +419,12 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 - Errance : marcher vers un point (horizontale puis verticale, donc 4 directions), pause, repartir.
   Tri d'affichage par position verticale, décor compris.
 - Membres inactifs depuis plus de 3 jours (dernier événement ou dernière session) : assis, « zzz ».
-- Survol : pseudo. Clic : saut et petite bulle.
-- `GET /api/place?since=` (requireMember) renvoie les membres (URL de leur planche, dernière
-  activité) et les événements depuis `since` (10 min au plus). Le client l'appelle toutes les 30 s :
+- Survol : pseudo. Clic : saut et bulle (sa phrase s'il en a une, sinon une réplique au hasard).
+- Phrase du membre : son personnage la dit 5 s, une première fois dans les 25 s après l'affichage,
+  puis toutes les 30 à 75 s (pas quand il dort, sans couper une autre bulle), et tout de suite
+  quand elle change. Bulle trop large pour la scène : tronquée par « … ».
+- `GET /api/place?since=` (requireMember) renvoie les membres (URL de leur planche, phrase,
+  dernière activité) et les événements depuis `since` (10 min au plus). Le client l'appelle toutes les 30 s :
   un avatar modifié change de planche sans recharger la page, et chaque événement déclenche une
   réaction (`REACTIONS` : `avatar/updated` → émotion, 3 sur 3 à TROIS → confettis…).
   - `listEventsSince` reprend 10 s avant `since` (`EVENT_COMMIT_GRACE_MS`) : un événement validé
