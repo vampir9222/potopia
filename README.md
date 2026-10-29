@@ -2,7 +2,7 @@
 
 Un portail web réservé aux membres d'un serveur Discord : connexion avec Discord, monnaie interne
 (« Ma monnaie »), fil d'activité, notifications, avatars pixel art qui se promènent sur une place
-commune, boîte à idées, vote du design des futures cartes, et deux jeux : **TROIS** (un Wordle
+commune (et y disent la phrase choisie par leur membre), boîte à idées, vote du design des futures cartes, et deux jeux : **TROIS** (un Wordle
 français à 3 mots par jour) et **Agents Doubles** (jeu d'espions coopératif à deux). Le nom affiché
 et celui de la monnaie viennent de `packages/config/brand.ts`.
 

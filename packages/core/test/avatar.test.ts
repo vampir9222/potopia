@@ -8,13 +8,16 @@ import { truncateTestDb } from "@app/db/testing";
 import { headObject, putObject } from "@app/storage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  AVATAR_PHRASE_MAX,
   AvatarConfigError,
+  AvatarPhraseError,
   ensureAvatar,
   ensureMissingAvatars,
   getAvatar,
   listEventsSince,
   listPlaceMembers,
   saveAvatar,
+  setAvatarPhrase,
   validateAvatarConfig,
 } from "../src/index";
 
@@ -187,6 +190,49 @@ describe("la place", () => {
     const members = await listPlaceMembers();
     expect(members.map((m) => m.name)).toEqual(["Alice", "Bob"]);
     expect(members[1]?.lastSeenAt.toISOString()).toBe("2026-02-01T00:00:00.000Z");
+    expect(members.map((m) => m.phrase)).toEqual([null, null]);
+  });
+});
+
+describe("phrase", () => {
+  it("enregistre la phrase sur une ligne, la renvoie à la place, sans événement", async () => {
+    const userId = await createUser("u1");
+    await ensureAvatar({ userId, sprites });
+    await expect(setAvatarPhrase({ userId, phrase: "  Salut\n\tla   place ! " })).resolves.toBe(
+      "Salut la place !",
+    );
+    expect((await getAvatar(userId))?.phrase).toBe("Salut la place !");
+    expect((await listPlaceMembers())[0]?.phrase).toBe("Salut la place !");
+    expect(await db.activityEvent.count()).toBe(0);
+  });
+
+  it("vide ou null : retire la phrase", async () => {
+    const userId = await createUser("u1");
+    await ensureAvatar({ userId, sprites });
+    await setAvatarPhrase({ userId, phrase: "Coucou" });
+    await expect(setAvatarPhrase({ userId, phrase: "   " })).resolves.toBeNull();
+    await setAvatarPhrase({ userId, phrase: "Coucou" });
+    await expect(setAvatarPhrase({ userId, phrase: null })).resolves.toBeNull();
+    expect((await getAvatar(userId))?.phrase).toBeNull();
+  });
+
+  it("refuse une phrase trop longue, une forme invalide ou un membre sans avatar", async () => {
+    const userId = await createUser("u1");
+    await expect(setAvatarPhrase({ userId, phrase: "Coucou" })).rejects.toThrow(AvatarPhraseError);
+    await ensureAvatar({ userId, sprites });
+    await expect(
+      setAvatarPhrase({ userId, phrase: "a".repeat(AVATAR_PHRASE_MAX + 1) }),
+    ).rejects.toThrow(AvatarPhraseError);
+    await expect(setAvatarPhrase({ userId, phrase: 42 })).rejects.toThrow(AvatarPhraseError);
+    expect((await getAvatar(userId))?.phrase).toBeNull();
+  });
+
+  it("changer d'avatar garde la phrase", async () => {
+    const userId = await createUser("u1");
+    await ensureAvatar({ userId, sprites });
+    await setAvatarPhrase({ userId, phrase: "Toujours là" });
+    await saveAvatar({ userId, config: validConfig(), sprites });
+    expect((await getAvatar(userId))?.phrase).toBe("Toujours là");
   });
 });
 

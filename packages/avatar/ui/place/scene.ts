@@ -159,7 +159,7 @@ export function drawProp(ctx: Ctx, prop: Prop, now: number, reduced: boolean): v
   ctx.fillRect(x + 4 + t, y - 44, 2, 2);
 }
 
-/** Bulle de texte (pseudo au survol, réaction, « zzz »). */
+/** Bulle de texte (pseudo au survol, réaction, phrase du membre). Trop large : tronquée par « … ». */
 export function drawBubble(
   ctx: Ctx,
   text: string,
@@ -168,11 +168,18 @@ export function drawBubble(
   tone: "light" | "dark" = "light",
 ) {
   ctx.font = "bold 11px ui-sans-serif, system-ui, sans-serif";
+  const width = ctx.canvas.width / (ctx.getTransform().a || 1);
+  const maxText = width - 14;
+  if (ctx.measureText(text).width > maxText) {
+    const chars = [...text];
+    while (chars.length > 1 && ctx.measureText(`${chars.join("").trimEnd()}…`).width > maxText) {
+      chars.pop();
+    }
+    text = `${chars.join("").trimEnd()}…`;
+  }
   const w = Math.ceil(ctx.measureText(text).width) + 10;
   const h = 17;
-  const left = Math.round(
-    Math.min(Math.max(x - w / 2, 2), ctx.canvas.width / (ctx.getTransform().a || 1) - w - 2),
-  );
+  const left = Math.round(Math.min(Math.max(x - w / 2, 2), width - w - 2));
   const top = Math.round(y - h);
   ctx.fillStyle = tone === "light" ? "rgb(255 255 255 / 0.95)" : "rgb(20 16 24 / 0.85)";
   ctx.beginPath();

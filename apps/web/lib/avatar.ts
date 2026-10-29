@@ -51,6 +51,7 @@ export async function getPlaceSnapshot(since?: Date): Promise<PlaceSnapshot> {
       id: m.userId,
       name: m.name,
       sheetUrl: avatarSheetUrl(m.userId, m.configHash),
+      phrase: m.phrase,
       lastSeenAt: m.lastSeenAt.toISOString(),
     })),
     // Ni contenu ni date : seulement qui a fait quoi, pour animer son avatar.

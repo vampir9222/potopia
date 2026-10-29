@@ -12,16 +12,22 @@ import { encodePng } from "@app/avatar/server";
 import { catalog, palettes } from "@app/avatar-assets";
 import { db, withTx, type DbTx, type Prisma } from "@app/db";
 import { deleteObject, headObject, presignGet, putObject } from "@app/storage";
+import { z } from "zod";
 import { publishEvent } from "./activity";
-import { AvatarConfigError } from "./errors";
+import { AvatarConfigError, AvatarPhraseError } from "./errors";
 
 export type Avatar = {
   userId: string;
   config: AvatarConfig;
   configHash: string;
   sheetKey: string;
+  /** Phrase dite par le personnage sur la place (null : aucune). */
+  phrase: string | null;
   updatedAt: Date;
 };
+
+/** Longueur maximale de la phrase : elle tient sur une ligne de bulle. */
+export const AVATAR_PHRASE_MAX = 60;
 
 /** La planche ne change jamais pour une clé donnée (l'empreinte est dans le nom). */
 const SHEET_CACHE_CONTROL = "private, max-age=31536000, immutable";
@@ -38,6 +44,7 @@ function toAvatar(row: {
   config: Prisma.JsonValue;
   configHash: string;
   sheetKey: string;
+  phrase: string | null;
   updatedAt: Date;
 }): Avatar {
   return { ...row, config: row.config as AvatarConfig };
@@ -141,6 +148,40 @@ export async function saveAvatar(
   return toAvatar(saved);
 }
 
+// Une seule ligne : retours à la ligne, tabulations et caractères de contrôle deviennent des
+// espaces, espaces multiples réduits. Vide : pas de phrase.
+const phraseSchema = z
+  .string()
+  .transform((s) =>
+    s
+      .replace(/[\p{Cc}\p{Zl}\p{Zp}]/gu, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+  )
+  .pipe(z.string().max(AVATAR_PHRASE_MAX))
+  .transform((s) => s || null);
+
+/**
+ * Enregistre la phrase d'un membre (null ou vide : la retire). Pas d'événement d'activité : la
+ * phrase n'apparaît que sur la place. Le membre doit déjà avoir un avatar (`ensureAvatar`).
+ */
+export async function setAvatarPhrase(
+  input: { userId: string; phrase: unknown },
+  opts?: { tx?: DbTx },
+): Promise<string | null> {
+  const parsed = phraseSchema.nullable().safeParse(input.phrase);
+  if (!parsed.success) {
+    throw new AvatarPhraseError(`${AVATAR_PHRASE_MAX} caractères au plus.`);
+  }
+  const phrase = parsed.data ?? null;
+  const { count } = await (opts?.tx ?? db).avatar.updateMany({
+    where: { userId: input.userId },
+    data: { phrase },
+  });
+  if (count === 0) throw new AvatarPhraseError("Avatar introuvable.");
+  return phrase;
+}
+
 /**
  * Ancienne planche : plus servie, donc supprimée. À n'appeler qu'hors transaction externe (sinon on
  * ne sait pas si l'enregistrement sera validé). Un échec n'annule rien : la planche orpheline est
@@ -202,6 +243,7 @@ export type PlaceMember = {
   userId: string;
   name: string;
   configHash: string;
+  phrase: string | null;
   /** Dernière activité : dernier événement ou dernière session, au plus récent. */
   lastSeenAt: Date;
 };
@@ -209,9 +251,15 @@ export type PlaceMember = {
 /** Membres qui ont un avatar, pour la place du dashboard. */
 export async function listPlaceMembers(): Promise<PlaceMember[]> {
   const rows = await db.$queryRaw<
-    { user_id: string; name: string; config_hash: string; last_seen_at: Date }[]
+    {
+      user_id: string;
+      name: string;
+      config_hash: string;
+      phrase: string | null;
+      last_seen_at: Date;
+    }[]
   >`
-    SELECT a."user_id", u."name", a."config_hash",
+    SELECT a."user_id", u."name", a."config_hash", a."phrase",
       GREATEST(
         u."created_at",
         (SELECT MAX(e."created_at") FROM "core"."activity_events" e WHERE e."user_id" = a."user_id"),
@@ -224,6 +272,7 @@ export async function listPlaceMembers(): Promise<PlaceMember[]> {
     userId: r.user_id,
     name: r.name,
     configHash: r.config_hash,
+    phrase: r.phrase,
     lastSeenAt: r.last_seen_at,
   }));
 }

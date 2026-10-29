@@ -1,5 +1,6 @@
 export { isAdmin } from "./access/admin";
 export {
+  AVATAR_PHRASE_MAX,
   ensureAvatar,
   ensureMissingAvatars,
   getAvatar,
@@ -8,6 +9,7 @@ export {
   listOwnedAvatarItems,
   listPlaceMembers,
   saveAvatar,
+  setAvatarPhrase,
   sheetKeyFor,
   SHEET_URL_TTL,
   validateAvatarConfig,
@@ -34,7 +36,7 @@ export {
 export { apps, getVisibleApps, type AppEntry, type AppIconName } from "./apps/registry";
 export { createAuth, getAuth, type Auth } from "./auth/auth";
 export { checkGuildMembership, DiscordApiError, mapProfileToUser } from "./auth/discord";
-export { AvatarConfigError, ForbiddenError, UnauthorizedError } from "./errors";
+export { AvatarConfigError, AvatarPhraseError, ForbiddenError, UnauthorizedError } from "./errors";
 export {
   countUnread,
   listNotifications,

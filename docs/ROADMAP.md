@@ -326,10 +326,11 @@ Détails : section « Avatars et place » de [ARCHITECTURE.md](ARCHITECTURE.md).
   des éléments écartés, sortie dans `packages/avatar-assets` (PNG, catalogue, palettes, crédits).
 - `packages/avatar` : config et validation (`checkConfig`), compositeur (zPos, multi-calques,
   palette swap, robe sans pantalon), empreinte, avatar aléatoire, adaptateur sharp ; UI :
-  `AvatarSprite`, `AvatarEditor`, `Place`.
+  `AvatarSprite`, `AvatarEditor`, `PhraseForm`, `Place`.
 - core : `Avatar` et `UserAvatarItem`, `validateAvatarConfig`, `saveAvatar` (R2 + événement
-  `avatar/updated`), `ensureAvatar`, `ensureMissingAvatars`, `listPlaceMembers`,
-  `listEventsSince`. storage : `putObject` et `deleteObject`.
+  `avatar/updated`), `setAvatarPhrase` (phrase dite sur la place), `ensureAvatar`,
+  `ensureMissingAvatars`, `listPlaceMembers`, `listEventsSince`. storage : `putObject` et
+  `deleteObject`.
 - Web : page `/avatar` (lien « Mon avatar » du menu), routes `/api/avatars/[userId]/[hash]`
   et `/api/place`, place sous la grille des apps, page `/credits`.
 
@@ -339,6 +340,8 @@ Détails : section « Avatars et place » de [ARCHITECTURE.md](ARCHITECTURE.md).
   frames ; calques multiples gardés avec leur zPos.
 - Compositeur : ordre des calques, multi-calques, robe et pantalon, couleurs de peau.
 - Validation : élément inexistant, incompatible, non possédé ; couleur hors palette.
+- Phrase : remise sur une ligne, retirée si vide, refusée trop longue ou sans avatar, gardée
+  quand l'avatar change.
 - Empreinte : stable pour une même config, nouvelle pour une config modifiée.
 - Routes et action refusées sans session (401) et pour une session révoquée (403).
 
