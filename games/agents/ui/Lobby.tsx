@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, Badge, Card, Input, cx } from "@app/ui";
+import { AppLink, Avatar, Badge, Card, Input, cx, useNavigate } from "@app/ui";
 import { useCallback, useEffect, useState } from "react";
 import { AGENTS_TOTAL, NAME, TURNS, type LobbyGame, type Who } from "../src/game";
 import { api } from "./api";
@@ -28,6 +28,7 @@ export function AgentsLobby() {
   const [games, setGames] = useState<LobbyGame[] | null>(null);
   const [partners, setPartners] = useState<Who[]>([]);
   const [search, setSearch] = useState("");
+  const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +56,7 @@ export function AgentsLobby() {
     setError(null);
     try {
       const { id } = await api<{ id: string }>("/api/agents/games", { body: { partnerId } });
-      window.location.href = `/agents/${id}`;
+      navigate(`/agents/${id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
       setBusy(null);
@@ -89,7 +90,7 @@ export function AgentsLobby() {
               const s = statusOf(g);
               return (
                 <li key={g.id}>
-                  <a
+                  <AppLink
                     href={`/agents/${g.id}`}
                     className={cx(
                       "hover:bg-surface-hover flex items-center gap-3 rounded-lg border p-2.5 text-sm transition",
@@ -107,7 +108,7 @@ export function AgentsLobby() {
                       )}
                     </span>
                     <Badge tone={s.tone}>{s.label}</Badge>
-                  </a>
+                  </AppLink>
                 </li>
               );
             })}

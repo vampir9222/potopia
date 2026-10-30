@@ -1,4 +1,5 @@
 import { BRAND } from "@app/config/brand";
+import { AppLink } from "@app/ui";
 import type { ReactNode } from "react";
 import { ProfileMenu } from "./ProfileMenu";
 
@@ -26,12 +27,12 @@ export function Header({ user, signOut, menuButton, actions }: Props) {
         }}
       />
       {menuButton}
-      <a href="/" className="flex items-center gap-2">
+      <AppLink href="/" className="flex items-center gap-2">
         <img src={BRAND.logo} alt="" className="size-11 shrink-0" />
         <span className="font-display text-gradient text-xl font-bold tracking-[0.12em]">
           {BRAND.name}
         </span>
-      </a>
+      </AppLink>
       <div className="ml-auto flex items-center gap-2">
         {actions}
         <ProfileMenu user={user} signOut={signOut} />

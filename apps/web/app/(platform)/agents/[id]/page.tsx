@@ -9,10 +9,12 @@ export const metadata: Metadata = { title: AGENTS_NAME };
 /** Une partie : le client charge l'état par l'API (le serveur vérifie que c'est la mienne). */
 export default async function AgentsGamePage({ params }: { params: Promise<{ id: string }> }) {
   await getCurrentMember();
+  const { id } = await params;
   return (
     <div className="flex flex-col gap-4">
       <Breadcrumb />
-      <AgentsGame id={(await params).id} />
+      {/* une autre partie (navigation sans rechargement) repart d'un composant neuf */}
+      <AgentsGame key={id} id={id} />
     </div>
   );
 }

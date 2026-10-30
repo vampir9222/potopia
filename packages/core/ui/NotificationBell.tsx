@@ -1,5 +1,6 @@
 "use client";
 
+import { AppLink, useNavigate } from "@app/ui";
 import { Bell } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { formatRelative } from "./format";
@@ -39,6 +40,7 @@ function NotificationRow({ notification: n }: { notification: NotificationItem }
 
 export function NotificationBell({ notifications, unreadCount, markAsRead, markAllAsRead }: Props) {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const [pending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -52,7 +54,10 @@ export function NotificationBell({ notifications, unreadCount, markAsRead, markA
         // Le lien reste la priorité : on y va même si le marquage a échoué.
       }
     }
-    if (n.link) window.location.assign(n.link);
+    if (n.link) {
+      setOpen(false);
+      navigate(n.link);
+    }
   };
 
   useEffect(() => {
@@ -112,7 +117,7 @@ export function NotificationBell({ notifications, unreadCount, markAsRead, markA
               {notifications.map((n) => (
                 <li key={n.id} className="border-border border-b last:border-b-0">
                   {n.link ? (
-                    <a
+                    <AppLink
                       href={n.link}
                       onClick={(e) => {
                         // Ouverture dans un autre onglet (Ctrl/Cmd, molette…) : le navigateur fait
@@ -127,7 +132,7 @@ export function NotificationBell({ notifications, unreadCount, markAsRead, markA
                       className={itemClass}
                     >
                       <NotificationRow notification={n} />
-                    </a>
+                    </AppLink>
                   ) : (
                     // Sans lien : un bouton, focalisable et activable au clavier, qui marque comme lu.
                     <button

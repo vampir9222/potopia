@@ -185,6 +185,8 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
     - Header : marque, Luffy (fruit du démon étincelant à l'arrêt ; au clic, il en sort avec sa
       musique et rebondit sur le liseré du header), boule musicale, thème, cloche, volume, menu
       du profil (déconnexion).
+    - Navigation sans rechargement entre les pages (tuiles, logo, notifications, jeux : `AppLink`
+      et `useNavigate` de `@app/ui`) : la musique du header continue d'une page à l'autre.
     - Sur mobile, la colonne gauche passe dans un menu.
   - `/wallet` (« Ma monnaie ») : solde et historique paginé (20 par page) ;
   - `/admin` : accueil de l'administration ;
