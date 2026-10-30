@@ -182,7 +182,9 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
     - Colonne gauche : compte, solde, menu (Accueil, Mon avatar, Ma monnaie, Administration pour
       les admins), puis le fil d'activité.
     - Centre : grille de tuiles, puis la place des avatars.
-    - Header : marque, boule musicale et volume, thème, cloche, menu du profil (déconnexion).
+    - Header : marque, Luffy (fruit du démon étincelant à l'arrêt ; au clic, il en sort avec sa
+      musique et rebondit sur le liseré du header), boule musicale, thème, cloche, volume, menu
+      du profil (déconnexion).
     - Sur mobile, la colonne gauche passe dans un menu.
   - `/wallet` (« Ma monnaie ») : solde et historique paginé (20 par page) ;
   - `/admin` : accueil de l'administration ;

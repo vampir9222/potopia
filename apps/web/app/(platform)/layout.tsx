@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/actions/auth";
 import { markAllNotificationsAsRead, markNotificationAsRead } from "@/app/actions/notifications";
+import { LuffyRun } from "@/components/LuffyRun";
 import { MobileMenu } from "@/components/MobileMenu";
 import { SideNav } from "@/components/SideNav";
 import { SpinOrb } from "@/components/SpinOrb";
@@ -51,7 +52,7 @@ export default async function PlatformLayout({ children }: { children: ReactNode
         menuButton={<MobileMenu>{sidePanels(false)}</MobileMenu>}
         actions={
           <>
-            <VolumeControl />
+            <LuffyRun />
             <SpinOrb />
             <ThemeSwitcher current={theme} />
             <NotificationBell
@@ -60,6 +61,7 @@ export default async function PlatformLayout({ children }: { children: ReactNode
               markAsRead={markNotificationAsRead}
               markAllAsRead={markAllNotificationsAsRead}
             />
+            <VolumeControl />
           </>
         }
       />
