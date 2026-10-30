@@ -12,7 +12,7 @@ import {
   practiceGuess,
   TroisError,
 } from "../src/index";
-import { resetWordsCache, todayParis, wordsFor } from "../src/words";
+import { parisMidnight, resetWordsCache, todayParis, wordsFor } from "../src/words";
 
 const ME = "user-me";
 const OTHER = "user-other";
@@ -251,3 +251,130 @@ describe("classement", () => {
     ]);
   });
 });
+
+describe("passage à minuit", () => {
+  // samedi 31 octobre puis dimanche 1er novembre 2026 (heure d'hiver : minuit à Paris = 23 h UTC)
+  const DAY1 = "2026-10-31";
+  const DAY2 = "2026-11-01";
+  const MIDNIGHT = parisMidnight(DAY2);
+  const BEFORE = new Date(MIDNIGHT - 60_000);
+  const IN_GRACE = new Date(MIDNIGHT + 10 * 60_000);
+  const AFTER_GRACE = new Date(MIDNIGHT + 31 * 60_000);
+
+  beforeEach(async () => {
+    await db.troisDailyWord.createMany({
+      data: [
+        ...ANSWERS.map((word, slot) => ({ date: DAY1, slot, word })),
+        ...["noter", "vitre", "plage"].map((word, slot) => ({ date: DAY2, slot, word })),
+      ],
+    });
+  });
+
+  it("minuit à Paris, heure d'hiver comme d'été", () => {
+    expect(MIDNIGHT).toBe(Date.UTC(2026, 9, 31, 23));
+    expect(parisMidnight("2026-07-01")).toBe(Date.UTC(2026, 5, 30, 22));
+  });
+
+  it("un essai pensé pour hier n'est jamais compté pour aujourd'hui", async () => {
+    // OTHER n'avait pas commencé la journée d'hier : pas de délai de grâce, rien d'enregistré
+    await expectTroisError(
+      playGuess({ userId: OTHER, guess: "noter", date: DAY1 }, { now: IN_GRACE }),
+      409,
+    );
+    expect(await db.troisGuess.count()).toBe(0);
+    await expectTroisError(playGuess({ userId: OTHER, guess: "noter", date: "hier" }), 400);
+  });
+
+  it("délai de grâce : une journée commencée avant minuit se finit jusqu'à 00h30", async () => {
+    const started = await playGuess({ userId: ME, guess: WRONG, date: DAY1 }, { now: BEFORE });
+    expect(started.day.endsAt).toBe(MIDNIGHT);
+
+    // après minuit, on retrouve la journée d'hier et on peut la jouer
+    expect((await getToday(ME, { now: IN_GRACE })).day.date).toBe(DAY1);
+    const won = await playGuess({ userId: ME, guess: "faire", date: DAY1 }, { now: IN_GRACE });
+    expect(won.day).toMatchObject({ date: DAY1 });
+    expect(won.day.words[0]).toMatchObject({ status: "won", tries: 2 });
+    expect(await db.troisGame.count({ where: { date: DAY2 } })).toBe(0);
+
+    // délai écoulé : la journée d'hier est close, place aux nouveaux mots
+    await expectTroisError(
+      playGuess({ userId: ME, guess: "temps", date: DAY1 }, { now: AFTER_GRACE }),
+      409,
+    );
+    expect((await getToday(ME, { now: AFTER_GRACE })).day.date).toBe(DAY2);
+  });
+
+  it("passer aux nouveaux mots laisse tomber la journée d'hier", async () => {
+    await playGuess({ userId: ME, guess: WRONG, date: DAY1 }, { now: BEFORE });
+    expect((await getToday(ME, { today: true, now: IN_GRACE })).day.date).toBe(DAY2);
+    await playGuess({ userId: ME, guess: "noter", date: DAY2 }, { now: IN_GRACE });
+
+    // la nouvelle journée est commencée : celle d'hier n'est plus jouable
+    expect((await getToday(ME, { now: IN_GRACE })).day.date).toBe(DAY2);
+    await expectTroisError(
+      playGuess({ userId: ME, guess: "faire", date: DAY1 }, { now: IN_GRACE }),
+      409,
+    );
+  });
+
+  it("une journée finie après minuit compte pour la veille (activité, série)", async () => {
+    await playGuess({ userId: ME, guess: "faire", date: DAY1 }, { now: BEFORE });
+    await playGuess({ userId: ME, guess: "temps", date: DAY1 }, { now: BEFORE });
+    await playGuess({ userId: ME, guess: "chose", date: DAY1 }, { now: IN_GRACE });
+    const events = await listRecentEvents();
+    expect(events[0]).toMatchObject({ type: "day_completed", payload: { found: 3 } });
+    const { stats } = await getToday(ME, { now: IN_GRACE });
+    expect(stats).toMatchObject({ played: 1, perfectDays: 1, streak: 1 });
+  });
+});
+
+describe("historique du classement", () => {
+  const DAY1 = "2026-10-31";
+  const DAY2 = "2026-11-01";
+  const NOW = new Date(parisMidnight(DAY2) + 12 * 3_600_000);
+
+  beforeEach(async () => {
+    await db.troisDailyWord.createMany({
+      data: [
+        ...ANSWERS.map((word, slot) => ({ date: DAY1, slot, word })),
+        ...["noter", "vitre", "plage"].map((word, slot) => ({ date: DAY2, slot, word })),
+      ],
+    });
+    // OTHER a joué hier (1er mot du premier coup), ME aujourd'hui
+    await playGuess(
+      { userId: OTHER, guess: "faire" },
+      { now: new Date(parisMidnight(DAY1) + 12 * 3_600_000) },
+    );
+    await playGuess({ userId: ME, guess: "noter" }, { now: NOW });
+  });
+
+  it("un jour passé : ses grilles, en couleurs seulement, et jusqu'où remonter", async () => {
+    const board = await dayLeaderboard(ME, { date: DAY1, now: NOW });
+    expect(board).toMatchObject({ date: DAY1, today: DAY2, first: DAY1 });
+    expect(board.players.map((p) => [p.id, dayScoreOf(p.today)])).toEqual([
+      [OTHER, 1],
+      [ME, 0],
+    ]);
+    expect(JSON.stringify(board.players)).not.toContain("faire");
+
+    // pas de classement dans le futur : on retombe sur aujourd'hui
+    expect((await dayLeaderboard(ME, { date: "2027-01-01", now: NOW })).date).toBe(DAY2);
+    await expectTroisError(dayLeaderboard(ME, { date: "31/10", now: NOW }), 400);
+  });
+
+  it("une semaine ou un mois passé : la période entière qui contient la date", async () => {
+    const october = await periodLeaderboard(ME, "month", { date: "2026-10-15", now: NOW });
+    expect(october).toMatchObject({ from: "2026-10-01", to: "2026-10-31" });
+    expect(october.totals.map((t) => [t.id, t.points])).toEqual([
+      [OTHER, 6],
+      [ME, 0],
+    ]);
+
+    // semaine du lundi 26 octobre, en cours : jusqu'à aujourd'hui
+    const week = await periodLeaderboard(ME, "week", { date: DAY1, now: NOW });
+    expect(week).toMatchObject({ from: "2026-10-26", to: DAY2 });
+  });
+});
+
+const dayScoreOf = (d: { words: { status: string }[] }) =>
+  d.words.filter((w) => w.status === "won").length;

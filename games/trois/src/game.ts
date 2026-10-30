@@ -2,6 +2,12 @@
 export const WORD_LEN = 5;
 export const MAX_TRIES = 6;
 export const WORDS_PER_DAY = 3;
+/**
+ * Délai de grâce après minuit : une journée commencée avant minuit (au moins un essai) et pas
+ * finie reste jouable jusqu'à 00h30, tant que le joueur n'a pas commencé la nouvelle.
+ */
+export const GRACE_MINUTES = 30;
+export const GRACE_MS = GRACE_MINUTES * 60_000;
 
 export type Mark = "correct" | "present" | "absent";
 export type WordStatus = "playing" | "won" | "lost";
@@ -18,8 +24,20 @@ export type DayView = {
   number: number;
   maxTries: number;
   over: boolean;
+  /** Minuit qui termine la journée, à Paris (ms depuis l'epoch), délai de grâce non compris. */
+  endsAt: number;
   words: WordView[];
 };
+
+/** Date AAAA-MM-JJ décalée de `days` jours. */
+export function shiftDate(date: string, days: number): string {
+  const d = new Date(date + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Une journée est commencée dès son premier essai. */
+export const dayStarted = (d: DayView) => d.words.some((w) => w.tries > 0);
 
 export function normalize(input: string): string {
   return input

@@ -22,9 +22,13 @@ export function TroisApp({ me }: { me: Me }) {
   const [players, setPlayers] = useState<Player[] | null>(null);
   const muted = useMuted();
 
-  const load = useCallback(async () => {
+  // `today` : laisser tomber la journée d'hier (délai de grâce) pour les nouveaux mots ; le choix
+  // tient pour les rechargements suivants (retour sur l'onglet, nouveau jour)
+  const skipGrace = useRef(false);
+  const load = useCallback(async (today = false) => {
+    if (today) skipGrace.current = true;
     try {
-      const r = await api("/api/trois/game");
+      const r = await api(skipGrace.current ? "/api/trois/game?today=1" : "/api/trois/game");
       setDay(r.day);
       setStats(r.stats);
       setError(false);
@@ -120,7 +124,10 @@ export function TroisApp({ me }: { me: Me }) {
           {error && !day && (
             <p className="m-auto p-4 text-center text-zinc-400">
               Impossible de charger la partie.{" "}
-              <button onClick={load} className="text-good underline-offset-4 hover:underline">
+              <button
+                onClick={() => load()}
+                className="text-good underline-offset-4 hover:underline"
+              >
                 Réessayer
               </button>
             </p>
@@ -137,6 +144,7 @@ export function TroisApp({ me }: { me: Me }) {
                 loadPlayers();
               }}
               onNewDay={load}
+              onSkipToToday={() => load(true)}
               onShowLeaderboard={() => setTab("classement")}
             />
           )}

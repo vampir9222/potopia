@@ -1,8 +1,10 @@
 import { getUsersByIds } from "@app/core";
 import { db } from "@app/db";
 import { dayView, streaksFor } from "./day";
-import { compareDays, wordPoints, type DayView, type Period } from "./game";
-import { todayParis } from "./words";
+import { z } from "zod";
+import { TroisError } from "./errors";
+import { compareDays, shiftDate, wordPoints, type DayView, type Period } from "./game";
+import { dayNumber, todayParis } from "./words";
 
 /** Un joueur tel que le classement l'affiche : pseudo et avatar Discord du portail. */
 type Who = { id: string; name: string; image: string | null; me: boolean };
@@ -34,11 +36,33 @@ function rank<T extends Who>(rows: T[], score: (a: T, b: T) => number): (T & { r
 }
 
 /** Premier jour de la période (lundi pour la semaine, le 1er pour le mois). */
-function periodStart(today: string, period: Exclude<Period, "day">): string {
-  if (period === "month") return today.slice(0, 8) + "01";
-  const d = new Date(today + "T12:00:00Z");
+function periodStart(date: string, period: Exclude<Period, "day">): string {
+  if (period === "month") return date.slice(0, 8) + "01";
+  const d = new Date(date + "T12:00:00Z");
   d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
   return d.toISOString().slice(0, 10);
+}
+
+/** Dernier jour de la période commencée le jour `from`. */
+function periodEnd(from: string, period: Exclude<Period, "day">): string {
+  if (period === "week") return shiftDate(from, 6);
+  // le 1er du mois suivant (le 28 + 4 jours tombe toujours dans le mois suivant), moins un jour
+  return shiftDate(shiftDate(from.slice(0, 8) + "28", 4).slice(0, 8) + "01", -1);
+}
+
+const dateInput = z.iso.date().optional();
+
+/**
+ * Jour demandé pour l'historique du classement (aujourd'hui par défaut, jamais dans le futur), et
+ * premier jour où quelqu'un a joué, pour savoir jusqu'où remonter.
+ */
+async function historyDates(input: unknown, now: Date) {
+  const parsed = dateInput.safeParse(input);
+  if (!parsed.success) throw new TroisError(400, "Date invalide");
+  const today = todayParis(now);
+  const date = parsed.data && parsed.data < today ? parsed.data : today;
+  const first = (await db.troisGame.aggregate({ _min: { date: true } }))._min.date ?? today;
+  return { date, today, first: first < today ? first : today };
 }
 
 /** Garde les LIMIT premiers, plus ma ligne si elle est au-delà (elle garde son vrai rang). */
@@ -58,11 +82,22 @@ async function identities(ids: string[], meId: string): Promise<Map<string, Who>
 }
 
 /**
- * Classement du jour : grilles de tous ceux qui ont joué, plus moi. Couleurs uniquement, jamais
- * les lettres (dayView sans `withLetters`).
+ * Classement d'un jour (aujourd'hui par défaut, ou un jour passé de l'historique) : grilles de
+ * tous ceux qui ont joué, plus moi. Couleurs uniquement, jamais les lettres (dayView sans
+ * `withLetters`), même pour les jours passés.
  */
-export async function dayLeaderboard(meId: string): Promise<{ players: Player[]; total: number }> {
-  const date = todayParis();
+export async function dayLeaderboard(
+  meId: string,
+  opts?: { date?: unknown; now?: Date },
+): Promise<{
+  players: Player[];
+  total: number;
+  date: string;
+  number: number;
+  today: string;
+  first: string;
+}> {
+  const { date, today, first } = await historyDates(opts?.date, opts?.now ?? new Date());
   const games = await db.troisGame.findMany({
     where: { date, guesses: { some: {} } },
     select: {
@@ -90,18 +125,38 @@ export async function dayLeaderboard(meId: string): Promise<{ players: Player[];
     });
   }
   const players = rank(rows, (a, b) => compareDays(a.today, b.today));
-  return { players: top(players), total: players.length };
+  return {
+    players: top(players),
+    total: players.length,
+    date,
+    number: dayNumber(date),
+    today,
+    first,
+  };
 }
 
-/** Semaine ou mois : cumul des points des mots terminés. */
+/**
+ * Semaine ou mois : cumul des points des mots terminés. Par défaut la période en cours, sinon
+ * celle qui contient `date` (historique).
+ */
 export async function periodLeaderboard(
   meId: string,
   period: "week" | "month",
-): Promise<{ totals: Total[]; from: string; to: string; total: number }> {
-  const today = todayParis();
-  const from = periodStart(today, period);
+  opts?: { date?: unknown; now?: Date },
+): Promise<{
+  totals: Total[];
+  from: string;
+  to: string;
+  total: number;
+  today: string;
+  first: string;
+}> {
+  const { date, today, first } = await historyDates(opts?.date, opts?.now ?? new Date());
+  const from = periodStart(date, period);
+  const end = periodEnd(from, period);
+  const to = end < today ? end : today;
   const games = await db.troisGame.findMany({
-    where: { date: { gte: from, lte: today }, status: { not: "PLAYING" } },
+    where: { date: { gte: from, lte: to }, status: { not: "PLAYING" } },
     select: { userId: true, date: true, status: true, _count: { select: { guesses: true } } },
   });
   const userIds = [...new Set([meId, ...games.map((g) => g.userId)])];
@@ -128,5 +183,5 @@ export async function periodLeaderboard(
     rows.push({ ...user, points: a.points, found: a.found, words: a.words, days: a.days.size });
   }
   const totals = rank(rows, (a, b) => b.points - a.points || b.found - a.found || a.days - b.days);
-  return { totals: top(totals), from, to: today, total: totals.length };
+  return { totals: top(totals), from, to, total: totals.length, today, first };
 }

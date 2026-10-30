@@ -11,6 +11,17 @@ export function todayParis(now = new Date()): string {
   return new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(now);
 }
 
+/** Instant (ms) où commence une date à Paris : minuit, à 22 h ou 23 h UTC la veille selon la saison. */
+export function parisMidnight(date: string): number {
+  const [y = 0, m = 1, d = 1] = date.split("-").map(Number);
+  const utc = Date.UTC(y, m - 1, d);
+  for (const hours of [2, 1]) {
+    const t = utc - hours * 3_600_000;
+    if (todayParis(new Date(t)) === date) return t;
+  }
+  return utc;
+}
+
 export function dayNumber(date: string): number {
   const [y = 0, m = 1, d = 1] = date.split("-").map(Number);
   return Math.round((Date.UTC(y, m - 1, d) - EPOCH) / 86400000) + 1;

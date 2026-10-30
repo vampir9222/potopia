@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  dayStarted,
+  GRACE_MINUTES,
+  GRACE_MS,
   normalize,
   shareText,
   WORD_LEN,
@@ -28,6 +31,8 @@ const TILE: Record<Mark, string> = {
 const RANK: Record<Mark, number> = { absent: 0, present: 1, correct: 2 };
 const FLIP_STEP = 120;
 const REVEAL_MS = WORD_LEN * FLIP_STEP + 400;
+// alerte avant minuit : à partir de 23h45
+const WARN_MS = 15 * 60_000;
 const PRAISE = ["Génial !", "Magnifique !", "Splendide !", "Bravo !", "Pas mal !", "Ouf !"];
 
 /** Mode test : un mot déjà terminé qu'on rejoue pour de faux (rien n'est enregistré). */
@@ -72,12 +77,15 @@ export function Game({
   day,
   onUpdate,
   onNewDay,
+  onSkipToToday,
   onShowLeaderboard,
 }: {
   day: DayView;
   onUpdate: (d: DayView, s?: Stats) => void;
   /** La journée affichée n'est plus celle du serveur : à recharger. */
   onNewDay: () => void;
+  /** Délai de grâce : laisser tomber la journée d'hier pour jouer les nouveaux mots. */
+  onSkipToToday: () => void;
   onShowLeaderboard: () => void;
 }) {
   const current = day.words.findIndex((w) => w.status === "playing");
@@ -161,8 +169,11 @@ export function Game({
       }
 
       // le serveur fait tout : validation du mot + feedback lettre par lettre
-      const r = await api("/api/trois/guess", { body: { guess: input, slot: current } });
-      // minuit est passé entre-temps : l'essai a compté pour la nouvelle journée, on l'affiche
+      // la journée jouée part avec l'essai : après minuit, le serveur ne la compte jamais pour la
+      // nouvelle journée (il l'accepte pendant le délai de grâce, sinon 409 et on recharge)
+      const r = await api("/api/trois/guess", {
+        body: { guess: input, slot: current, date: day.date },
+      });
       if (r.day.date !== day.date) return onNewDay();
       const row = r.day.words[r.slot].tries - 1;
       setRevealing({ slot: r.slot, row });
@@ -272,6 +283,10 @@ export function Game({
         <div className="animate-toast absolute top-14 left-1/2 z-20 rounded-lg bg-zinc-100 px-4 py-2 font-semibold text-zinc-900 shadow-lg">
           {toast}
         </div>
+      )}
+
+      {!day.over && !practice && (
+        <Deadline day={day} onNewDay={onNewDay} onSkipToToday={onSkipToToday} />
       )}
 
       {/* sélecteur des 3 mots */}
@@ -487,6 +502,84 @@ function Key({
   );
 }
 
+const mmss = (ms: number) => {
+  const s = Math.ceil(ms / 1000);
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+};
+
+/**
+ * Bandeau de fin de journée. Avant minuit (dès 23h45) : le temps qui reste. Après minuit, une
+ * journée commencée reste jouable jusqu'à 00h30 (délai de grâce) : le temps qui reste, et de quoi
+ * passer aux nouveaux mots. Une fois la journée close, on charge la nouvelle.
+ */
+function Deadline({
+  day,
+  onNewDay,
+  onSkipToToday,
+}: {
+  day: DayView;
+  onNewDay: () => void;
+  onSkipToToday: () => void;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+  const asked = useRef(0);
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const started = dayStarted(day);
+  const deadline = started ? day.endsAt + GRACE_MS : day.endsAt;
+  // journée close : nouveaux mots (réessayé toutes les 30 s si le chargement échoue)
+  useEffect(() => {
+    if (now < deadline || now - asked.current < 30_000) return;
+    asked.current = now;
+    onNewDay();
+  }, [now, deadline, onNewDay]);
+
+  if (now >= deadline) return null;
+  const afterMidnight = now >= day.endsAt;
+  if (!afterMidnight && day.endsAt - now > WARN_MS) return null;
+
+  return (
+    <div className="border-near/60 bg-near/10 flex w-full max-w-sm flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2 text-sm">
+      <span>
+        {afterMidnight ? (
+          <>
+            🌙 Minuit est passé : encore <b className="font-mono">{mmss(deadline - now)}</b> pour
+            finir TROIS #{day.number}
+          </>
+        ) : started ? (
+          <>
+            ⏳ Nouveaux mots dans <b className="font-mono">{mmss(day.endsAt - now)}</b>
+            <span className="text-zinc-400">
+              {" "}
+              · tu auras jusqu&apos;à 00h{String(GRACE_MINUTES).padStart(2, "0")} pour finir
+              celle-ci
+            </span>
+          </>
+        ) : (
+          <>
+            ⏳ Plus que <b className="font-mono">{mmss(day.endsAt - now)}</b> pour jouer TROIS #
+            {day.number}
+          </>
+        )}
+      </span>
+      {afterMidnight && (
+        <button
+          onClick={() => {
+            sfx.click();
+            onSkipToToday();
+          }}
+          className="rounded-lg bg-zinc-800 px-2 py-1 hover:bg-zinc-700"
+        >
+          Passer aux nouveaux mots
+        </button>
+      )}
+    </div>
+  );
+}
+
 /** Heure de Paris : date au format AAAA-MM-JJ et secondes restantes avant minuit. */
 function parisClock(now = new Date()) {
   const parts = new Intl.DateTimeFormat("fr-FR", {
@@ -518,7 +611,11 @@ function DayOver({
   flash: (m: string) => void;
 }) {
   const [left, setLeft] = useState("");
+  // journée finie après minuit, pendant le délai de grâce : on laisse voir le résultat, les
+  // nouveaux mots attendent un clic
+  const [late] = useState(() => parisClock().date !== day.date);
   useEffect(() => {
+    if (late) return;
     let asked = 0;
     const tick = () => {
       const clock = parisClock();
@@ -539,7 +636,7 @@ function DayOver({
     tick();
     const t = setInterval(tick, 1000);
     return () => clearInterval(t);
-  }, [day.date, onNewDay]);
+  }, [day.date, onNewDay, late]);
 
   const found = day.words.filter((w) => w.status === "won").length;
 
@@ -575,8 +672,22 @@ function DayOver({
           </span>
         ))}
       </div>
-      <p className="mt-4 text-xs tracking-wide text-zinc-400 uppercase">Prochains mots dans</p>
-      <p className="font-mono text-3xl">{left}</p>
+      {late ? (
+        <button
+          onClick={() => {
+            sfx.click();
+            onNewDay();
+          }}
+          className="mt-4 w-full rounded-xl border border-zinc-600 py-3 font-semibold hover:border-zinc-400"
+        >
+          Jouer les nouveaux mots
+        </button>
+      ) : (
+        <>
+          <p className="mt-4 text-xs tracking-wide text-zinc-400 uppercase">Prochains mots dans</p>
+          <p className="font-mono text-3xl">{left}</p>
+        </>
+      )}
       <div className="mt-4 flex gap-2">
         <button
           onClick={share}
