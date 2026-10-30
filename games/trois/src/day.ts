@@ -1,6 +1,6 @@
 import { db } from "@app/db";
-import { MAX_TRIES, WORDS_PER_DAY, type Mark } from "./game";
-import { dayNumber, todayParis, wordsFor } from "./words";
+import { MAX_TRIES, shiftDate, WORDS_PER_DAY, type Mark } from "./game";
+import { dayNumber, parisMidnight, todayParis, wordsFor } from "./words";
 
 const CODE: Record<Mark, string> = { correct: "C", present: "P", absent: "A" };
 const DECODE: Record<string, Mark> = { C: "correct", P: "present", A: "absent" };
@@ -36,6 +36,7 @@ export async function dayView(date: string, games: GameRow[], { withLetters = tr
     number: dayNumber(date),
     maxTries: MAX_TRIES,
     over: words.every((w) => w.status !== "playing"),
+    endsAt: parisMidnight(shiftDate(date, 1)),
     words,
   };
 }
@@ -51,15 +52,11 @@ export async function loadGames(userId: string, date = todayParis()) {
   });
 }
 
-function prevDate(date: string) {
-  const d = new Date(date + "T12:00:00Z");
-  d.setUTCDate(d.getUTCDate() - 1);
-  return d.toISOString().slice(0, 10);
-}
+const prevDate = (date: string) => shiftDate(date, -1);
 
 /** Série : jours consécutifs terminés, jusqu'à aujourd'hui (ou hier si pas encore joué aujourd'hui). */
-function currentStreak(done: Set<string>) {
-  let d = todayParis();
+function currentStreak(done: Set<string>, now = new Date()) {
+  let d = todayParis(now);
   if (!done.has(d)) d = prevDate(d);
   let streak = 0;
   while (done.has(d)) {
@@ -94,7 +91,7 @@ export async function streaksFor(userIds: string[]) {
 }
 
 /** Statistiques calculées à partir de l'historique des parties. */
-export async function computeStats(userId: string) {
+export async function computeStats(userId: string, now = new Date()) {
   const games = await db.troisGame.findMany({
     where: { userId },
     select: { date: true, status: true, _count: { select: { guesses: true } } },
@@ -119,7 +116,7 @@ export async function computeStats(userId: string) {
     ([, gs]) => gs.length === WORDS_PER_DAY && gs.every((g) => g.status === "WON"),
   ).length;
 
-  const streak = currentStreak(done);
+  const streak = currentStreak(done, now);
 
   let maxStreak = 0;
   let run = 0;

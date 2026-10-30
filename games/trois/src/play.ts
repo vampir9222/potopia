@@ -4,8 +4,18 @@ import valid from "../data/valid.json";
 import { computeStats, dayView, encodeMarks, loadGames } from "./day";
 import { TroisError } from "./errors";
 import { evaluate } from "./evaluate";
-import { MAX_TRIES, normalize, WORD_LEN, WORDS_PER_DAY, type DayView, type Mark } from "./game";
-import { dayNumber, todayParis, wordsFor } from "./words";
+import { z } from "zod";
+import {
+  GRACE_MS,
+  MAX_TRIES,
+  normalize,
+  shiftDate,
+  WORD_LEN,
+  WORDS_PER_DAY,
+  type DayView,
+  type Mark,
+} from "./game";
+import { dayNumber, parisMidnight, todayParis, wordsFor } from "./words";
 
 const VALID = new Set(valid as string[]);
 
@@ -19,25 +29,71 @@ function checkWord(input: unknown): string {
   return guess;
 }
 
-/** La journée du joueur (réponses visibles seulement pour les mots terminés) et ses stats. */
-export async function getToday(userId: string): Promise<{ day: DayView; stats: Stats }> {
-  const date = todayParis();
-  const [games, stats] = await Promise.all([loadGames(userId, date), computeStats(userId)]);
+type Games = Awaited<ReturnType<typeof loadGames>>;
+
+/**
+ * Journée d'hier encore jouable : délai de grâce pas écoulé, journée commencée avant minuit et pas
+ * finie, et nouvelle journée pas encore commencée (la commencer, c'est laisser tomber l'ancienne).
+ */
+async function graceDay(userId: string, now: Date): Promise<{ date: string; games: Games } | null> {
+  const today = todayParis(now);
+  if (now.getTime() >= parisMidnight(today) + GRACE_MS) return null;
+  const date = shiftDate(today, -1);
+  const [games, todays] = await Promise.all([loadGames(userId, date), loadGames(userId, today)]);
+  const started = games.some((g) => g.guesses.length > 0);
+  const over = games.length === WORDS_PER_DAY && games.every((g) => g.status !== "PLAYING");
+  if (!started || over || todays.some((g) => g.guesses.length > 0)) return null;
+  return { date, games };
+}
+
+const dateInput = z.iso.date().optional();
+
+/**
+ * La journée du joueur (réponses visibles seulement pour les mots terminés) et ses stats. Juste
+ * après minuit, c'est encore celle d'hier s'il l'avait commencée (délai de grâce), sauf s'il demande
+ * à passer aux nouveaux mots (`today`).
+ */
+export async function getToday(
+  userId: string,
+  opts?: { today?: boolean; now?: Date },
+): Promise<{ day: DayView; stats: Stats }> {
+  const now = opts?.now ?? new Date();
+  const grace = opts?.today ? null : await graceDay(userId, now);
+  const date = grace?.date ?? todayParis(now);
+  const [games, stats] = await Promise.all([
+    grace?.games ?? loadGames(userId, date),
+    computeStats(userId, now),
+  ]);
   return { day: await dayView(date, games), stats };
 }
 
 /**
  * Un essai sur le mot en cours. Le serveur valide le mot, le compare à la réponse (qui ne quitte
- * jamais le serveur) et renvoie le feedback lettre par lettre. La date est toujours celle du serveur.
+ * jamais le serveur) et renvoie le feedback lettre par lettre. Le client dit quelle journée il
+ * joue (`date`) ; le serveur n'accepte que la sienne, ou celle d'hier pendant le délai de grâce :
+ * un essai pensé pour hier n'est jamais compté pour aujourd'hui.
  */
 export async function playGuess(
-  input: { userId: string; guess: unknown; slot?: unknown },
-  opts?: { tx?: DbTx },
+  input: { userId: string; guess: unknown; slot?: unknown; date?: unknown },
+  opts?: { tx?: DbTx; now?: Date },
 ): Promise<{ slot: number; marks: Mark[]; day: DayView; stats: Stats }> {
   const { userId } = input;
   const guess = checkWord(input.guess);
-  const date = todayParis();
-  const games = await loadGames(userId, date);
+  const parsed = dateInput.safeParse(input.date);
+  if (!parsed.success) throw new TroisError(400, "Date invalide");
+  const now = opts?.now ?? new Date();
+  const today = todayParis(now);
+  let date = today;
+  let games: Games;
+  if (parsed.data === undefined || parsed.data === today) {
+    games = await loadGames(userId, date);
+  } else {
+    const grace = await graceDay(userId, now);
+    if (grace?.date !== parsed.data) {
+      throw new TroisError(409, "Minuit est passé : voici les nouveaux mots !");
+    }
+    ({ date, games } = grace);
+  }
 
   // mot en cours = premier créneau non terminé (on joue les 3 mots dans l'ordre)
   let slot = 0;
@@ -90,7 +146,7 @@ export async function playGuess(
   }
 
   const after = await loadGames(userId, date);
-  return { slot, marks, day: await dayView(date, after), stats: await computeStats(userId) };
+  return { slot, marks, day: await dayView(date, after), stats: await computeStats(userId, now) };
 }
 
 /**

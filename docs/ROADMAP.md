@@ -279,6 +279,11 @@ jeu du portail. Détails du jeu : [games/trois/README.md](../games/trois/README.
 - Partie : ordre des mots, réponse cachée tant que le mot n'est pas terminé, défaite au 6e essai,
   essais simultanés jamais comptés deux fois, refus après la journée.
 - Mode test sans écriture, classement sans lettres, points de la semaine.
+- Minuit : un essai pour la veille jamais compté pour le nouveau jour, délai de grâce (commencée
+  avant minuit, jusqu'à 00h30, perdu si la nouvelle journée est commencée), journée finie après
+  minuit comptée pour la veille, minuit de Paris en heure d'hiver et d'été.
+- Historique du classement : jour passé (couleurs seulement), date future ramenée à aujourd'hui,
+  semaine et mois passés entiers.
 - Chaque route `/api/trois/*` et la page refusent sans session (401) et une session révoquée (403).
 
 **Fini quand**
@@ -433,7 +438,9 @@ corrections en PR séparées par thème.
 - Serveur : plafond et purge des envois d'image, solde plafonné (`MAX_BALANCE`), cache de sprites
   borné, planches orphelines supprimées, événements de la place sans perte ni doublon,
   `check:boundaries` élargi.
-- Jeux : TROIS (bascule de jour, contrastes, rangs ex æquo) ; Agents Doubles (mort subite, une
+- Jeux : TROIS (bascule de jour, contrastes, rangs ex æquo, puis délai de grâce de 30 min après
+  minuit pour une journée commencée, alerte dès 23h45 et historique du classement) ; Agents
+  Doubles (mort subite, une
   partie en cours par paire, accessibilité) ; cartes (négations, onglets masqués, archives
   allégées).
 - Documentation remise à jour, règle « doc à jour dans chaque PR » ajoutée à CLAUDE.md.
