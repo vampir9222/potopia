@@ -208,8 +208,9 @@ await withTx(async (tx) => {
 
 Le bouton volume du header règle tous les sons du site. Un son doit le respecter : `effectiveVolume()`
 de `@app/ui` donne le volume à appliquer (0 à 1, 0 si coupé) et `onVolumeChange(fn)` prévient quand
-il change. Pour un `<audio>` : `audio.volume = effectiveVolume()` (exemple : la boule musicale du
-header, `apps/web/components/SpinOrb.tsx`, qui joue `public/audio/spin2.mp3`) ; avec Web Audio : un
+il change. Pour un `<audio>` : `audio.volume = effectiveVolume()` (exemples : la boule musicale du
+header, `apps/web/components/SpinOrb.tsx`, qui joue `public/audio/spin2.mp3`, et Luffy,
+`components/LuffyRun.tsx`, qui joue `public/audio/luffy.mp3`) ; avec Web Audio : un
 `GainNode` en fin de chaîne (voir `games/trois/ui/sound.ts`).
 
 ### Ajouter un thème

@@ -284,6 +284,24 @@ décors.
 - Les jeux gardent leur propre style pour l'instant (TROIS, Agents Doubles, cartes du vote) : une
   feuille CSS par jeu (`games/*/ui/*.css`), importée dans `apps/web/app/globals.css`.
 
+**Header** (`packages/core/ui/Header.tsx`, boutons passés par `(platform)/layout.tsx`). De gauche à
+droite : Luffy, la boule musicale, thème, cloche, volume, menu du profil.
+
+- Luffy (`apps/web/components/LuffyRun.tsx`, masqué sous 640 px) et la boule
+  (`components/SpinOrb.tsx`) lancent une animation et une musique en boucle au clic, et se mettent
+  en pause au second.
+- Luffy : à l'arrêt, son fruit du démon flotte au-dessus du liseré (`public/luffy/devil-fruit.png`,
+  pixel art 24 × 33, étoiles de l'image d'origine retirées) avec quelques étincelles qui
+  s'allument au hasard. Au clic, le fruit tremble, éclate en lumière et Luffy en sort en
+  rebondissant ; en pause, l'inverse (animations `luffy-*` de `app/globals.css`).
+- Luffy en action : planche de 25 frames à fond transparent (`public/luffy/luffy-sheet.png`, tirée
+  du gif d'origine), musique `public/audio/luffy.mp3`. Le sol du gif est retiré : c'est le liseré
+  doré du header qui se creuse et se bombe quand il rebondit (profils par frame dans
+  `components/luffyGround.ts`, déformation exagérée ×2,5, Luffy décalé pour suivre la ligne, qui
+  s'allume quand elle se tend). Le liseré du header accepte une trouée, `--line-gap-from` /
+  `--line-gap-to` (px depuis son bord gauche) posées sur le `<header>` ; Luffy y redessine le
+  liseré en SVG, déformé, avec le même dégradé.
+
 **Dates.** Toutes les dates affichées passent par `BRAND.timeZone` (`Europe/Paris`) : le serveur
 Vercel tourne en UTC, les navigateurs des membres en France ; sans fuseau explicite, l'heure
 affichée serait décalée et le rendu serveur différerait du rendu client (erreur d'hydratation).
