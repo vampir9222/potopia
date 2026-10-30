@@ -25,6 +25,10 @@ Jeu intégré au portail : page `/trois`, routes `/api/trois/*`, tuile dans le r
   (`GET /api/trois/leaderboard?period=…&date=AAAA-MM-JJ` : le jour, ou la période qui contient ce
   jour ; une date future retombe sur aujourd'hui). Toujours les couleurs seulement, jamais les
   lettres ni les réponses. La période en cours se rafraîchit toute seule, l'historique est figé.
+  Navigation fluide : le nom de la période (« Hier · #303 », « Semaine du 26 oct. ») s'affiche
+  tout de suite, les périodes déjà vues restent en mémoire, la précédente est préchargée, et
+  pendant un chargement l'ancien classement reste à l'écran (atténué). « ⏭ Revenir à
+  aujourd'hui » (ou à cette semaine, à ce mois-ci) ramène d'un clic à la période en cours.
 
 ## Passage à minuit
 

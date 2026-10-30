@@ -36,6 +36,22 @@ export function shiftDate(date: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+const EPOCH = Date.UTC(2026, 0, 1);
+
+/** Numéro de la journée (TROIS #1 = 1er janvier 2026). */
+export function dayNumber(date: string): number {
+  const [y = 0, m = 1, d = 1] = date.split("-").map(Number);
+  return Math.round((Date.UTC(y, m - 1, d) - EPOCH) / 86400000) + 1;
+}
+
+/** Premier jour de la période (lundi pour la semaine, le 1er pour le mois). */
+export function periodStart(date: string, period: "week" | "month"): string {
+  if (period === "month") return date.slice(0, 8) + "01";
+  const d = new Date(date + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
 /** Une journée est commencée dès son premier essai. */
 export const dayStarted = (d: DayView) => d.words.some((w) => w.tries > 0);
 
