@@ -1,3 +1,4 @@
+import { AppLink } from "@app/ui";
 import { Grid3x3, Lightbulb, Palette, Shield, VenetianMask, type LucideIcon } from "lucide-react";
 import type { AppEntry, AppIconName } from "../src/apps/registry";
 
@@ -24,7 +25,7 @@ export function AppGrid({ apps }: Props) {
         const Icon = ICONS[app.icon];
         return (
           <li key={app.id}>
-            <a
+            <AppLink
               href={app.route}
               className="group shine rounded-theme bg-surface/80 hover:border-accent/70 flex h-full [transform:perspective(600px)] flex-col items-center justify-center gap-2 border border-(--frame) p-3 text-center text-sm transition-all duration-300 hover:[transform:perspective(600px)_rotateX(8deg)_translateY(-4px)] hover:shadow-[0_14px_30px_-12px_var(--accent)]"
             >
@@ -38,7 +39,7 @@ export function AppGrid({ apps }: Props) {
               <span className="font-display text-text line-clamp-2 text-xs font-semibold tracking-wide">
                 {app.name}
               </span>
-            </a>
+            </AppLink>
           </li>
         );
       })}

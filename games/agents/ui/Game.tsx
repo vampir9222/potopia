@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, Badge, Button, Card, Input, Select, cx } from "@app/ui";
+import { AppLink, Avatar, Badge, Button, Card, Input, Select, cx, useNavigate } from "@app/ui";
 import {
   useCallback,
   useEffect,
@@ -126,9 +126,9 @@ export function AgentsGame({ id }: { id: string }) {
         <p className="text-muted text-sm">
           {loadError ?? "Chargement de la mission…"}{" "}
           {loadError && (
-            <a href="/agents" className="text-accent hover:underline">
+            <AppLink href="/agents" className="text-accent hover:underline">
               Retour aux missions
-            </a>
+            </AppLink>
           )}
         </p>
       </Card>
@@ -569,6 +569,7 @@ function ClueLine({ view, current }: { view: GameView; current: TurnView | undef
 }
 
 function Ending({ view }: { view: GameView }) {
+  const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const again = async () => {
@@ -578,7 +579,7 @@ function Ending({ view }: { view: GameView }) {
       const { id } = await api<{ id: string }>("/api/agents/games", {
         body: { partnerId: view.partner.id },
       });
-      window.location.href = `/agents/${id}`;
+      navigate(`/agents/${id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
       setBusy(false);
@@ -603,12 +604,12 @@ function Ending({ view }: { view: GameView }) {
         <Button disabled={busy} onClick={again}>
           Nouvelle mission avec {view.partner.name}
         </Button>
-        <a
+        <AppLink
           href="/agents"
           className="border-border text-text hover:bg-surface-hover inline-flex h-10 items-center rounded-md border px-4 text-sm"
         >
           Toutes mes missions
-        </a>
+        </AppLink>
       </div>
       {error && <p className="text-danger text-sm">{error}</p>}
     </div>

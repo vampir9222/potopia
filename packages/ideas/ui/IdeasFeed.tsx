@@ -1,7 +1,7 @@
 "use client";
 
 import { BRAND } from "@app/config/brand";
-import { Badge, Button, EmptyState } from "@app/ui";
+import { AppLink, Badge, Button, EmptyState } from "@app/ui";
 import { ArrowUp, ImageIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RARITY_LABELS, type Rarity } from "../src/validation";
@@ -104,7 +104,7 @@ export function IdeasFeed({ initial, basePath, loadMore }: Props) {
       <ul className="divide-border divide-y">
         {items.map((idea) => (
           <li key={idea.id}>
-            <a
+            <AppLink
               href={`${basePath}/${idea.id}`}
               className="hover:bg-surface-hover -mx-2 flex items-center gap-3 rounded-md px-2 py-3"
             >
@@ -116,7 +116,7 @@ export function IdeasFeed({ initial, basePath, loadMore }: Props) {
               </div>
               {idea.hasImage && <ImageIcon size={16} className="text-muted" aria-label="Image" />}
               {idea.rarity && <Badge tone="accent">{RARITY_LABELS[idea.rarity]}</Badge>}
-            </a>
+            </AppLink>
           </li>
         ))}
       </ul>

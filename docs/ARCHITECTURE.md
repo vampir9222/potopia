@@ -63,6 +63,15 @@ Chaque module (`core`, `economy`, `ideas`, plus tard chaque jeu) contient :
 Les server actions vivent dans `apps/web` : elles appellent les fonctions des modules et passent les
 actions aux composants en props.
 
+**Liens entre pages.** Sans import Next, un composant de package ferait des `<a>` simples, qui
+rechargent tout le site (la musique du header s'arrête, l'état client repart de zéro). Il utilise
+donc `AppLink` (lien) et `useNavigate()` (navigation depuis du code) de `@app/ui` : `<a>` et
+`window.location` par défaut, branchés sur `Link` et `router.push` de Next par
+`apps/web/components/NextNavigation.tsx`, posé dans le layout racine. Un lien externe ou un
+téléchargement d'API reste un `<a>`. Une page dont le composant client dépend d'un paramètre
+d'URL le remonte avec `key` (ex. `<AgentsGame key={id} />`), pour repartir d'un état neuf quand on
+passe d'une partie à l'autre sans rechargement.
+
 **Assemblage des schémas.** Prisma n'accepte qu'un seul dossier de schéma. Un script
 `packages/db/scripts/assemble.ts` copie donc les `schema.prisma` des modules dans
 `packages/db/prisma/schema/` (dossier généré et gitignoré), avant `generate` et `migrate`.
