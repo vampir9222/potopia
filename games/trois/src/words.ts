@@ -3,7 +3,6 @@ import { db } from "@app/db";
 import solutions from "../data/solutions.json";
 import { WORDS_PER_DAY } from "./game";
 
-const EPOCH = Date.UTC(2026, 0, 1);
 const POOL = solutions as string[];
 
 /** Date du jour à Paris, au format YYYY-MM-DD */
@@ -22,10 +21,7 @@ export function parisMidnight(date: string): number {
   return utc;
 }
 
-export function dayNumber(date: string): number {
-  const [y = 0, m = 1, d = 1] = date.split("-").map(Number);
-  return Math.round((Date.UTC(y, m - 1, d) - EPOCH) / 86400000) + 1;
-}
+export { dayNumber } from "./game";
 
 // Les mots d'une date ne changent plus une fois tirés : on les garde en mémoire.
 const cache = new Map<string, string[]>();

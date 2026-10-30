@@ -3,7 +3,7 @@ import { db } from "@app/db";
 import { dayView, streaksFor } from "./day";
 import { z } from "zod";
 import { TroisError } from "./errors";
-import { compareDays, shiftDate, wordPoints, type DayView, type Period } from "./game";
+import { compareDays, periodStart, shiftDate, wordPoints, type DayView, type Period } from "./game";
 import { dayNumber, todayParis } from "./words";
 
 /** Un joueur tel que le classement l'affiche : pseudo et avatar Discord du portail. */
@@ -33,14 +33,6 @@ function rank<T extends Who>(rows: T[], score: (a: T, b: T) => number): (T & { r
     if (!prev || score(prev, row) !== 0) current = i + 1;
     return { ...row, rank: current };
   });
-}
-
-/** Premier jour de la période (lundi pour la semaine, le 1er pour le mois). */
-function periodStart(date: string, period: Exclude<Period, "day">): string {
-  if (period === "month") return date.slice(0, 8) + "01";
-  const d = new Date(date + "T12:00:00Z");
-  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
-  return d.toISOString().slice(0, 10);
 }
 
 /** Dernier jour de la période commencée le jour `from`. */

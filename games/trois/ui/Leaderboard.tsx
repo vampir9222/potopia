@@ -1,7 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { dayScore, shiftDate, wordPoints, type Mark, type Period } from "../src/game";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  dayNumber,
+  dayScore,
+  periodStart,
+  shiftDate,
+  wordPoints,
+  type Mark,
+  type Period,
+} from "../src/game";
 import type { Player, Total } from "../src/leaderboard";
 import { api } from "./api";
 import { dayEntries, Podium, totalEntries } from "./Podium";
@@ -23,10 +31,6 @@ const PERIOD_ORDER: Period[] = ["day", "week", "month"];
 type Board = {
   players?: Player[];
   totals?: Total[];
-  date?: string;
-  number?: number;
-  from?: string;
-  to?: string;
   today: string;
   first: string;
 };
@@ -36,63 +40,120 @@ const fmt = (date: string, options: Intl.DateTimeFormatOptions) =>
     new Date(date + "T12:00:00Z"),
   );
 
-/** Nom de la période affichée dans l'historique (`null` : la période en cours). */
-function periodLabel(period: Period, board: Board | null, past: boolean): string {
-  if (period === "day") {
-    const number = board?.number ? ` · #${board.number}` : "";
-    if (!past || !board?.date) return `Aujourd'hui${number}`;
-    if (board.date === shiftDate(board.today, -1)) return `Hier${number}`;
-    return fmt(board.date, { weekday: "long", day: "numeric", month: "long" }) + number;
-  }
-  if (!past || !board?.from) return period === "week" ? "Cette semaine" : "Ce mois-ci";
-  if (period === "month") return fmt(board.from, { month: "long", year: "numeric" });
-  return `Semaine du ${fmt(board.from, { day: "numeric", month: "short" })}`;
+/** Date du jour à Paris, en attendant celle du serveur. */
+const parisToday = () => new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format();
+
+/** Premier jour de la période qui contient `date` (pour « jour » : le jour lui-même). */
+const startOf = (period: Period, date: string) =>
+  period === "day" ? date : periodStart(date, period);
+
+/** Premier jour de la période suivante. */
+function nextStart(period: Period, start: string): string {
+  if (period === "day") return shiftDate(start, 1);
+  if (period === "week") return shiftDate(start, 7);
+  // le 28 + 4 jours tombe toujours dans le mois suivant
+  return shiftDate(start.slice(0, 8) + "28", 4).slice(0, 8) + "01";
 }
+
+/** Nom de la période commençant le jour `start`, calculé tout de suite (sans attendre le serveur). */
+function periodLabel(period: Period, start: string, today: string): string {
+  if (period === "day") {
+    const number = ` · #${dayNumber(start)}`;
+    if (start === today) return `Aujourd'hui${number}`;
+    if (start === shiftDate(today, -1)) return `Hier${number}`;
+    return fmt(start, { weekday: "long", day: "numeric", month: "long" }) + number;
+  }
+  if (start === startOf(period, today)) return CURRENT[period];
+  if (period === "month") return fmt(start, { month: "long", year: "numeric" });
+  return `Semaine du ${fmt(start, { day: "numeric", month: "short" })}`;
+}
+
+const CURRENT: Record<Period, string> = {
+  day: "Aujourd'hui",
+  week: "Cette semaine",
+  month: "Ce mois-ci",
+};
+
+const keyOf = (period: Period, date: string | null) => `${period}:${date ?? "now"}`;
 
 export function Leaderboard({ players, reload }: { players: Player[] | null; reload: () => void }) {
   const [period, setPeriod] = useState<Period>("day");
-  // jour affiché dans l'historique (pour une semaine ou un mois : un jour de la période) ;
-  // null = la période en cours, rafraîchie régulièrement
+  // premier jour de la période affichée dans l'historique ; null = la période en cours
   const [date, setDate] = useState<string | null>(null);
-  const [board, setBoard] = useState<Board | null>(null);
+  // classements déjà chargés : une période passée ne change plus, on la garde pour revenir dessus
+  // sans attendre ; la précédente est préchargée pour que la flèche ‹ réponde tout de suite
+  const [boards, setBoards] = useState<Record<string, Board>>({});
+  const loadedKeys = useRef(new Set<string>());
+  // pendant le chargement d'une période pas encore en mémoire : on garde l'ancienne à l'écran
+  const [stale, setStale] = useState<Board | null>(null);
+  const [bounds, setBounds] = useState<{ today: string; first: string } | null>(null);
 
-  const loadBoard = useCallback(async () => {
+  const fetchBoard = useCallback(async (p: Period, d: string | null) => {
     const params = new URLSearchParams();
-    if (period !== "day") params.set("period", period);
-    if (date) params.set("date", date);
+    if (p !== "day") params.set("period", p);
+    if (d) params.set("date", d);
     try {
-      setBoard(await api(`/api/trois/leaderboard?${params}`));
+      const board = await api<Board>(`/api/trois/leaderboard?${params}`);
+      loadedKeys.current.add(keyOf(p, d));
+      setBoards((b) => ({ ...b, [keyOf(p, d)]: board }));
+      setBounds((old) =>
+        old?.today === board.today && old.first === board.first
+          ? old
+          : { today: board.today, first: board.first },
+      );
     } catch {
       /* réessayé au prochain tour */
     }
-  }, [period, date]);
+  }, []);
 
   useEffect(() => {
-    setBoard(null);
-    loadBoard();
     if (period === "day" && !date) reload();
-    // historique : figé ; période en cours : rafraîchie, sans requête tant que l'onglet est caché
+    // historique déjà en mémoire : figé, rien à recharger
+    if (date && loadedKeys.current.has(keyOf(period, date))) return;
+    fetchBoard(period, date);
     if (date) return;
-    const t = setInterval(() => document.visibilityState === "visible" && loadBoard(), 60_000);
+    // période en cours : rafraîchie, sans requête tant que l'onglet est caché
+    const t = setInterval(
+      () => document.visibilityState === "visible" && fetchBoard(period, null),
+      60_000,
+    );
     return () => clearInterval(t);
-  }, [period, date, loadBoard, reload]);
+  }, [period, date, fetchBoard, reload]);
 
+  const today = bounds?.today ?? parisToday();
+  const currentStart = startOf(period, today);
+  const shownStart = date ?? currentStart;
+  const prevStart = startOf(period, shiftDate(shownStart, -1));
+  const canPrev = !!bounds && shownStart > bounds.first;
+
+  // précharge la période précédente
+  useEffect(() => {
+    if (!canPrev || loadedKeys.current.has(keyOf(period, prevStart))) return;
+    fetchBoard(period, prevStart);
+  }, [period, prevStart, canPrev, fetchBoard]);
+
+  const loadedBoard = boards[keyOf(period, date)];
+  const board = loadedBoard ?? stale;
+  const loading = !loadedBoard;
   const current = PERIODS[period];
   const past = date !== null;
   // jour en cours : les grilles partagées avec le podium de gauche (rafraîchies par le parent)
-  const dayPlayers = period === "day" && !past ? (players ?? board?.players ?? null) : null;
-  const shownPlayers = period === "day" ? (dayPlayers ?? board?.players ?? null) : null;
+  const shownPlayers =
+    period === "day" ? ((!past ? players : null) ?? board?.players ?? null) : null;
   const totals = period === "day" ? null : (board?.totals ?? null);
   const loaded = period === "day" ? shownPlayers : totals;
+  const label = periodLabel(period, shownStart, today);
 
-  // bornes de l'historique : du premier jour joué à aujourd'hui
-  const start = period === "day" ? board?.date : board?.from;
-  const end = period === "day" ? board?.date : board?.to;
-  const canPrev = !!board && !!start && start > board.first;
-  const canNext = past && !!board && !!end && end < board.today;
   const go = (target: string | null) => {
     sfx.click();
-    setDate(target && board && target < board.today ? target : null);
+    setStale(board);
+    setDate(target);
+  };
+  const choosePeriod = (id: Period) => {
+    sfx.click();
+    setStale(null);
+    setPeriod(id);
+    setDate(null);
   };
   // rang calculé par le serveur : les ex æquo partagent la médaille
   const medal = (rank: number) => MEDALS[rank - 1] ?? rank;
@@ -127,11 +188,7 @@ export function Leaderboard({ players, reload }: { players: Player[] | null; rel
         {PERIOD_ORDER.map((id) => (
           <button
             key={id}
-            onClick={() => {
-              sfx.click();
-              setPeriod(id);
-              setDate(null);
-            }}
+            onClick={() => choosePeriod(id)}
             className={`rounded-full px-4 py-1.5 ${period === id ? "bg-zinc-100 font-semibold text-zinc-900" : "text-zinc-400 hover:text-zinc-100"}`}
           >
             {PERIODS[id].label}
@@ -139,33 +196,42 @@ export function Leaderboard({ players, reload }: { players: Player[] | null; rel
         ))}
       </div>
 
-      {/* historique : jour, semaine ou mois précédent / suivant */}
+      {/* historique : jour, semaine ou mois précédent / suivant, et retour direct à aujourd'hui */}
       <div className="-mt-2 flex items-center justify-center gap-2 text-sm">
         <button
-          onClick={() => start && go(shiftDate(start, -1))}
+          onClick={() => go(prevStart)}
           disabled={!canPrev}
           aria-label="Période précédente"
           className="grid h-8 w-8 place-items-center rounded-full bg-zinc-900 text-zinc-300 hover:text-zinc-100 disabled:opacity-30"
         >
           ‹
         </button>
-        <span className="min-w-44 text-center first-letter:uppercase">
-          {periodLabel(period, board, past)}
-        </span>
+        <span className="min-w-44 text-center first-letter:uppercase">{label}</span>
         <button
-          onClick={() => end && go(shiftDate(end, 1))}
-          disabled={!canNext}
+          onClick={() => {
+            const next = nextStart(period, shownStart);
+            go(next >= currentStart ? null : next);
+          }}
+          disabled={!past}
           aria-label="Période suivante"
           className="grid h-8 w-8 place-items-center rounded-full bg-zinc-900 text-zinc-300 hover:text-zinc-100 disabled:opacity-30"
         >
           ›
         </button>
       </div>
+      {/* place réservée même quand il est caché : rien ne saute à l'écran */}
+      <button
+        onClick={() => go(null)}
+        disabled={!past}
+        className={`-mt-3 self-center rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:border-zinc-500 hover:text-zinc-100 ${past ? "" : "invisible"}`}
+      >
+        ⏭ Revenir à {CURRENT[period].toLowerCase()}
+      </button>
 
       {/* sur très grand écran le podium du jour en cours est déjà affiché à gauche */}
       <div className={period === "day" && !past ? "xl:hidden" : ""}>
         <Podium
-          title={past ? `Podium · ${periodLabel(period, board, past)}` : current.title}
+          title={past ? `Podium · ${label}` : current.title}
           entries={period === "day" ? dayEntries(shownPlayers) : totalEntries(totals)}
         />
       </div>
@@ -184,7 +250,9 @@ export function Leaderboard({ players, reload }: { players: Player[] | null; rel
             {past ? "Personne d'autre n'a joué." : "Personne d'autre n'a joué pour l'instant."}
           </p>
         )}
-        <ol className="flex flex-col gap-2">
+        <ol
+          className={`flex flex-col gap-2 transition-opacity ${loading && loaded ? "opacity-50" : ""}`}
+        >
           {period === "day"
             ? (shownPlayers ?? []).map((p) => {
                 const s = dayScore(p.today);
