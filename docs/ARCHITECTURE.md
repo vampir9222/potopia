@@ -294,19 +294,23 @@ décors.
   boucle de watercooling animée en fond, titres en Orbitron), **JoJo** (Stardust Crusaders : nuit
   indigo, or et violet, cadres encrés façon case de manga avec étoiles Joestar, titres en Anton ;
   petits textes en capitales pleines pour rester lisibles) et **One Piece** (nuit sur la Grand
-  Line : bleu de la mer, or du chapeau de paille, rouge de Luffy, cadres bordés de corde tressée
-  avec roses des vents aux coins, titres en Pirata One ; petits textes en capitales pleines).
+  Line : bleu de la mer, or du chapeau de paille, rouge de Luffy, cadres translucides bordés de
+  corde tressée avec roses des vents aux coins, titres en Pirata One ; petits textes en capitales
+  pleines).
 - Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`, `--jojo`,
   `--onepiece`) :
   un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons,
   portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.png` : Jotaro, Star Platinum, DIO,
   The World), « ゴゴゴ » qui montent, étoiles, Jotaro qui prend la pose (`jotaro-pose.png`).
-  Décor One Piece (`OnePieceDecor`, tout en CSS et SVG) : ciel étoilé, lune et son reflet sur la
-  mer, houle sur trois plans qui boucle sans à-coup, navire au loin qui traverse l'horizon en
-  tanguant, mouettes, pavillon au chapeau de paille qui flotte (`public/onepiece/jolly-roger.svg`,
-  dessiné pour le site, découpé en bandes qui ondulent l'une après l'autre) devant la lune, avis
-  de recherche de Luffy épinglé (image de `public/luffy/luffy-sheet.png`), « ドン!! » qui claquent
-  de temps en temps.
+  Décor One Piece (`OnePieceDecor`) : ciel étoilé, lune et son reflet sur la mer, houle sur
+  trois plans qui boucle sans à-coup, le Thousand Sunny qui navigue entre deux vagues
+  (`public/onepiece/sunny.webp`) et le Vogue Merry au loin sur l'horizon (`merry.webp`),
+  mouettes, chapeau de paille emporté par le vent, pavillon au chapeau de paille qui flotte devant
+  la lune (`jolly-roger.svg`, dessiné pour le site, découpé en bandes qui ondulent l'une après
+  l'autre), l'équipage qui défile dans les deux coins en fondu enchaîné (`crew-*.webp`, portraits
+  du jeu One Piece: Gigant Battle), les avis de recherche des neuf membres épinglés
+  (`wanted-*.webp`), « ドン!! » qui claquent de temps en temps. Images du wiki One Piece (Fandom),
+  détourées et réduites en WebP (~380 Ko en tout).
 - Passer au thème JoJo déclenche **ZA WARUDO** (`apps/web/components/ZaWarudo.tsx`, `zaWarudo()` de
   `@app/ui`) : la voix (`public/audio/za-warudo.mp3`), une onde qui inverse les couleurs, la page
   figée et délavée (« 時よ止まれ ! »), puis la reprise (`time-resume.mp3`). Un clic ou Échap
@@ -316,8 +320,9 @@ décors.
   Sonic aussi (`onTimeStop`).
 - Passer au thème One Piece déclenche **ドン!!** (`apps/web/components/Don.tsx`, `don()` de
   `@app/ui`) : un coup de taiko synthétisé en Web Audio (pas de fichier), un flash, des lignes de
-  vitesse de manga qui convergent vers le centre, et « ドン!! » qui tombe de haut, s'écrase et
-  tremble sous le choc (1,6 s).
+  vitesse de manga qui convergent vers le centre, « ドン!! » qui tombe de haut, s'écrase et
+  tremble sous le choc, et le Thousand Sunny qui traverse l'écran en « Coup de Burst » en laissant
+  des nuages de vapeur (1,9 s).
 - Le choix se fait avec le bouton palette du header (`ThemeSwitcher`). Il est mémorisé par appareil
   dans le cookie `theme`, que le layout racine lit pour poser `data-theme` dès le rendu serveur, sans
   flash.

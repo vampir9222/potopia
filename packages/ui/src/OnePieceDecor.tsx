@@ -17,11 +17,37 @@ function wavePath(height: number, amplitude: number): string {
   return `${d} L1600 ${height} L0 ${height} Z`;
 }
 
-const WAVES = [
-  { className: "op-wave op-wave-back", height: 60, amplitude: 9 },
-  { className: "op-wave op-wave-mid", height: 60, amplitude: 12 },
-  { className: "op-wave op-wave-front", height: 60, amplitude: 15 },
-];
+function Wave({ className, amplitude }: { className: string; amplitude: number }) {
+  return (
+    <svg viewBox="0 0 1600 60" preserveAspectRatio="none" className={`op-wave ${className}`}>
+      <path d={wavePath(60, amplitude)} />
+    </svg>
+  );
+}
+
+// Images de public/onepiece (app) : portraits de l'équipage (One Piece: Gigant Battle), avis de
+// recherche, Thousand Sunny et Vogue Merry.
+const IMG = (name: string) => `/onepiece/${name}.webp`;
+
+// L'équipage défile dans deux coins, un membre après l'autre (fondu enchaîné) : chacun reste
+// CREW_STEP secondes, la boucle dure CREW_STEP × nombre de membres du coin.
+const CREW_STEP = 9;
+const CREW_LEFT = ["luffy", "zoro", "usopp", "franky", "jinbe"];
+const CREW_RIGHT = ["nami", "sanji", "robin", "chopper"];
+
+// Avis de recherche épinglés un peu partout (position, inclinaison) ; au centre, les cartes du
+// site en cachent une partie, on les devine entre deux.
+const POSTERS = [
+  { name: "luffy", left: "1.5vw", top: "14vh", tilt: -6 },
+  { name: "zoro", left: "12vw", top: "31vh", tilt: 5 },
+  { name: "nami", left: "22vw", top: "11vh", tilt: -3 },
+  { name: "chopper", left: "31vw", top: "40vh", tilt: 4 },
+  { name: "sanji", left: "41vw", top: "8vh", tilt: 7 },
+  { name: "usopp", left: "52vw", top: "30vh", tilt: -8 },
+  { name: "brook", right: "29vw", top: "11vh", tilt: 3 },
+  { name: "robin", right: "15vw", top: "33vh", tilt: 6 },
+  { name: "franky", right: "2.5vw", top: "27vh", tilt: -5 },
+] as const;
 
 // Le pavillon est découpé en bandes verticales qui ondulent chacune avec un léger retard : le
 // tissu a l'air de flotter au vent, crâne compris.
@@ -29,11 +55,31 @@ const WAVES = [
 const FLAG_SLICES = 15;
 const SLICE_PX = 10;
 
+/** Fondu enchaîné des membres d'un coin : chacun son tour, sur la même boucle. */
+function CrewCorner({ side, crew }: { side: "left" | "right"; crew: string[] }) {
+  return (
+    <div className={`op-crew op-crew-${side}`}>
+      {crew.map((name, i) => (
+        <span
+          key={name}
+          className="op-crew-member"
+          style={{
+            backgroundImage: `url(${IMG(`crew-${name}`)})`,
+            animationDuration: `${CREW_STEP * crew.length}s`,
+            animationDelay: `${i * CREW_STEP - CREW_STEP * 0.4}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /**
- * Décor du thème One Piece, en fond : nuit sur la mer (lune, étoiles, horizon), houle sur trois
- * plans, un navire au loin qui traverse l'horizon, mouettes, le pavillon au chapeau de paille qui
- * flotte, l'avis de recherche de Luffy épinglé, et des « ドン!! » de manga qui claquent de temps en
- * temps. Affiché seulement par ce thème (--onepiece), décoratif (aria-hidden, aucun clic).
+ * Décor du thème One Piece, en fond : nuit sur la mer (lune et son reflet, étoiles), houle sur
+ * trois plans où navigue le Thousand Sunny (et le Vogue Merry au loin, sur l'horizon), mouettes,
+ * chapeau de paille emporté par le vent, pavillon qui flotte devant la lune, l'équipage qui défile
+ * dans les coins, les avis de recherche de tout l'équipage épinglés, et des « ドン!! » de manga.
+ * Affiché seulement par ce thème (--onepiece), décoratif (aria-hidden, aucun clic).
  */
 export function OnePieceDecor() {
   return (
@@ -57,34 +103,38 @@ export function OnePieceDecor() {
         />
       ))}
 
-      {/* navire au loin : traverse l'horizon très lentement en tanguant */}
-      <div className="op-ship-track">
-        <svg viewBox="0 0 220 110" className="op-ship">
-          <path className="op-ship-sail" d="M78 18 Q104 26 132 18 L134 64 Q104 72 76 64 Z" />
-          <path className="op-ship-sail" d="M138 34 Q154 39 170 34 L171 64 Q154 69 137 64 Z" />
-          <path className="op-ship-hull" d="M104 4 V76 M154 22 V76 M60 50 L104 40" />
-          <path className="op-ship-flag" d="M104 4 L124 8 L104 13 Z" />
-          <path
-            className="op-ship-body"
-            d="M18 70 Q24 96 66 99 L162 99 Q194 96 204 72 L172 77 L52 77 Z"
-          />
-          {/* tête de mouton à la proue */}
-          <circle className="op-ship-body" cx="206" cy="66" r="8" />
-          <circle className="op-ship-sail" cx="104" cy="44" r="7" />
-        </svg>
-      </div>
+      <CrewCorner side="left" crew={CREW_LEFT} />
+      <CrewCorner side="right" crew={CREW_RIGHT} />
 
-      {Array.from({ length: 4 }, (_, i) => (
+      {POSTERS.map((p, i) => (
+        <span
+          key={p.name}
+          className="op-poster"
+          style={
+            {
+              left: "left" in p ? p.left : undefined,
+              right: "right" in p ? p.right : undefined,
+              top: p.top,
+              backgroundImage: `url(${IMG(`wanted-${p.name}`)})`,
+              "--poster-tilt": `${p.tilt}deg`,
+              animationDuration: `${6 + seeded(i, 20) * 4}s`,
+              animationDelay: `${-seeded(i, 21) * 8}s`,
+            } as CSSProperties
+          }
+        />
+      ))}
+
+      {Array.from({ length: 5 }, (_, i) => (
         <span
           key={`g${i}`}
           className="op-gull"
           style={
             {
-              top: `${10 + seeded(i, 6) * 30}%`,
-              animationDuration: `${46 + seeded(i, 7) * 30}s`,
+              top: `${8 + seeded(i, 6) * 32}%`,
+              animationDuration: `${40 + seeded(i, 7) * 30}s`,
               animationDelay: `${-seeded(i, 8) * 70}s`,
               "--gull-rise": `${(seeded(i, 9) - 0.5) * 18}vh`,
-              "--gull-size": `${0.7 + seeded(i, 10) * 0.6}`,
+              "--gull-size": `${0.7 + seeded(i, 10) * 0.7}`,
             } as CSSProperties
           }
         >
@@ -97,6 +147,24 @@ export function OnePieceDecor() {
           </svg>
         </span>
       ))}
+
+      {/* le chapeau de paille, emporté par le vent, traverse le ciel en tournoyant */}
+      <span className="op-hat-track">
+        <svg viewBox="0 0 160 70" className="op-hat">
+          <path d="M42 40 C42 8 118 8 118 40 Z" fill="#f2c23a" stroke="#8a5f10" strokeWidth="3" />
+          <path d="M42.6 30 C60 34 100 34 117.4 30 L118 40 L42 40 Z" fill="#d8342b" />
+          <ellipse
+            cx="80"
+            cy="44"
+            rx="76"
+            ry="14"
+            fill="#f2c23a"
+            stroke="#8a5f10"
+            strokeWidth="3"
+          />
+          <path d="M14 45 q66 9 132 0" fill="none" stroke="#c9961f" strokeWidth="2" />
+        </svg>
+      </span>
 
       <div className="op-flag">
         <span className="op-flag-pole" />
@@ -118,14 +186,6 @@ export function OnePieceDecor() {
         ))}
       </div>
 
-      <div className="op-wanted">
-        <span className="op-wanted-title">WANTED</span>
-        <span className="op-wanted-photo" />
-        <span className="op-wanted-doa">DEAD OR ALIVE</span>
-        <span className="op-wanted-name">MONKEY·D·LUFFY</span>
-        <span className="op-wanted-bounty">฿ 3.000.000.000-</span>
-      </div>
-
       {Array.from({ length: 3 }, (_, i) => (
         <span
           key={`d${i}`}
@@ -145,17 +205,18 @@ export function OnePieceDecor() {
         </span>
       ))}
 
+      {/* la mer : le Merry au loin sur l'horizon, le Sunny entre deux vagues (sa coque plonge
+          derrière la houle du premier plan) */}
       <div className="op-sea">
-        {WAVES.map((w) => (
-          <svg
-            key={w.className}
-            viewBox={`0 0 1600 ${w.height}`}
-            preserveAspectRatio="none"
-            className={w.className}
-          >
-            <path d={wavePath(w.height, w.amplitude)} />
-          </svg>
-        ))}
+        <span className="op-merry-track">
+          <span className="op-merry" style={{ backgroundImage: `url(${IMG("merry")})` }} />
+        </span>
+        <Wave className="op-wave-back" amplitude={9} />
+        <span className="op-sunny-track">
+          <span className="op-sunny" style={{ backgroundImage: `url(${IMG("sunny")})` }} />
+        </span>
+        <Wave className="op-wave-mid" amplitude={12} />
+        <Wave className="op-wave-front" amplitude={15} />
       </div>
     </div>
   );

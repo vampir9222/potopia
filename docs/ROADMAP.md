@@ -194,8 +194,10 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
       dans « Paramètres » (`/parametres`, menu de l'avatar), réglages gardés sur l'appareil.
     - Thème JoJo (Stardust Crusaders) : décor manga, portraits, « ゴゴゴ » ; le choisir déclenche
       ZA WARUDO, qui fige vraiment tout le site (animations et musiques) le temps de l'effet.
-    - Thème One Piece : nuit sur la mer (houle, lune, navire, mouettes, pavillon au chapeau de
-      paille, avis de recherche de Luffy), cadres en corde tressée ; le choisir déclenche « ドン!! ».
+    - Thème One Piece : nuit sur la mer (houle, lune, Thousand Sunny et Vogue Merry, mouettes,
+      chapeau de paille au vent, pavillon), l'équipage qui défile dans les coins, les avis de
+      recherche de tout l'équipage, cadres translucides en corde tressée ; le choisir déclenche
+      « ドン!! » et le Coup de Burst du Sunny.
     - Navigation sans rechargement entre les pages (tuiles, logo, notifications, jeux : `AppLink`
       et `useNavigate` de `@app/ui`) : la musique du header continue d'une page à l'autre.
     - Sur mobile, la colonne gauche passe dans un menu.

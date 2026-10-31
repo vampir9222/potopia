@@ -663,7 +663,7 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
     transparent 5.6deg 9deg
   );
   mask-image: radial-gradient(circle at 50% 50%, transparent 22%, #000 62%);
-  animation: don-lines 1.6s ease-out forwards;
+  animation: don-lines 1.9s ease-out forwards;
 }
 
 @keyframes don-lines {
@@ -684,6 +684,55 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
   }
 }
 
+/* Coup de Burst : le Thousand Sunny surgit en bas à droite et file vers le haut à gauche */
+.don-sunny {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: clamp(180px, 26vw, 340px);
+  aspect-ratio: 204 / 180;
+  background: center / contain no-repeat;
+  filter: drop-shadow(0 12px 18px rgb(0 0 0 / 0.55));
+  animation: don-sunny 1.5s cubic-bezier(0.3, 0.1, 0.4, 1) 0.18s both;
+}
+
+@keyframes don-sunny {
+  from {
+    transform: translate(105vw, 70vh) rotate(-4deg) scale(0.8);
+  }
+  to {
+    transform: translate(-40vw, -10vh) rotate(-16deg) scale(1.15);
+  }
+}
+
+/* nuages de vapeur : ils éclatent derrière le navire puis se dissipent */
+.don-puff {
+  position: absolute;
+  margin: -40px 0 0 -40px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%, #fff 0 35%, transparent 36%),
+    radial-gradient(circle at 70% 55%, #f3f6ff 0 30%, transparent 31%),
+    radial-gradient(circle at 40% 72%, #e6ecf7 0 28%, transparent 29%);
+  filter: drop-shadow(0 0 6px rgb(255 255 255 / 0.6));
+  opacity: 0;
+  animation: don-puff 0.9s ease-out both;
+}
+
+@keyframes don-puff {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  15% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
 .don-text {
   position: absolute;
   inset: 0;
@@ -700,7 +749,7 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
   text-shadow:
     10px 10px 0 #02070d,
     0 0 60px rgb(230 58 46 / 0.6);
-  animation: don-text 1.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+  animation: don-text 1.9s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
 }
 
 .don-bang {

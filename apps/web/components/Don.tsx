@@ -1,10 +1,19 @@
 "use client";
 
-import { DON_EVENT, effectiveVolume } from "@app/ui";
+import { DON_EVENT, effectiveVolume, preloadImages } from "@app/ui";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-const DON_MS = 1600;
+const DON_MS = 1900;
+const SUNNY = "/onepiece/sunny.webp";
+// nuages de vapeur laissés par le Coup de Burst, le long de la trajectoire du Sunny (en % de
+// l'écran) : chacun éclate quand le navire passe
+const PUFFS = Array.from({ length: 7 }, (_, i) => ({
+  x: 92 - i * 14,
+  y: 72 - i * 8.5,
+  delay: 260 + i * 120,
+  size: 70 + (i % 3) * 26,
+}));
 const VOLUME = 0.9;
 
 /**
@@ -48,12 +57,16 @@ function drum(volume: number) {
 
 /**
  * « ドン!! » façon manga (thème One Piece) : coup de tambour, flash, lignes de vitesse noires qui
- * convergent vers le centre et onomatopée qui claque en tremblant, puis tout s'efface. Déclenché
+ * convergent vers le centre et onomatopée qui claque en tremblant ; le Thousand Sunny traverse
+ * l'écran en « Coup de Burst », en laissant des nuages de vapeur, puis tout s'efface. Déclenché
  * par `don()` de `@app/ui` (choix du thème One Piece). Monté une fois, layout racine.
  */
 export function Don() {
   const [on, setOn] = useState(false);
   const onRef = useRef(false);
+
+  // le Sunny est chargé d'avance : il doit traverser l'écran au moment du coup de tambour
+  useEffect(() => void preloadImages([SUNNY]), []);
 
   useEffect(() => {
     let timer = 0;
@@ -80,6 +93,20 @@ export function Don() {
     <div aria-hidden className="don-layer pointer-events-none fixed inset-0 z-100">
       <span className="don-flash" />
       <span className="don-lines" />
+      {PUFFS.map((p, i) => (
+        <span
+          key={i}
+          className="don-puff"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size,
+            animationDelay: `${p.delay}ms`,
+          }}
+        />
+      ))}
+      <span className="don-sunny" style={{ backgroundImage: `url(${SUNNY})` }} />
       <span className="don-text">
         <span>
           ドン<span className="don-bang">!!</span>
