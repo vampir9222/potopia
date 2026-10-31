@@ -1,6 +1,6 @@
 # Plan d’intégration de GOTY Party dans Potopia
 
-Statut : lot 1 terminé ; implémentation à partir du lot 2. Analyse des deux dépôts locaux le
+Statut : lots 1 et 2 terminés ; préparation à partir du lot 3. Analyse des deux dépôts locaux le
 31 octobre 2026. Ce document ne déclenche ni migration ni déploiement.
 
 Le [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) détaille les droits, transitions,
@@ -110,7 +110,7 @@ choix explicite sur les données existantes.
 Livré : [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md), avec matrice des droits,
 transitions, projections par lecteur, adaptations de la source et scénarios R01 à R30.
 
-### Lot 2 — Créer le module et les données
+### Lot 2 — Créer le module et les données ✅
 
 - Ajouter le package, le schéma à l’assemblage Prisma, la migration additive et les configurations
   TypeScript, ESLint et Vitest suivant les modules existants.
@@ -121,6 +121,11 @@ transitions, projections par lecteur, adaptations de la source et scénarios R01
 
 **Fini quand :** la migration s’applique sur la base de test, les règles passent et le contrôle
 des frontières accepte le nouveau module.
+
+Livré : [module serveur `@app/goty`](../games/goty/README.md), huit tables dans le schéma `goty`,
+migration additive, règles pures, services d’accès, création d’édition et gestion des inscrits.
+Les tests vérifient les rôles, les archives, la concurrence et les transactions composables.
+Aucune route ou interface GOTY n’est encore exposée dans le portail.
 
 ### Lot 3 — Porter la préparation
 

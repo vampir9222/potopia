@@ -39,6 +39,7 @@ Pourquoi Better Auth plutôt qu'Auth.js :
 apps/web/            app Next mince : routes, layouts, server actions, route handlers
 games/
   agents/            Agents Doubles, jeu d'espions coopératif à deux (règles de Codenames Duet)
+  goty/              GOTY Party : socle serveur (éditions, accès, inscriptions), UI à venir
   tcg/               futur jeu de cartes : pour l'instant, le vote du design des cartes (/cartes)
   trois/             Wordle français à 3 mots par jour (premier jeu intégré)
 packages/
@@ -190,6 +191,23 @@ passe d'une partie à l'autre sans rechargement.
   l'illustration, point central x/y en % et zoom de 1 à 4 ; l'image n'est jamais rognée), ideaId? (index simple, `ideas.ideas`
   sans relation : lien de gestion, une idée peut donner plusieurs cartes), baseCardId? (variante full art → sa carte de base), createdAt, updatedAt. La base ne
   contient aucune logique d'effet : seulement la clé d'un effet du catalogue et ses réglages.
+
+### goty
+
+Huit tables dans le schéma `goty` : `editions`, `members`, `rounds`, `games`, `choices`,
+`predictions`, `proposals`, `votes`. Le module utilise les identités de `core` sans FK entre
+domaines. Année unique, clés composites pour inscriptions, choix, pronostics et votes ; noms
+normalisés et positions uniques dans le conducteur. Les FK de jeux utilisés sont restrictives.
+
+Le socle fournit création d’édition, résumés filtrés, identités publiques et gestion des inscrits.
+Les écritures sont composables avec `{ tx }`. Le remplacement des inscrits verrouille la ligne
+édition, vérifie `expectedVersion` puis l’incrémente. Les lectures d’accès prennent un verrou
+partagé sur cette ligne pour stabiliser phase, version et inscriptions. Les droits d’admin sont
+recalculés via `core`, et les archives sont lisibles par tous les membres du portail.
+
+La migration `20261031230000_goty` est additive et n’importe aucune donnée de goty-party.
+Préparation, pronostics, cérémonie et leurs projections complètes sont à venir ; voir le
+[README du module](../games/goty/README.md) pour les services disponibles et les contraintes.
 
 ### trois et agents
 
@@ -794,10 +812,8 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 
 L’intégration native de GOTY Party est définie dans le
 [plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) et le
-[contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Le futur module `games/goty` utilisera
-les identités de `core` et un schéma PostgreSQL `goty`, sans reprise des anciennes données.
-Les archives seront accessibles à tous les membres du portail. Le module, ses routes et ses
-tables ne sont pas encore implémentés ; le contrat fixe les règles des prochains lots.
+[contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Son socle serveur est disponible,
+mais préparation, cérémonie, snapshots complets, interface et routes HTTP restent à implémenter.
 
 Côté cartes : boosters, collection, decks et parties (étape 13, à venir). Pas de récompense en
 monnaie dans TROIS pour l'instant.

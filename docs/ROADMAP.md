@@ -537,7 +537,7 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 
 ---
 
-## Étape 14 : intégration de GOTY Party (cadrage terminé)
+## Étape 14 : intégration de GOTY Party (socle serveur terminé)
 
 Le [plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) décrit les lots. Le
 [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) fixe droits, transitions, projections HTTP
@@ -545,7 +545,8 @@ et scénarios de recette. Le module n’est pas encore disponible dans le portai
 
 - [x] Lot 1 : comparaison des sources, règles, matrice des droits, transitions, contrats HTTP et
       scénarios R01 à R30. Décisions utilisateur : départ à zéro, archives pour tous les membres.
-- [ ] Lot 2 : module `games/goty`, schéma PostgreSQL, règles et services d’accès.
+- [x] Lot 2 : module `games/goty`, schéma PostgreSQL (huit tables), migration additive, règles
+      pures, services d’accès, éditions, inscriptions, tests de concurrence et de transactions.
 - [ ] Lot 3 : préparation, catégories, jeux, imports, palmarès et catalogue IGDB.
 - [ ] Lot 4 : pronostics, confidentialité, concurrence et cérémonie.
 - [ ] Lot 5 : interface React, navigation du portail, synchronisation et écran TV.
