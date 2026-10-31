@@ -261,6 +261,13 @@ métier restent indépendants de Next et acceptent `{ tx }` pour leurs écriture
 est toujours vérifié contre son édition, son propriétaire et les permissions ; l’acteur vient
 de la session et jamais du corps de requête.
 
+Précisions du lot 4 : `restart` exige aussi `confirmRestart: true`. Les commandes
+`announce`, `lock`, `reopen`, `reveal`, `recap` exigent `roundId` ; `play` exige `targetId`.
+`resume` est réservé au classement temporaire ; `play` exige un écran de rubrique ou de
+récapitulatif. Les types serveur `ControlInput` décrivent ces variantes. Les deux snapshots sont
+implémentés côté serveur ; leur exposition HTTP, `no-store` et les contrôles de session par
+route seront intégrés au lot 5.
+
 `GameInput` : `title`, `platform?`, `period?`, `completed?`, `platinum?`, `igdbId?`, `cover?`,
 `trailerYoutubeId?`, avec les limites de la section 4. Chaînes facultatives par défaut vides,
 indicateurs faux, métadonnées externes nulles. Référence IGDB entière positive ; jaquette HTTPS

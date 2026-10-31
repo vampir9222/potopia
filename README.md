@@ -11,8 +11,8 @@ et celui de la monnaie viennent de `packages/config/brand.ts`.
 - Intégration de GOTY Party (planifiée, pas encore disponible) :
   [plan d’action](docs/PLAN_INTEGRATION_GOTY_PARTY.md) et
   [contrat fonctionnel](docs/CONTRAT_FONCTIONNEL_GOTY_PARTY.md).
-  Le [socle et la préparation serveur](games/goty/README.md) sont implémentés, avec imports
-  CSV/XLSX et catalogue IGDB facultatif, sans page ni route HTTP pour l’instant.
+  Le [serveur GOTY](games/goty/README.md) couvre préparation, imports CSV/XLSX, IGDB facultatif,
+  pronostics, cérémonie et archives, sans page ni route HTTP pour l’instant.
 
 **Stack** : monorepo pnpm + Turborepo, TypeScript strict, Next.js 16 (App Router), Tailwind v4,
 PostgreSQL + Prisma 7, Better Auth (Discord), stockage S3 (Cloudflare R2 en prod, RustFS en
@@ -142,7 +142,7 @@ packages/
   ui/            thèmes et composants de base
 games/
   agents/        Agents Doubles, le jeu d'espions coopératif à deux
-  goty/          GOTY Party : éditions et préparation serveur, imports, IGDB ; interface à venir
+  goty/          GOTY Party : préparation, pronostics, cérémonie et archives serveur ; UI à venir
   tcg/           jeu de cartes : vote du design (/cartes), cartes et effets (admin /admin/cartes)
   trois/         TROIS, le Wordle à 3 mots par jour
 ```

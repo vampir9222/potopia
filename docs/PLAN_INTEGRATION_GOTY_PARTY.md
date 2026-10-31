@@ -1,6 +1,6 @@
 # Plan d’intégration de GOTY Party dans Potopia
 
-Statut : lots 1 à 3 terminés ; pronostics et cérémonie à partir du lot 4. Analyse des dépôts le
+Statut : lots 1 à 4 terminés ; interface et routes à partir du lot 5. Analyse des dépôts le
 31 octobre 2026. Ce document ne déclenche ni migration ni déploiement.
 
 Le [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) détaille les droits, transitions,
@@ -145,7 +145,7 @@ Livré côté serveur : catégories, votes, ouverture en préparation, jeux, imp
 aperçus réutilisables, choix personnels, IGDB avec cache et quotas PostgreSQL partagés. Les
 interfaces React restent au lot 5 ; voir le [README du module](../games/goty/README.md).
 
-### Lot 4 — Porter les pronostics et la cérémonie
+### Lot 4 — Porter les pronostics et la cérémonie ✅
 
 - Reprendre les pronostics et le score actuel : un point par réponse correcte révélée, ex æquo
   conservés ; aucune conversion automatique en monnaie.
@@ -163,6 +163,11 @@ interfaces React restent au lot 5 ; voir le [README du module](../games/goty/REA
 
 **Fini quand :** le cycle complet passe en tests avec plusieurs acteurs, y compris une course
 entre enregistrement d’un pronostic, fermeture et révélation.
+
+Livré côté serveur : pronostics, score dérivé avec ex æquo, commandes versionnées, conducteur,
+état audio, retour en préparation et archives. Les vues membre/TV sont filtrées côté serveur et
+lues sous un verrou partagé cohérent avec les écritures. Le cycle complet et les courses sont
+testés sur PostgreSQL. Aucune migration nouvelle ; interfaces et handlers restent au lot 5.
 
 ### Lot 5 — Intégrer l’interface au portail
 

@@ -1,8 +1,8 @@
 # GOTY Party dans Potopia
 
-Les lots 2 et 3 livrent le socle serveur et la préparation de `@app/goty`. Ils n’ajoutent encore
-ni page, ni route HTTP, ni tuile au portail. Pronostics et cérémonie viennent au lot 4, les
-interfaces React au lot 5. Les lecteurs et aperçus d’import sont prêts pour ces interfaces.
+Les lots 2 à 4 livrent le serveur de `@app/goty` : éditions, préparation, pronostics, cérémonie
+et archives. Ils n’ajoutent encore ni page, ni route HTTP, ni tuile au portail. Les interfaces
+React, la synchronisation navigateur et l’écran TV viennent au lot 5.
 
 - [Plan des lots](../../docs/PLAN_INTEGRATION_GOTY_PARTY.md)
 - [Contrat fonctionnel et recette](../../docs/CONTRAT_FONCTIONNEL_GOTY_PARTY.md)
@@ -26,16 +26,17 @@ des données des autres domaines. Le schéma PostgreSQL `goty` contient huit tab
 La migration additive `20261101010000_goty_catalog` ajoute `catalog_cache` (résultats publics
 IGDB et expiration) et `catalog_quotas` (compteurs partagés), sans modifier de table existante.
 
-Phases : `categories`, `preparation`, `live`, `closed`. Le passage en préparation est disponible ;
-la soirée et la clôture viendront au lot 4. Statuts de rubrique : `draft`, `announced`, `locked`,
+Phases : `categories`, `preparation`, `live`, `closed`. Les transitions de préparation, soirée,
+retour en préparation et clôture sont disponibles. Statuts de rubrique : `draft`, `announced`, `locked`,
 `revealing`, `done`. Les tableaux de révélation contiennent des identifiants de type chaîne.
 
 Les FK restent internes à GOTY. Les identités sont obtenues via les services de `core` et aucun
-compte ou session GOTY n’est créé. Les services de choix vérifient édition, rubrique et propriétaire
-du jeu ; les futurs pronostics devront vérifier aussi leur cible. Les FK seules ne remplacent
+compte ou session GOTY n’est créé. Les services de choix et pronostics vérifient édition, rubrique,
+propriétaire du jeu et cible. Les FK seules ne remplacent
 pas ces contrôles métier. Les suppressions de jeux référencés sont restreintes.
-Le conducteur utilise une contrainte unique de position : son futur réordonnancement devra
-passer par des positions temporaires dans une transaction pour éviter les collisions.
+Le conducteur utilise une contrainte unique de position : son réordonnancement passe par des
+positions temporaires dans une transaction pour éviter les collisions. Le lot 4 ne nécessite
+aucune migration supplémentaire.
 
 ## API serveur disponible
 
@@ -73,8 +74,8 @@ attendue et l’incrémentent. Les lectures d’accès prennent un verrou partag
 pour garder les inscriptions et la version cohérentes face aux écritures concurrentes.
 
 `getEdition` est volontairement une vue limitée du socle : aucun écran brut, choix ou pronostic.
-`listEditionMembers` ne fournit pas encore les compteurs de préparation du futur snapshot.
-Aucune de ces vues ne constitue le `MemberSnapshot` complet ni la projection TV du contrat.
+`listEditionMembers` fournit uniquement les identités et rôles. Les compteurs de préparation,
+le `MemberSnapshot` complet et la projection TV sont disponibles via les services du lot 4.
 
 `GotyError` expose `code`, `message` et `status` : `INVALID_INPUT` (400), `FORBIDDEN` (403),
 `NOT_FOUND` (404), `CONFLICT` (409), `RATE_LIMITED` (429), `CATALOG_UNAVAILABLE` (503).
@@ -106,8 +107,8 @@ pour leur auteur. Les nouvelles arrivées en Préparation ne recalculent pas les
 facultatifs, référence IGDB, jaquette HTTPS sur `images.igdb.com`, identifiant YouTube de trailer
 facultatifs. Un lot contient 1 à 1000 jeux ; les doublons sont conservés, une erreur invalide
 tout le lot. Un jeu ne peut apparaître qu’une fois dans le top, mais peut recevoir plusieurs prix.
-Les trous temporaires du top restent possibles pendant l’édition ; le lot 4 les vérifiera à
-l’annonce. La précision est limitée à 500 caractères. YouTube est réservé à la bande-son,
+Les trous temporaires du top restent possibles pendant l’édition ; chaque annonce de rubrique
+du top exige un classement contigu depuis la place 1. La précision est limitée à 500 caractères. YouTube est réservé à la bande-son,
 validé et normalisé. Modifier son choix ne supprime aucun pronostic déjà enregistré.
 
 ### Import CSV et XLSX
@@ -146,6 +147,87 @@ Les appels réseau ont lieu hors transaction dans l’usage habituel ; éviter d
 recherche externe dans une transaction applicative déjà ouverte, dont le délai reste imposé
 par son appelant. Aucun jeton ou secret n’est écrit dans le cache.
 
+## Pronostics et cérémonie (lot 4)
+
+| Fonction                  | Entrée en plus de `actorId`, `editionId`              | Résultat                                                      |
+| ------------------------- | ----------------------------------------------------- | ------------------------------------------------------------- |
+| `setPrediction`           | `roundId`, `targetId`, `gameId` ou `null`             | `{ ok, version }`                                             |
+| `controlEdition`          | `expectedVersion`, `action`, arguments selon l’action | `{ ok, version }`                                             |
+| `setRoundOrder`           | `expectedVersion`, `roundIds` (permutation complète)  | `{ ok, version }`                                             |
+| `getMemberSnapshot`       | Aucun                                                 | `MemberSnapshot` filtré selon le lecteur                      |
+| `getPresentationSnapshot` | Aucun                                                 | `PresentationSnapshot`, sans privilège de lecture lié au rôle |
+
+Les types `ControlInput`, `ControlAction`, `CeremonyScreen`, `MemberSnapshot` et
+`PresentationSnapshot` sont exportés pour les futurs handlers et composants.
+
+Les pronostics ouvrent en Préparation, y compris avant que la cible ait rempli son palmarès.
+Ils sont modifiables pour les rubriques `draft` et `announced`, pour les autres participants
+seulement, avec un jeu appartenant à la liste de la cible. À l’annonce, une cible sans choix est
+neutralisée : sa réponse reste conservée mais ne rapporte aucun point. La fermeture bloque
+modification et effacement ; les rubriques suivantes restent ouvertes.
+
+Commandes réservées aux présentateurs et admins :
+
+| Action        | Arguments spécifiques  | Conditions et effet                                                                        |
+| ------------- | ---------------------- | ------------------------------------------------------------------------------------------ |
+| `announce`    | `roundId`              | Prochaine rubrique `draft`, aucune rubrique active ; gel des choix, tirage et phase `live` |
+| `lock`        | `roundId`              | `announced` → `locked`, pronostics fermés                                                  |
+| `reopen`      | `roundId`              | `locked` ou `revealing`, zéro révélation ; retour à `announced`                            |
+| `reveal`      | `roundId`              | `locked` ou `revealing`, cible restante ; exactement une révélation                        |
+| `recap`       | `roundId`              | Toutes les cibles révélées, y compris zéro ; rubrique `done`, écran récapitulatif          |
+| `leaderboard` | Aucun                  | Affichage temporaire des points, mémorisation de l’écran précédent                         |
+| `resume`      | Aucun                  | Seulement depuis le classement temporaire, retour à l’écran précédent                      |
+| `play`        | `targetId`             | Bande-son déjà révélée dans la rubrique affichée en mode rubrique ou récapitulatif         |
+| `stop`        | Aucun                  | Arrêt de la commande audio                                                                 |
+| `restart`     | `confirmRestart: true` | Retour en préparation avec remise à zéro des révélations ; choix et pronostics conservés   |
+| `close`       | Aucun                  | Phase `live`, toutes les rubriques `done` ; archive en lecture seule                       |
+
+Hors `restart`, chaque commande exige un état de présentation valide. Les commandes ne sont
+permises qu’en Préparation ou Soirée. Le retour en préparation exige une confirmation explicite
+dans l’entrée serveur ; l’interface devra expliquer que les spectateurs peuvent déjà avoir
+mémorisé les réponses. Il ne rouvre pas les votes sur les catégories. Jeux, choix, pronostics et
+conducteur sont conservés, les tirages sont effacés et les points dérivés retombent à zéro.
+
+Toutes les commandes vérifient `expectedVersion` sous verrou d’édition. Un double clic, un rejeu
+ou une seconde télécommande utilisant l’ancienne version reçoit 409 sans deuxième effet.
+Après un conflit, rafraîchir l’état avant de proposer une nouvelle commande ; ne pas rejouer
+automatiquement une révélation sur une nouvelle version. Le conducteur est modifiable par
+organisateurs et présentateurs, mais les rubriques déjà commencées gardent leur position.
+
+Le tirage aléatoire est créé à l’annonce et persisté, sans être transmis au navigateur. Une
+rubrique vide se termine par annonce, fermeture et récapitulatif. Chaque bonne réponse révélée
+rapporte un point, sans effet de la précision ou du média et sans récompense en monnaie. Les
+ex æquo conservent leur rang (`1, 1, 3`). Les points sont calculés à la lecture, pas crédités dans
+un compteur modifiable ou un ledger séparé.
+
+### Projections et cohérence
+
+`getMemberSnapshot` contient édition/version/écran, permissions, identités et rôles des membres,
+compteurs globaux de préparation, listes partagées de jeux, rubriques, propositions, ses propres
+choix et pronostics, et ceux dont la cible a été révélée. Les cibles éligibles d’une rubrique
+ne sont indiquées qu’après annonce et triées indépendamment du tirage. Le classement n’est
+visible que pour un présentateur/admin, quand il est affiché ou après clôture.
+
+`getPresentationSnapshot` contient les identités minimales, les rubriques et leur seul préfixe
+révélé, les choix et jeux effectivement révélés, les pronostics correspondants, et le classement
+uniquement lorsqu’il est affiché ou archivé. Aucun choix personnel encore secret, rôle, compteur
+de préparation ou liste de cibles futures, même pour une TV connectée avec le compte admin.
+Une archive est ouverte à tous les membres du portail ; les pronostics neutralisés restent
+privés sauf pour leur auteur.
+
+Les deux projections utilisent un JSON d’écran validé avec champs autorisés. Une commande audio
+ne peut référencer qu’un choix révélé ; chaque lancement porte un nonce, conservé lors d’une
+simple reconnexion et renouvelé lors d’une nouvelle lecture. Les changements d’écran arrêtent
+l’audio, sauf une révélation de bande-son qui remplace la lecture précédente. Les lecteurs,
+leurs contrôles de son et la suspension de la musique du portail seront intégrés au lot 5.
+
+Toutes les lectures GOTY d’un snapshot s’exécutent sous le verrou partagé de l’édition, qui
+reste détenu jusqu’à la fin de la transaction. Les écritures métier prennent le verrou exclusif
+sur cette même ligne ; cela stabilise les données même en isolation PostgreSQL READ COMMITTED,
+y compris dans une transaction fournie via `{ tx }`. Les services `core` fournissent séparément
+les noms et images publics. Les futurs handlers devront vérifier la session, renvoyer `no-store`
+et ne pas mettre en cache les projections entre acteurs.
+
 ## Règles pures
 
 `initialRounds`, `BASE_CATEGORIES`, `normalizeCategoryName`, `votesNeeded`, `shuffle`,
@@ -168,4 +250,6 @@ Les tests appliquent les migrations puis vident la base désignée par `TEST_DAT
 le nom doit finir par `_test`. Ne pas les exécuter en parallèle avec les autres packages sur la
 même base. Les fixtures sont fictives. Les tests couvrent règles pures, accès, archives, identités,
 retrait, rôles, concurrence, validation, rollback, préparation, confidentialité et imports
-CSV/XLSX. IGDB et Twitch sont simulés dans les tests : aucune clé réelle ni requête fournisseur.
+CSV/XLSX, pronostics, cycle complet de cérémonie, audio, archives et snapshots. Les tests de
+concurrence couvrent les doubles révélations, les courses de fermeture/réouverture et une lecture
+bloquée par une révélation non validée. IGDB et Twitch sont simulés : aucune clé réelle ni requête fournisseur.

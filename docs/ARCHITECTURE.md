@@ -218,8 +218,22 @@ fixes, protégées par verrou consultatif). Aucun secret ou jeton OAuth en base.
 facultatives `IGDB_CLIENT_ID` et `IGDB_CLIENT_SECRET` restent côté serveur ; sans clés ou en cas
 de panne, la saisie manuelle reste possible. Les appels réseau sont bornés à 10 secondes chacun.
 
-Pronostics, cérémonie et projections complètes sont à venir ; voir le
-[README du module](../games/goty/README.md) pour les services disponibles et les contraintes.
+Le lot 4 fournit pronostics, score dérivé des réponses révélées, commandes versionnées de
+cérémonie, conducteur, état audio et archives. `getMemberSnapshot` ne retourne que ses choix
+et pronostics personnels ou ceux déjà révélés ; `getPresentationSnapshot` omet aussi les
+réponses personnelles cachées, les rôles et les compteurs de préparation, même pour un admin.
+L’ordre futur du tirage n’est jamais transmis. Le classement accepte les ex æquo sans départage
+et n’est visible qu’aux présentateurs/admins, lorsqu’affiché ou après clôture (sur la TV,
+uniquement lorsqu’affiché ou archivé).
+
+Les snapshots gardent le verrou partagé de l’édition pendant toutes leurs lectures GOTY,
+ce qui empêche les écritures métier entre deux requêtes même en READ COMMITTED. Les commandes
+et changements de conducteur vérifient la version attendue sous verrou exclusif : un rejeu ou
+une commande concurrente devient un conflit sans deuxième effet. L’échange des positions utilise
+deux passes pour respecter leur unicité. Le retour en préparation exige `confirmRestart: true`,
+garde les choix et pronostics, efface les tirages et remet les points dérivés à zéro. Les archives
+sont immuables. Aucun nouvel objet SQL ni variable d’environnement pour ce lot ; voir le
+[README du module](../games/goty/README.md). Interfaces et routes restent au lot 5.
 
 ### trois et agents
 
@@ -824,8 +838,9 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 
 L’intégration native de GOTY Party est définie dans le
 [plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) et le
-[contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Socle et préparation serveur sont
-disponibles ; pronostics, cérémonie, snapshots complets, interface et routes HTTP restent à implémenter.
+[contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Le serveur couvre préparation,
+pronostics, cérémonie et snapshots ; interface, synchronisation navigateur et routes HTTP
+restent à implémenter.
 
 Côté cartes : boosters, collection, decks et parties (étape 13, à venir). Pas de récompense en
 monnaie dans TROIS pour l'instant.
