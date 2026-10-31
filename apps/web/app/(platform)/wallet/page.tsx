@@ -2,6 +2,7 @@ import { BRAND } from "@app/config/brand";
 import { getBalance, getHistory } from "@app/economy";
 import { BalanceCard, TransactionList } from "@app/economy/ui";
 import { buttonClasses, Card } from "@app/ui";
+import { HiddenEmerald } from "@app/inventory/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -22,7 +23,7 @@ export default async function WalletPage({
   ]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
       <Breadcrumb />
       <BalanceCard balance={balance} />
       <Card title="Historique">
@@ -49,6 +50,7 @@ export default async function WalletPage({
           </div>
         )}
       </Card>
+      <HiddenEmerald color="red" className="absolute right-3 -bottom-3" />
     </div>
   );
 }

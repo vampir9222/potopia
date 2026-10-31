@@ -1,0 +1,14 @@
+// Domaine inventory : objets trouvés par les membres (Émeraudes du Chaos cachées sur le site, puis
+// hauts faits). `userId` référence core.users sans relation.
+
+model InventoryItem {
+  id      String   @id @default(uuid(7))
+  userId  String   @map("user_id")
+  // Identifiant d'un objet du catalogue (`src/catalog.ts`), ex. `emerald-green`.
+  itemId  String   @map("item_id")
+  foundAt DateTime @default(now()) @map("found_at")
+
+  @@unique([userId, itemId])
+  @@map("items")
+  @@schema("inventory")
+}

@@ -50,6 +50,9 @@ importers:
       '@app/ideas':
         specifier: workspace:*
         version: link:../../packages/ideas
+      '@app/inventory':
+        specifier: workspace:*
+        version: link:../../packages/inventory
       '@app/storage':
         specifier: workspace:*
         version: link:../../packages/storage
@@ -446,6 +449,40 @@ importers:
       lucide-react:
         specifier: 1.61.0
         version: 1.61.0(@types/react@19.3.0)(react@19.3.1)
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: 26.6.5
+        version: 26.6.5
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      eslint:
+        specifier: 10.13.0
+        version: 10.13.0(jiti@2.7.0)
+      react:
+        specifier: 19.3.1
+        version: 19.3.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 5.0.5
+        version: 5.0.5(@types/node@26.6.5)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/inventory:
+    dependencies:
+      '@app/config':
+        specifier: workspace:*
+        version: link:../config
+      '@app/db':
+        specifier: workspace:*
+        version: link:../db
+      '@app/ui':
+        specifier: workspace:*
+        version: link:../ui
       zod:
         specifier: 4.6.7
         version: 4.6.7

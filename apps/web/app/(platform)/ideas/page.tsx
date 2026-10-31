@@ -1,5 +1,6 @@
 import { IdeaForm } from "@app/ideas/ui";
 import { Card } from "@app/ui";
+import { HiddenEmerald } from "@app/inventory/ui";
 import { EyeOff, Lightbulb } from "lucide-react";
 import type { Metadata } from "next";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -18,7 +19,7 @@ const FIELDS = [
 export default async function IdeasPage() {
   await getCurrentMember();
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
       <Breadcrumb />
 
       <Card>
@@ -57,6 +58,7 @@ export default async function IdeasPage() {
       <Card title="Proposer une idée">
         <IdeaForm action={sendIdea} />
       </Card>
+      <HiddenEmerald color="purple" className="absolute top-1 right-1" />
     </div>
   );
 }

@@ -199,3 +199,155 @@
     filter: brightness(1);
   }
 }
+
+/* Sonic du header (SonicRun) : traînée de vitesse sur le liseré, en tirets qui défilent. */
+.sonic-streak {
+  mask-image: repeating-linear-gradient(to left, #000 0 14px, transparent 14px 20px);
+  animation: sonic-dash 180ms linear infinite;
+}
+
+@keyframes sonic-dash {
+  to {
+    mask-position: -20px 0;
+  }
+}
+
+/* Super Sonic : aura dorée qui pulse. */
+.sonic-super {
+  filter: drop-shadow(0 0 5px rgb(255 215 60 / 0.85));
+  animation: sonic-aura 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes sonic-aura {
+  to {
+    filter: drop-shadow(0 0 10px rgb(255 235 120 / 1));
+  }
+}
+
+/* Émeraude du Chaos cachée (HiddenEmerald) : discrète, un éclat de temps en temps. */
+.emerald-hidden {
+  opacity: 0.28;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+  animation: emerald-glint 7s ease-in-out infinite;
+}
+
+.emerald-hidden:hover,
+.emerald-hidden:focus-visible {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+@keyframes emerald-glint {
+  0%,
+  90%,
+  100% {
+    filter: none;
+  }
+  95% {
+    filter: brightness(2) drop-shadow(0 0 4px #fff);
+  }
+}
+
+/* Ramassée : elle grossit, s'illumine et disparaît. */
+.emerald-burst {
+  animation: emerald-burst 0.7s ease-out forwards;
+}
+
+@keyframes emerald-burst {
+  40% {
+    transform: scale(2.2) rotate(-12deg);
+    filter: brightness(2) drop-shadow(0 0 10px #fff);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.2) translateY(-30px);
+    opacity: 0;
+  }
+}
+
+.emerald-spin {
+  animation: emerald-spin 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes emerald-spin {
+  to {
+    transform: scaleX(-1);
+  }
+}
+
+/* Inventaire : émeraude trouvée qui brille, ou silhouette noire à débloquer. */
+.emerald-owned {
+  filter: drop-shadow(0 0 6px rgb(255 255 255 / 0.35));
+}
+
+.emerald-locked {
+  filter: brightness(0);
+  opacity: 0.55;
+}
+
+/* « To Be Continued » (ToBeContinued) : l'image se fige en sépia, la flèche glisse en bas. */
+html.tbc-freeze body > :not(.tbc-layer) {
+  filter: sepia(0.9) contrast(1.15) brightness(0.85);
+  transition: filter 0.12s;
+}
+
+html.tbc-freeze body > :not(.tbc-layer) *,
+html.tbc-freeze body > :not(.tbc-layer) *::before,
+html.tbc-freeze body > :not(.tbc-layer) *::after {
+  animation-play-state: paused !important;
+}
+
+.tbc-layer {
+  cursor: pointer;
+  transition: opacity 0.7s;
+}
+
+.tbc-leaving {
+  opacity: 0;
+}
+
+.tbc-arrow {
+  animation: tbc-slide 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+
+@keyframes tbc-slide {
+  from {
+    transform: translateX(-120%);
+  }
+}
+
+/* Nouvelle notification (LuffyGatling) : Luffy surgit, mitraille la cloche, qui tremble. */
+.luffy-gatling {
+  animation: luffy-gatling 1.5s ease-out both;
+}
+
+@keyframes luffy-gatling {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.8);
+  }
+  10%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
+.bell-hit {
+  animation: bell-hit 0.12s linear infinite;
+}
+
+@keyframes bell-hit {
+  25% {
+    transform: translate(2px, -1px) rotate(8deg);
+  }
+  75% {
+    transform: translate(-1px, 1px) rotate(-6deg);
+  }
+}

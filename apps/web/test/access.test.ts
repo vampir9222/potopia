@@ -84,6 +84,8 @@ const troisPracticeRoute = await import("@/app/api/trois/practice/route");
 const troisLeaderboardRoute = await import("@/app/api/trois/leaderboard/route");
 const { default: TroisPage } = await import("@/app/(platform)/trois/page");
 const { default: WalletPage } = await import("@/app/(platform)/wallet/page");
+const { default: InventoryPage } = await import("@/app/(platform)/inventaire/page");
+const { collectEmerald } = await import("@/app/actions/inventory");
 const { default: AvatarPage } = await import("@/app/(platform)/avatar/page");
 const { default: CreditsPage } = await import("@/app/(platform)/credits/page");
 const { saveAvatarAction } = await import("@/app/(platform)/avatar/actions");
@@ -117,6 +119,7 @@ function adjustForm(userId: string, amount = 100): FormData {
 const actions: Record<string, () => Promise<unknown>> = {
   markNotificationAsRead: () => markNotificationAsRead("inconnue"),
   markAllNotificationsAsRead: () => markAllNotificationsAsRead(),
+  collectEmerald: () => collectEmerald("emerald-green"),
   rateDesignAction: () => rateDesignAction({ status: "idle" }, rateForm()),
   loadMoreIdeas: () => loadMoreIdeas({}, ideaId),
   adjustBalance: () => adjustBalance({ status: "idle" }, adjustForm("inconnu")),
@@ -209,6 +212,7 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "trois/page": () => TroisPage(),
   "cartes/page": () => CardsVotePage({ searchParams: Promise.resolve({ onglet: "archives" }) }),
   "wallet/page": () => WalletPage({ searchParams: Promise.resolve({}) }),
+  "inventaire/page": () => InventoryPage(),
   "avatar/page": () => AvatarPage(),
   "credits/page": () => CreditsPage(),
 };
@@ -342,6 +346,13 @@ describe("server actions", () => {
 
     await markNotificationAsRead(notification.id);
     expect(await countUnread(adminId)).toBe(1);
+  });
+
+  it("collectEmerald ramasse une émeraude une fois, et refuse un objet inconnu", async () => {
+    await signIn(MEMBER_ID);
+    expect(await collectEmerald("emerald-red")).toEqual({ isNew: true, emeralds: 1 });
+    expect(await collectEmerald("emerald-red")).toEqual({ isNew: false, emeralds: 1 });
+    await expect(collectEmerald("emerald-black")).rejects.toThrow();
   });
 });
 

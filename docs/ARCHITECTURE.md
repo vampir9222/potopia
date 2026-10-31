@@ -50,6 +50,7 @@ packages/
   avatar-assets/     sprites LPC importés, catalogue, palettes, crédits (pnpm assets:import)
   economy/           monnaie : ledger + wallets
   ideas/             boîte à idées (module autonome, indépendant du futur TCG)
+  inventory/         inventaire : objets trouvés (Émeraudes du Chaos), puis hauts faits
   storage/           client R2 + URLs présignées (aucune logique métier)
   ui/                thème (variables CSS, sombre par défaut) + composants de base
 ```
@@ -294,11 +295,27 @@ décors.
   feuille CSS par jeu (`games/*/ui/*.css`), importée dans `apps/web/app/globals.css`.
 
 **Header** (`packages/core/ui/Header.tsx`, boutons passés par `(platform)/layout.tsx`). De gauche à
-droite : Luffy, la boule musicale, thème, cloche, volume, menu du profil.
+droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil.
 
-- Luffy (`apps/web/components/LuffyRun.tsx`, masqué sous 640 px) et la boule
-  (`components/SpinOrb.tsx`) lancent une animation et une musique en boucle au clic, et se mettent
-  en pause au second.
+- Sonic (`apps/web/components/SonicRun.tsx`, masqué sous 1024 px), Luffy
+  (`components/LuffyRun.tsx`, masqué sous 640 px) et la boule (`components/SpinOrb.tsx`) lancent
+  une animation et une musique en boucle au clic, et se mettent en pause au second.
+- Sonic : planches en pixel art à l'échelle 1 dans `public/sonic/` (attente, marche, course, sprint,
+  puis transformation, course et vol de Super Sonic), tirées de gifs de sources différentes,
+  ramenées à la même taille de pixel et aux mêmes bleus et rouges que la marche. À l'arrêt il
+  attend (la pause du gif d'origine allongée) ; au clic, musique `public/audio/sonic.mp3` : il
+  marche, accélère, court, pique des sprints, avec une traînée en tirets sur le liseré. Les 7
+  Émeraudes du Chaos trouvées (`superSonic`, voir Inventaire), le clic le transforme en Super
+  Sonic (`public/audio/super-sonic.mp3`) : transformation, sprint doré, puis il s'envole.
+- Combo Luffy + steel ball (`components/LuffyCombo.tsx`, état partagé dans
+  `components/headerStage.ts`) : si la boule tourne et qu'on clique sur le fruit, la boule quitte
+  sa case et roule sur le liseré (rotation = distance / rayon, dans le sens du mouvement), Luffy
+  sort du fruit quand elle passe (`public/luffy/luffy-run-sheet.png`) et lui court après ; au bout
+  du header elle rebondit et c'est elle qui le poursuit, sur le générique de One Piece
+  (`public/audio/one-piece.mp3`). Un clic sur le fruit ou sur la case de la boule arrête tout.
+- Nouvelle notification (`components/LuffyGatling.tsx`, juste avant la cloche) : Luffy surgit et
+  mitraille la cloche (Gomu Gomu no Gatling, `public/luffy/luffy-gatling.png`), qui tremble. Une
+  fois par hausse du nombre de non lues, mémorisé sur l'appareil (`localStorage`).
 - Luffy : à l'arrêt, son fruit du démon flotte au-dessus du liseré (`public/luffy/devil-fruit.png`,
   pixel art 24 × 33, étoiles de l'image d'origine retirées) avec quelques étincelles qui
   s'allument au hasard. Au clic, le fruit tremble, éclate en lumière et Luffy en sort en
@@ -310,6 +327,26 @@ droite : Luffy, la boule musicale, thème, cloche, volume, menu du profil.
   s'allume quand elle se tend). Le liseré du header accepte une trouée, `--line-gap-from` /
   `--line-gap-to` (px depuis son bord gauche) posées sur le `<header>` ; Luffy y redessine le
   liseré en SVG, déformé, avec le même dégradé.
+
+**To Be Continued** (`apps/web/components/ToBeContinued.tsx`, monté dans le layout racine).
+`toBeContinued()` de `@app/ui` le déclenche : un mot raté pour de vrai à TROIS, une mission perdue
+sous les yeux du joueur à Agents Doubles. L'intro de Roundabout (`public/audio/roundabout.mp3`,
+~9 s coupées dans le morceau) démarre ; à son pic (2,4 s) la page se fige en sépia
+(`html.tbc-freeze`, animations en pause) et la flèche « To Be Continued »
+(`public/jojo/to-be-continued.png`) glisse en bas à gauche. Un clic ou Échap écourte.
+
+**Inventaire** (`packages/inventory`, schéma `inventory`, table `items` : `user_id`, `item_id`,
+`found_at`, unique par membre et objet).
+
+- Catalogue dans le code (`src/catalog.ts`) : les 7 Émeraudes du Chaos, chacune avec un indice.
+  `collectItem` (idempotent, refuse un objet hors catalogue) et `listItems`.
+- Chaque émeraude est cachée dans une page (`HiddenEmerald`, discrète, un éclat de temps en
+  temps) : accueil, Ma monnaie, Mon avatar, TROIS, Agents Doubles, Crédits, Boîte à idées. Le
+  layout `(platform)` charge les objets du membre et pose `EmeraldsProvider`, qui cache celles déjà
+  trouvées ; un clic appelle la server action `collectEmerald` (`app/actions/inventory.ts`), qui
+  rafraîchit le layout (Super Sonic débloqué dès la 7e).
+- Page `/inventaire` (« Mon inventaire », dans le menu sous « Mon avatar ») : les 7 cases, en
+  noir avec un indice tant que l'émeraude n'est pas trouvée, puis les hauts faits (à venir).
 
 **Dates.** Toutes les dates affichées passent par `BRAND.timeZone` (`Europe/Paris`) : le serveur
 Vercel tourne en UTC, les navigateurs des membres en France ; sans fuseau explicite, l'heure

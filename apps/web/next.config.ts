@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
     "@app/db",
     "@app/economy",
     "@app/ideas",
+    "@app/inventory",
     "@app/storage",
     "@app/tcg",
     "@app/trois",

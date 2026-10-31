@@ -10,6 +10,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { onComboChange, setStage, useHeaderStage } from "./headerStage";
+import { LuffyCombo } from "./LuffyCombo";
 import { LUFFY_GROUND } from "./luffyGround";
 
 const FRAMES = 25;
@@ -39,7 +41,8 @@ const PAD = 18;
 const SVG_TOP = LINE_Y - 14;
 const SVG_HEIGHT = 24;
 
-type Phase = "idle" | "waking" | "playing" | "sleeping";
+// away : parti courir après la steel ball (combo), le fruit a éclaté et la case reste vide
+type Phase = "idle" | "waking" | "playing" | "sleeping" | "away";
 
 // Étincelles autour du fruit à l'arrêt : position de départ, durée et décalage différents pour
 // qu'elles ne s'allument jamais toutes ensemble ; chacune change de place à chaque cycle.
@@ -135,6 +138,10 @@ export function LuffyRun() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [frame, setFrame] = useState(REST_FRAME);
   const [gradient, setGradient] = useState<{ x1: number; x2: number } | null>(null);
+  // place de la case dans le header, pour le calque du combo
+  const [geo, setGeo] = useState<{ offset: number; width: number } | null>(null);
+  const [combo, setCombo] = useState<{ ballStart: number; luffyStart: number } | null>(null);
+  const stage = useHeaderStage();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const uid = useId().replace(/:/g, "");
@@ -172,6 +179,7 @@ export function LuffyRun() {
       header.style.setProperty("--line-gap-to", `${left + SIZE + 2 * PAD}px`);
       // Le dégradé du liseré, exprimé dans le repère du SVG.
       setGradient({ x1: -left, x2: h.width - left });
+      setGeo({ offset: r.left - h.left, width: h.width });
     };
     update();
     const observer = new ResizeObserver(update);
@@ -215,7 +223,39 @@ export function LuffyRun() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
+  // Combo arrêté (clic sur la boule, ou fin) : Luffy rentre dans son fruit.
+  useEffect(
+    () =>
+      onComboChange((on) => {
+        if (on) return;
+        setCombo(null);
+        setFrame(REST_FRAME);
+        setPhase("sleeping");
+      }),
+    [],
+  );
+
   function toggle() {
+    // combo en cours : un clic sur le fruit l'arrête
+    if (combo) {
+      setStage({ combo: false });
+      return;
+    }
+    // la steel ball tourne et Luffy dort : combo, il sort du fruit pour lui courir après
+    const header = rootRef.current?.closest("header");
+    const orb = header?.querySelector("[data-spin-orb]");
+    if (!running && stage.orbPlaying && header && orb && rootRef.current) {
+      const h = header.getBoundingClientRect();
+      const o = orb.getBoundingClientRect();
+      const r = rootRef.current.getBoundingClientRect();
+      setCombo({
+        ballStart: o.left + o.width / 2 - h.left,
+        luffyStart: r.left + r.width / 2 - h.left,
+      });
+      setStage({ combo: true });
+      setPhase("away");
+      return;
+    }
     if (!audioRef.current) {
       const audio = new Audio(MUSIC);
       audio.loop = true;
@@ -293,10 +333,18 @@ export function LuffyRun() {
           )}
         </svg>
       )}
+      {combo && geo && (
+        <LuffyCombo
+          offset={geo.offset}
+          width={geo.width}
+          ballStart={combo.ballStart}
+          luffyStart={combo.luffyStart}
+        />
+      )}
       <button
         type="button"
         onClick={toggle}
-        aria-label={running ? "Mettre Luffy en pause" : "Lancer Luffy"}
+        aria-label={combo ? "Arrêter le combo" : running ? "Mettre Luffy en pause" : "Lancer Luffy"}
         aria-pressed={running}
         title={running ? "Pause" : "Luffy"}
         className="absolute inset-x-0 top-0 h-full rounded-md transition-[filter] hover:brightness-125"
@@ -307,7 +355,7 @@ export function LuffyRun() {
             className={cx(
               "absolute block",
               phase === "idle" && "luffy-fruit-idle",
-              phase === "waking" && "luffy-fruit-awaken",
+              (phase === "waking" || phase === "away") && "luffy-fruit-awaken",
               phase === "sleeping" && "luffy-fruit-return",
             )}
             style={{
@@ -343,7 +391,7 @@ export function LuffyRun() {
               }}
             />
           ))}
-        {(phase === "waking" || phase === "sleeping") && (
+        {(phase === "waking" || phase === "sleeping" || phase === "away") && (
           <span
             aria-hidden
             className="luffy-flash pointer-events-none absolute block rounded-full"
@@ -358,7 +406,7 @@ export function LuffyRun() {
             }}
           />
         )}
-        {phase === "waking" &&
+        {(phase === "waking" || phase === "away") &&
           BURST.map((b, i) => (
             <Sparkle
               key={i}
@@ -374,7 +422,7 @@ export function LuffyRun() {
               }
             />
           ))}
-        {phase !== "idle" && (
+        {phase !== "idle" && phase !== "away" && (
           <span
             aria-hidden
             className={cx(

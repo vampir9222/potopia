@@ -179,12 +179,17 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
   - layout `(platform)`, qui exécute `requireMember()` et affiche le header (marque depuis
     `brand.ts`, cloche, avatar) ;
   - `/` : le dashboard.
-    - Colonne gauche : compte, solde, menu (Accueil, Mon avatar, Ma monnaie, Administration pour
-      les admins), puis le fil d'activité.
+    - Colonne gauche : compte, solde, menu (Accueil, Mon avatar, Mon inventaire, Ma monnaie,
+      Administration pour les admins), puis le fil d'activité.
     - Centre : grille de tuiles, puis la place des avatars.
-    - Header : marque, Luffy (fruit du démon étincelant à l'arrêt ; au clic, il en sort avec sa
-      musique et rebondit sur le liseré du header), boule musicale, thème, cloche, volume, menu
-      du profil (déconnexion).
+    - Header : marque, Sonic (marche, course, sprint ; Super Sonic avec les 7 Émeraudes du
+      Chaos), Luffy (fruit du démon étincelant à l'arrêt ; au clic, il en sort avec sa musique et
+      rebondit sur le liseré du header ; combo avec la boule, qu'il poursuit sur le liseré),
+      boule musicale, thème, cloche (Luffy la mitraille à chaque nouvelle notification), volume,
+      menu du profil (déconnexion).
+    - « Mon inventaire » (`/inventaire`) : les Émeraudes du Chaos cachées dans les pages, puis
+      les hauts faits.
+    - Défaite dans un jeu : arrêt sur image « To Be Continued » (JoJo).
     - Navigation sans rechargement entre les pages (tuiles, logo, notifications, jeux : `AppLink`
       et `useNavigate` de `@app/ui`) : la musique du header continue d'une page à l'autre.
     - Sur mobile, la colonne gauche passe dans un menu.

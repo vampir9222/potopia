@@ -10,6 +10,7 @@ export { Modal, Sheet } from "./Modal";
 export { AppLink, NavigationProvider, useNavigate, type LinkComponent } from "./navigation";
 export { RgbFans } from "./RgbFans";
 export { ThemeSwitcher } from "./ThemeSwitcher";
+export { TO_BE_CONTINUED_EVENT, toBeContinued } from "./toBeContinued";
 export { DEFAULT_THEME, resolveTheme, THEME_COOKIE, THEMES, type ThemeId } from "./themes";
 export {
   effectiveVolume,

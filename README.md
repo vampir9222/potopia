@@ -128,6 +128,7 @@ packages/
   economy/       monnaie : ledger en ajout seul, wallets
   ideas/         boîte à idées (lue par les admins seulement ; une idée exemple visible de tous
                  sur /cartes)
+  inventory/     inventaire des membres : Émeraudes du Chaos cachées sur le site (puis hauts faits)
   storage/       client S3/R2 et URLs présignées
   ui/            thèmes et composants de base
 games/
@@ -209,8 +210,9 @@ await withTx(async (tx) => {
 Le bouton volume du header règle tous les sons du site. Un son doit le respecter : `effectiveVolume()`
 de `@app/ui` donne le volume à appliquer (0 à 1, 0 si coupé) et `onVolumeChange(fn)` prévient quand
 il change. Pour un `<audio>` : `audio.volume = effectiveVolume()` (exemples : la boule musicale du
-header, `apps/web/components/SpinOrb.tsx`, qui joue `public/audio/spin2.mp3`, et Luffy,
-`components/LuffyRun.tsx`, qui joue `public/audio/luffy.mp3`) ; avec Web Audio : un
+header, `apps/web/components/SpinOrb.tsx`, qui joue `public/audio/spin2.mp3`, Luffy,
+`components/LuffyRun.tsx`, qui joue `public/audio/luffy.mp3`, Sonic, `components/SonicRun.tsx`,
+et l'arrêt sur image « To Be Continued », `components/ToBeContinued.tsx`) ; avec Web Audio : un
 `GainNode` en fin de chaîne (voir `games/trois/ui/sound.ts`).
 
 ### Ajouter un thème

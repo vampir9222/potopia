@@ -2,6 +2,7 @@
 
 import { cx, effectiveVolume, onVolumeChange } from "@app/ui";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { onComboChange, setStage, useHeaderStage } from "./headerStage";
 
 const FRAMES = 48;
 const FRAME_PX = 32;
@@ -44,6 +45,22 @@ export function SpinOrb() {
   const blur1Ref = useRef<HTMLSpanElement>(null);
   const blur2Ref = useRef<HTMLSpanElement>(null);
   const windRef = useRef<HTMLSpanElement>(null);
+  // combo avec Luffy : la boule quitte sa place pour rouler sur le liseré (LuffyCombo)
+  const { combo } = useHeaderStage();
+
+  // Luffy l'emmène : sa musique s'arrête, la case reste vide le temps du combo.
+  useEffect(
+    () =>
+      onComboChange((on) => {
+        if (!on) return;
+        audioRef.current?.pause();
+        setPlaying(false);
+      }),
+    [],
+  );
+
+  // Les combos du header ont besoin de savoir si elle tourne.
+  useEffect(() => setStage({ orbPlaying: playing }), [playing]);
 
   // La musique s'arrête quand on quitte la page.
   useEffect(() => () => audioRef.current?.pause(), []);
@@ -120,6 +137,11 @@ export function SpinOrb() {
   }, [playing]);
 
   function toggle() {
+    // pendant le combo, un clic sur sa case la ramène
+    if (combo) {
+      setStage({ combo: false });
+      return;
+    }
     if (!audioRef.current) {
       const audio = new Audio(MUSIC);
       audio.loop = true;
@@ -147,7 +169,13 @@ export function SpinOrb() {
     >
       <span
         aria-hidden
-        className={cx("relative block", playing && "orb-glow", fast && "orb-fast")}
+        data-spin-orb
+        className={cx(
+          "relative block transition-opacity",
+          playing && "orb-glow",
+          fast && "orb-fast",
+          combo && "opacity-0",
+        )}
         style={{ width: SIZE, height: SIZE }}
       >
         <span

@@ -45,6 +45,8 @@ partie), routes `/api/agents/*`, tuile dans le registre des apps.
   victoires. Les abandons ne comptent pas.
 - **Activité** : une mission terminée apparaît dans le fil (« a réussi une mission Agents Doubles
   avec X en 7 tours »).
+- **Défaite** : une mission perdue sous les yeux du joueur (pas en rouvrant une partie déjà finie)
+  déclenche l'arrêt sur image « To Be Continued » (`toBeContinued()` de `@app/ui`).
 - **Données** : schéma Postgres `agents` (`games`, `clues`, `guesses`). `user_a` et `user_b`
   référencent `core.users` sans relation.
 

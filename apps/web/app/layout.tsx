@@ -5,6 +5,7 @@ import { Cinzel, Orbitron } from "next/font/google";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { NextNavigation } from "@/components/NextNavigation";
+import { ToBeContinued } from "@/components/ToBeContinued";
 import "./globals.css";
 
 // Polices des titres, exposées aux thèmes (voir packages/ui/theme.css) : Cinzel pour Fantasy,
@@ -36,6 +37,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <RgbFans />
         {/* liens des packages branchés sur Next : pas de rechargement entre deux pages */}
         <NextNavigation>{children}</NextNavigation>
+        {/* défaite dans un jeu : arrêt sur image façon JoJo (toBeContinued() de @app/ui) */}
+        <ToBeContinued />
       </body>
     </html>
   );
