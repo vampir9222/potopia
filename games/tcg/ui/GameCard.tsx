@@ -41,6 +41,7 @@ export function GameCard({
   layout = "normal",
   setSize,
   still = false,
+  author,
 }: {
   card: GameCardFields;
   imageUrl: string | null;
@@ -49,6 +50,8 @@ export function GameCard({
   setSize?: number;
   /** Carte figée (sans 3D ni animation), pour les planches de nombreuses cartes. */
   still?: boolean;
+  /** Auteur de l'idée d'origine, en pied de carte (« idée de … »). */
+  author?: string | null;
 }) {
   const pad = (n: number) => String(n).padStart(2, "0");
   const data: CardData = {
@@ -67,6 +70,7 @@ export function GameCard({
     power: card.power,
     imageUrl,
     imageFrame: card.imageFrame,
+    author: author ?? undefined,
     // Hors set, pas de numéro : la carte est dans la réserve.
     serial:
       card.number === null
@@ -82,6 +86,7 @@ export function GameCard({
       finish={card.rarity}
       band="court"
       typeLine={typeLine(card)}
+      gameFooter
     />
   );
   return still ? <div className="tcg-still">{face}</div> : face;

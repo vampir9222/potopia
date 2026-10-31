@@ -526,12 +526,21 @@ power?, effectKey?, effectParams?, effectText? }] }`. Chaque carte de base est r
   modifications). Tout ou rien, avec la carte fautive dans le message. Les fichiers de cartes
   générées depuis les idées ne vont jamais dans le dépôt (contenu des membres).
 - Pages : `/admin/cartes` (un onglet par set et la réserve, `?set=<code>` ou `?set=reserve`,
-  24 cartes par page avec `?page=` ;
-  cases à cocher pour déplacer des cartes d'un coup ; création d'un set), `/admin/cartes/[id]` et
+  24 cartes par page avec `?page=` ; recherche `?q=` sur le nom, le type, la famille, l'effet et
+  la description, dans tous les sets et la réserve, sans tenir compte des accents ; cases à cocher pour déplacer des cartes d'un coup ; création d'un set), `/admin/cartes/[id]` et
   `/admin/cartes/nouvelle` (`CardEditor` : formulaire et aperçu en direct, normale ou full art,
   envoi d'illustration), `/admin/cartes/import`, `/admin/cartes/illustrations` (`CardImagesUpload` :
   plusieurs images d'un coup, chacune posée sur la carte dont elle porte le numéro, « 12.jpg »). Les cartes s'affichent dans le design retenu
   (n°70, `GameCard`, ligne de type « {type} — {famille} », « Réserve » en pied de carte hors set).
+  Pied des vraies cartes (`gameFooter` de `FinalCard`, les propositions notées gardent le leur) :
+  numéro, rareté abrégée (C, PC, R, E, L, SR, SSR) avec ses étoiles, puis « idée de {auteur} »
+  (`getIdeaAuthorIds` + nom du membre, `cardAuthors`). Pour l'instant seuls les admins voient les
+  cartes ; quand les membres les verront, ce pied dira qui a proposé l'idée (à décider avec la
+  règle de la boîte noire). Sur la planche, les cartes sont figées (`GameCard still`, classe
+  `tcg-still`) : sans 3D, animation, reflet ni grande ombre floue, pour un défilement fluide ;
+  l'éditeur garde la carte vivante.
+- Illustrations réduites dans le navigateur avant l'envoi (`shrinkImage` : WebP, 1 200 px au plus
+  de côté ; une image déjà petite part telle quelle), dans l'éditeur comme dans l'envoi en masse.
   Titre (`FitTitle`) : la taille baisse avec la longueur jusqu'à 13 px, puis le titre passe sur
   deux lignes.
 - Cadrage : sous l'aperçu de l'éditeur, `ImageFramer` montre la fenêtre d'illustration (normale ou

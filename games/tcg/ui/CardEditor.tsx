@@ -51,6 +51,8 @@ type Props = {
   /** Familles déjà utilisées, proposées à la saisie. */
   families: string[];
   imageUrl: string | null;
+  /** Auteur de l'idée d'origine, affiché en pied de carte (« idée de … »). */
+  author?: string | null;
   /** Nombre de cartes du set, pour le numéro affiché dans l'aperçu. */
   setSize?: number;
   /** Création : nombre de cartes de chaque set (par id), pour le numéro de l'aperçu. */
@@ -119,6 +121,7 @@ export function CardEditor({
   sets,
   families,
   imageUrl,
+  author,
   setSize,
   setSizes,
   defaultSetId,
@@ -416,7 +419,13 @@ export function CardEditor({
 
       <div className="flex flex-col items-center gap-3">
         <GameCardDefs />
-        <GameCard card={preview} imageUrl={image} layout={layout} setSize={setSize} />
+        <GameCard
+          card={preview}
+          imageUrl={image}
+          layout={layout}
+          setSize={setSize}
+          author={author}
+        />
         <div className="flex gap-2 text-sm">
           {(["normal", "fullart"] as const).map((l) => (
             <button

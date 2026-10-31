@@ -1,4 +1,5 @@
-import { listIdeaImageUrls } from "@app/ideas";
+import { getUsersByIds } from "@app/core";
+import { getIdeaAuthorIds, listIdeaImageUrls } from "@app/ideas";
 import { presignGetStable } from "@app/storage";
 import type { Card } from "@app/tcg";
 
@@ -30,6 +31,22 @@ export async function cardImageUrls(
           ] as const,
       ),
     ),
+  );
+}
+
+/** Nom de l'auteur de l'idée de chaque carte (par id de carte), pour « idée de … ». */
+export async function cardAuthors(admin: Admin, cards: Card[]): Promise<Map<string, string>> {
+  const ideaAuthors = await getIdeaAuthorIds(
+    admin,
+    cards.flatMap((c) => (c.ideaId ? [c.ideaId] : [])),
+  );
+  const users = await getUsersByIds([...new Set(ideaAuthors.values())]);
+  const names = new Map(users.map((u) => [u.id, u.name]));
+  return new Map(
+    cards.flatMap((c) => {
+      const name = c.ideaId && names.get(ideaAuthors.get(c.ideaId) ?? "");
+      return name ? [[c.id, name] as const] : [];
+    }),
   );
 }
 

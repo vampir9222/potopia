@@ -11,6 +11,7 @@ import {
   getShowcaseImageUrl,
   SHOWCASE_IDEA_ID,
   InvalidImageError,
+  getIdeaAuthorIds,
   listIdeaImageUrls,
   listIdeas,
   purgeStaleUploads,
@@ -135,6 +136,15 @@ describe("images", () => {
     expect((await fetch(urls.get(withImage) ?? "")).status).toBe(200);
     expect((await listIdeaImageUrls(ADMIN, [])).size).toBe(0);
     await expect(listIdeaImageUrls(MEMBER, ids)).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("donne l'auteur de chaque idée (admin seulement)", async () => {
+    await submitIdea(MEMBER.id, idea(1));
+    const [stored] = (await listIdeas(ADMIN)).items;
+    const id = stored?.id ?? "";
+    expect(await getIdeaAuthorIds(ADMIN, [id, "inconnue"])).toEqual(new Map([[id, MEMBER.id]]));
+    expect((await getIdeaAuthorIds(ADMIN, [])).size).toBe(0);
+    await expect(getIdeaAuthorIds(MEMBER, [id])).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("refuse une clé inventée par le client", async () => {

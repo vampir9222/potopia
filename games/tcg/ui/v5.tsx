@@ -41,6 +41,16 @@ import {
  */
 export type CardFinish = SnapFinish | "epic";
 const FINISH_LABELS: Record<CardFinish, string> = { ...SNAP_FINISH_LABELS, epic: "Épique" };
+/** Rareté abrégée du pied des vraies cartes. */
+const FINISH_SHORT: Record<CardFinish, string> = {
+  common: "C",
+  uncommon: "PC",
+  rare: "R",
+  epic: "E",
+  legendary: "L",
+  sr: "SR",
+  ssr: "SSR",
+};
 
 const STYLE: TopStyle = { window: "creusee", panel: "ardoise", title: "bandeau", thin: true };
 const FRAME = FRAME_THIN;
@@ -235,7 +245,16 @@ function FitTitle({ title, width }: { title: string; width: number }) {
 }
 
 /** Pied de carte : numéro, puis rareté et ses étoiles. */
-function Footer({ card, finish }: { card: CardData; finish: CardFinish }) {
+function Footer({
+  card,
+  finish,
+  game,
+}: {
+  card: CardData;
+  finish: CardFinish;
+  /** Pied des vraies cartes : rareté abrégée, puis « idée de … ». */
+  game: boolean;
+}) {
   const stars = RARITY_STARS[finish];
   return (
     <Layer
@@ -258,7 +277,9 @@ function Footer({ card, finish }: { card: CardData; finish: CardFinish }) {
       <span aria-hidden style={{ opacity: 0.5 }}>
         ·
       </span>
-      <span>{FINISH_LABELS[finish]}</span>
+      <span title={game ? FINISH_LABELS[finish] : undefined}>
+        {game ? FINISH_SHORT[finish] : FINISH_LABELS[finish]}
+      </span>
       {stars > 0 && (
         <span
           role="img"
@@ -272,6 +293,16 @@ function Footer({ card, finish }: { card: CardData; finish: CardFinish }) {
         >
           {"★".repeat(stars)}
         </span>
+      )}
+      {game && card.author && (
+        <>
+          <span aria-hidden style={{ opacity: 0.5 }}>
+            ·
+          </span>
+          <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+            idée de {card.author}
+          </span>
+        </>
       )}
     </Layer>
   );
@@ -287,6 +318,7 @@ export function FinalCard({
   finish = "common",
   band = "plein",
   typeLine,
+  gameFooter = false,
 }: {
   card: CardData;
   layout: TopLayout;
@@ -294,6 +326,8 @@ export function FinalCard({
   band?: BandShape;
   /** Ligne de type des vraies cartes (« Instrument — Grenouilles ») ; par défaut « Créature — tag ». */
   typeLine?: string;
+  /** Pied des vraies cartes (rareté abrégée, auteur de l'idée) ; les propositions notées gardent le leur. */
+  gameFooter?: boolean;
 }) {
   const full = layout === "fullart";
   const panel = panelStyle(card, STYLE.panel, layout);
@@ -400,7 +434,7 @@ export function FinalCard({
         </div>
       </Layer>
 
-      <Footer card={card} finish={finish} />
+      <Footer card={card} finish={finish} game={gameFooter} />
 
       {/* Coût et puissance en dernier : toujours au-dessus du reste, sans sertissage. */}
       <Layer

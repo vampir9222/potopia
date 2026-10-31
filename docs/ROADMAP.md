@@ -490,7 +490,14 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 - [x] Planche plus rapide et plus grande : illustrations signées directement par la page avec des
       URLs stables 5 min (`presignGetStable`, mises en cache par le navigateur) au lieu d'une
       redirection par carte, chargement à l'approche de l'écran, cartes hors écran non dessinées ;
-      cartes agrandies d'un tiers (400 px de large), planche paginée par 24 cartes (`?page=`).
+      cartes agrandies d'un tiers (400 px de large), planche paginée par 24 cartes (`?page=`),
+      cartes figées sur la planche (sans 3D ni animation), illustrations réduites avant l'envoi
+      (WebP, 1 200 px), recherche (`?q=`), pied de carte « S1 07/116 · E · idée de … ».
+- [x] Migration `tcg_effets_snap` (modifie des données, accord de l'utilisateur) : toutes les
+      cartes passent sur les effets Snap (clés renommées ou remplacées, réglages et textes du
+      catalogue ; les cartes du set 1, retrouvées par leur idée, prennent la carte Snap retenue
+      avec son coût et sa puissance). Les textes d'effet personnalisés se remettent avec le
+      fichier `updates`, hors dépôt.
 - [x] Cadrage des illustrations dans l'éditeur (glisser, zoomer), migration
       `tcg_card_image_frame` (ajout d'une colonne).
 - [x] Une carte par idée de la boîte à idées, générée hors du dépôt et importée par l'admin ;

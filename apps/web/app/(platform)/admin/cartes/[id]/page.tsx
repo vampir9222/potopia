@@ -8,7 +8,7 @@ import { getCurrentAdmin } from "@/lib/session";
 import { designFonts } from "../../../cartes/fonts";
 import { confirmCardImageAction, requestCardImageAction, updateCardAction } from "../actions";
 import { MoveCardForm } from "../forms";
-import { cardImageUrls, familiesOf } from "../images";
+import { cardAuthors, cardImageUrls, familiesOf } from "../images";
 
 export const metadata: Metadata = { title: "Modifier une carte" };
 
@@ -19,7 +19,10 @@ export default async function AdminCardPage({ params }: { params: Promise<{ id: 
   if (!card) notFound();
   const [sets, allCards] = await Promise.all([listSets(admin), listCards(admin)]);
   const setCards = allCards.filter((c) => c.setId === card.setId);
-  const images = await cardImageUrls(admin, [card]);
+  const [images, authors] = await Promise.all([
+    cardImageUrls(admin, [card]),
+    cardAuthors(admin, [card]),
+  ]);
   const base = card.baseCardId ? allCards.find((c) => c.id === card.baseCardId) : null;
   const variants = allCards.filter((c) => c.baseCardId === card.id);
   const siblings = card.ideaId
@@ -97,6 +100,7 @@ export default async function AdminCardPage({ params }: { params: Promise<{ id: 
           sets={sets}
           families={familiesOf(allCards)}
           imageUrl={images.get(card.id) ?? null}
+          author={authors.get(card.id)}
           setSize={setCards.length}
           save={updateCardAction.bind(null, card.id)}
           upload={{

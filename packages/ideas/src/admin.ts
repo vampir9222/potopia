@@ -82,6 +82,23 @@ export async function listIdeaImageUrls(
   );
 }
 
+/**
+ * Auteur (id) de chacune de ces idées, par id d'idée : les cartes tirées d'une idée affichent
+ * « idée de … ». Lève ForbiddenError pour un non-admin.
+ */
+export async function getIdeaAuthorIds(
+  reader: Reader,
+  ids: string[],
+): Promise<Map<string, string>> {
+  assertAdmin(reader);
+  if (ids.length === 0) return new Map();
+  const rows = await db.idea.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, authorId: true },
+  });
+  return new Map(rows.map((r) => [r.id, r.authorId]));
+}
+
 /** Auteurs ayant envoyé au moins une idée, pour le filtre de la liste admin. */
 export async function listIdeaAuthorIds(reader: Reader): Promise<string[]> {
   assertAdmin(reader);
