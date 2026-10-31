@@ -6,7 +6,7 @@
 export const BRAND = {
   name: "Potopia",
   /** Logo du site, aussi utilisé comme favicon (fichier servi par apps/web/public). */
-  logo: "/brand/logo.svg",
+  logo: "/brand/logo.png",
   currency: {
     name: "PotoCoin",
     plural: "PotoCoins",
