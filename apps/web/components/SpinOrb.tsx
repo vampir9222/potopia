@@ -25,6 +25,29 @@ const BOOST_MAX = 15;
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
+// Au repos, de temps en temps (toutes les 5 à 11 s) : la spirale dorée de la « Golden Rotation »
+// se dessine sur la boule, ou elle fait un petit rebond sur place, comme lancée et rattrapée. Tiré
+// au hasard à chaque fois : le même peut revenir plusieurs fois de suite.
+const IDLE_MIN_MS = 5000;
+const IDLE_MAX_MS = 11000;
+const SPIRAL_MS = 2200;
+const HOP_MS = 750;
+
+/** Spirale d'or (rayon × φ à chaque quart de tour), centrée sur la boule, en coordonnées 0–100. */
+const GOLDEN_SPIRAL = (() => {
+  const b = Math.log((1 + Math.sqrt(5)) / 2) / (Math.PI / 2);
+  const turns = 3 * Math.PI;
+  const scale = 40 / Math.exp(b * turns);
+  let d = "";
+  for (let a = 0; a <= turns; a += 0.12) {
+    const r = scale * Math.exp(b * a);
+    const x = 50 + r * Math.cos(a);
+    const y = 50 - r * Math.sin(a);
+    d += `${d ? "L" : "M"}${x.toFixed(2)},${y.toFixed(2)}`;
+  }
+  return d;
+})();
+
 function sheet(src: string, frames: number, px: number, frame = 0): CSSProperties {
   return {
     backgroundImage: `url(${src})`,
@@ -54,6 +77,7 @@ export function SpinOrb() {
   // Luffy l'emmène : elle se charge dans sa case pendant que sa musique s'éteint, puis part
   // rouler ; sa case montre alors un bouton stop pour annuler le combo.
   const [comboStage, setComboStage] = useState<"off" | "charging" | "away">("off");
+  const [idleFx, setIdleFx] = useState<"spiral" | "hop" | null>(null);
   useEffect(
     () =>
       onComboChange((on) => {
@@ -70,6 +94,33 @@ export function SpinOrb() {
       }),
     [],
   );
+
+  // Au repos (ni musique, ni combo) : spirale ou rebond, au hasard, de temps en temps.
+  useEffect(() => {
+    if (playing || combo) return;
+    let timer = 0;
+    const next = () => {
+      timer = window.setTimeout(
+        () => {
+          const fx = Math.random() < 0.5 ? "spiral" : "hop";
+          setIdleFx(fx);
+          timer = window.setTimeout(
+            () => {
+              setIdleFx(null);
+              next();
+            },
+            fx === "spiral" ? SPIRAL_MS : HOP_MS,
+          );
+        },
+        IDLE_MIN_MS + Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS),
+      );
+    };
+    next();
+    return () => {
+      window.clearTimeout(timer);
+      setIdleFx(null);
+    };
+  }, [playing, combo]);
 
   // Les combos du header ont besoin de savoir si elle tourne.
   useEffect(() => setStage({ orbPlaying: playing }), [playing]);
@@ -201,6 +252,7 @@ export function SpinOrb() {
           playing && "orb-glow",
           fast && "orb-fast",
           comboStage === "charging" && "orb-charge",
+          !playing && idleFx === "hop" && "orb-hop",
           comboStage === "away" && "opacity-0",
         )}
         style={{ width: SIZE, height: SIZE }}
@@ -220,6 +272,11 @@ export function SpinOrb() {
           className="absolute inset-0 opacity-0"
           style={sheet("/orb/orb-blur-2.png", FRAMES, SIZE, REST_FRAME)}
         />
+        {!playing && idleFx === "spiral" && (
+          <svg viewBox="0 0 100 100" className="orb-spiral absolute inset-0 overflow-visible">
+            <path d={GOLDEN_SPIRAL} pathLength={100} fill="none" />
+          </svg>
+        )}
         <span
           ref={windRef}
           className="pointer-events-none absolute opacity-0"

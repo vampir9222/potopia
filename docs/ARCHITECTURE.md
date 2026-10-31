@@ -310,13 +310,15 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
 
 - Sonic (`apps/web/components/SonicRun.tsx`, masqué sous 1024 px), Luffy
   (`components/LuffyRun.tsx`, masqué sous 640 px) et la boule (`components/SpinOrb.tsx`) lancent
-  une animation et une musique en boucle au clic, et se mettent en pause au second.
+  une animation et une musique en boucle au clic, et se mettent en pause au second. Au repos, la
+  boule (46 px) dessine de temps en temps la spirale dorée de la Golden Rotation ou fait un petit
+  rebond sur place, tiré au hasard toutes les 5 à 11 s.
 - Sonic : planches en pixel art à l'échelle 1 dans `public/sonic/` (attente, marche, course, sprint,
   puis transformation, course, vol et attente de Super Sonic), tirées de gifs de sources
   différentes, ramenées à la même taille de pixel et aux mêmes couleurs. À l'arrêt il attend (la
   pause du gif d'origine allongée) ; au clic, musique `public/audio/sonic.mp3` (silences de début
   et de fin coupés, pour boucler sans trou) : il marche, accélère, court, pique des sprints de 4,5
-  à 7 s, avec de petits traits de vitesse à la couleur du thème. Traînée en tirets sur le liseré, à la couleur du thème, dont les tirets défilent à sa
+  à 7 s, avec de petits traits de vitesse dans son bleu. Traînée en tirets sur le liseré, à la couleur du thème, dont les tirets défilent à sa
   vitesse. Les 7 Émeraudes du Chaos trouvées et leur pouvoir libéré (`superSonic`, voir
   Inventaire), le clic le transforme en Super Sonic : transformation (~1,7 s), départ en
   trottinant puis sprint bien plus rapide que Sonic (4,5 s en tout), puis il s'envole. Traînée

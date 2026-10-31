@@ -635,21 +635,90 @@ html.time-stop body > :not(.za-layer) *::after {
   animation-play-state: paused !important;
 }
 
-/* Sonic de base au sprint : les mêmes petits traits, à la couleur du thème, plus courts. */
+/* Sonic de base au sprint : les mêmes petits traits, dans son bleu à lui, plus courts. */
 .sonic-speedlines.sonic-speedlines-plain {
   background:
-    repeating-linear-gradient(
-        to left,
-        color-mix(in oklab, var(--accent) 60%, white) 0 12px,
-        transparent 12px 24px
-      )
-      0 6px / 100% 2px no-repeat,
-    repeating-linear-gradient(to left, var(--accent) 0 18px, transparent 18px 28px) 6px 15px / 100%
-      2px no-repeat,
-    repeating-linear-gradient(
-        to left,
-        color-mix(in oklab, var(--accent) 60%, white) 0 10px,
-        transparent 10px 22px
-      )
-      2px 24px / 100% 2px no-repeat;
+    repeating-linear-gradient(to left, rgb(150 190 255 / 0.95) 0 12px, transparent 12px 24px) 0
+      6px / 100% 2px no-repeat,
+    repeating-linear-gradient(to left, rgb(40 90 230 / 0.9) 0 18px, transparent 18px 28px) 6px
+      15px / 100% 2px no-repeat,
+    repeating-linear-gradient(to left, rgb(120 170 255 / 0.9) 0 10px, transparent 10px 22px) 2px
+      24px / 100% 2px no-repeat;
+}
+
+/* Steel ball au repos (SpinOrb) : spirale dorée de la Golden Rotation qui se dessine, brille
+   puis s'efface, avec un reflet qui passe sur la boule… */
+.orb-spiral path {
+  stroke: #ffd75a;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  filter: drop-shadow(0 0 3px rgb(255 220 90 / 0.9));
+  animation: orb-spiral 2.2s ease-in-out forwards;
+}
+
+@keyframes orb-spiral {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 1;
+  }
+  45% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  65% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    stroke-width: 4;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+.orb-spiral {
+  animation: orb-spiral-turn 2.2s ease-in-out forwards;
+}
+
+@keyframes orb-spiral-turn {
+  from {
+    rotate: -40deg;
+  }
+  to {
+    rotate: 20deg;
+  }
+}
+
+/* …ou un petit rebond sur place : elle s'écrase, saute, retombe et rebondit encore un peu. */
+.orb-hop {
+  animation: orb-hop 0.75s ease-out;
+  transform-origin: 50% 100%;
+}
+
+@keyframes orb-hop {
+  0% {
+    translate: 0 0;
+    scale: 1;
+  }
+  12% {
+    translate: 0 0;
+    scale: 1.12 0.86;
+  }
+  40% {
+    translate: 0 -12px;
+    scale: 0.94 1.06;
+  }
+  62% {
+    translate: 0 0;
+    scale: 1.1 0.9;
+  }
+  78% {
+    translate: 0 -3px;
+    scale: 1;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
 }
