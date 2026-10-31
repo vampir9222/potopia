@@ -47,12 +47,13 @@ export function Mascot({ mood = "repos", height, fallback = null, className }: P
           ref={bodyRef}
           src="/api/mascotte/corps"
           alt=""
+          draggable={false}
           className="mascot-body"
           onError={() => setBroken(true)}
         />
         <span className="mascot-lid mascot-lid-l" />
         <span className="mascot-lid mascot-lid-r" />
-        <img src="/api/mascotte/couronne" alt="" className="mascot-crown" />
+        <img src="/api/mascotte/couronne" alt="" draggable={false} className="mascot-crown" />
       </span>
     </span>
   );
