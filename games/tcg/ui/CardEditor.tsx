@@ -15,6 +15,7 @@ import {
   defaultParams,
   EFFECTS,
   type EffectDef,
+  type EffectTrigger,
   type EffectParams,
   effectText,
   getEffect,
@@ -81,12 +82,10 @@ type Props = {
   };
 };
 
-const EFFECT_GROUPS = (["reveal", "ongoing", "end_of_turn", "destroyed"] as const).map(
-  (trigger) => ({
-    trigger,
-    effects: (EFFECTS as readonly EffectDef[]).filter((e) => e.trigger === trigger),
-  }),
-);
+const EFFECT_GROUPS = (Object.keys(TRIGGER_LABELS) as EffectTrigger[]).map((trigger) => ({
+  trigger,
+  effects: (EFFECTS as readonly EffectDef[]).filter((e) => e.trigger === trigger),
+}));
 
 function initialFields(card: Card | null, initial?: Partial<Fields>): Fields {
   return {
@@ -299,7 +298,7 @@ export function CardEditor({
           ))}
         </datalist>
 
-        <Label hint={effect?.snap ? `Inspiré de ${effect.snap} (Marvel Snap).` : undefined}>
+        <Label hint={effect?.snap ? `Repris de ${effect.snap} (Marvel Snap).` : undefined}>
           Effet
           <Select
             value={fields.effectKey}

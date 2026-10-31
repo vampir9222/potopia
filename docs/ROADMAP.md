@@ -474,6 +474,10 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 - [x] Catalogue d'effets (`src/effects.ts`) et fonctions des cartes (`src/cards.ts`).
 - [x] Effet Heimdall (`reveal_move_allies_left` : tes autres cartes passent d'un lieu vers la
       gauche), pour la carte « SPINNING SPINNING ».
+- [x] Catalogue d'effets refait d'après de vraies cartes Marvel Snap (85 effets, chacun avec sa
+      carte ; les effets inventés sont retirés ou corrigés), moments « depuis la main » et « fin
+      de partie », mana jusqu'à 8 (Skaar, Death) ; mise à jour en masse des cartes existantes
+      (`updates` sur `/admin/cartes/import`).
 - [x] Admin : `/admin/cartes`, `/admin/cartes/[id]`, `/admin/cartes/nouvelle`,
       `/admin/cartes/import`, `/admin/cartes/illustrations` (envoi en masse) ; entrée « Cartes »
       sur `/admin`.
@@ -502,6 +506,8 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
   mal réglé refusé, variantes (stats reprises et recopiées, pas de variante d'une variante), import
   (idées déjà importées ignorées, tout ou rien), illustration (envoi présigné, clé vérifiée dans le
   stockage, formats et droits).
+- Mise à jour en masse : carte retrouvée par son idée (le nom départage), reste gardé, variantes
+  suivies, tout ou rien, admins seulement.
 - Idées : `listIdeaImageUrls` réservé aux admins.
 - Stockage : `presignGetStable` donne la même URL pendant 5 min, valable 15 min, avec
   l'en-tête de cache renvoyé par le stockage.

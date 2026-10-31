@@ -185,7 +185,7 @@ passe d'une partie à l'autre sans rechargement.
 - `TcgSet` : code (unique, `S1`), name, createdAt. Une édition de cartes.
 - `TcgCard` : setId?, number? (`(set_id, number)` unique ; contrainte `cards_set_number_check` : un
   numéro si et seulement si la carte est dans un set, sinon elle est dans la réserve), name, rarity (enum `TcgRarity` :
-  common, uncommon, rare, epic, legendary, sr, ssr), type, family?, cost (0 à 6), power, effectKey?,
+  common, uncommon, rare, epic, legendary, sr, ssr), type, family?, cost (0 à 8), power, effectKey?,
   effectParams? (JSON), effectText, flavor?, imageKey?, imageFrame? (JSON : cadrage de
   l'illustration, point central x/y en % et zoom de 1 à 4 ; l'image n'est jamais rognée), ideaId? (index simple, `ideas.ideas`
   sans relation : lien de gestion, une idée peut donner plusieurs cartes), baseCardId? (variante full art → sa carte de base), createdAt, updatedAt. La base ne
@@ -482,13 +482,18 @@ et modifient les cartes.
   famille et la description pré-remplis et l'image de l'idée. Garde-fou : si l'idée a déjà des
   cartes, elles sont listées et il faut cocher « Créer quand même » (vérifié côté serveur).
 
-- Catalogue d'effets (`games/tcg/src/effects.ts`, `EFFECTS`, 49 effets) : chaque effet a une clé,
-  un moment (à la révélation, permanent, fin de tour, quand elle est détruite), des réglages
-  (nombre borné, famille ou nom de jeton, validés par `paramsSchema`), un modèle de texte
-  (`effectText`) et, souvent, la carte de Marvel Snap qui l'inspire (`snap`, affichée dans
-  l'éditeur : Iron Man, Wong, Sera, Armor, Shang-Chi, Killmonger, Deadpool, Heimdall…). L'admin choisit
-  l'effet d'une carte dans cette liste et règle ses nombres, sans déploiement ; un effet nouveau
-  s'ajoute dans le code.
+- Catalogue d'effets (`games/tcg/src/effects.ts`, `EFFECTS`, 85 effets) : chaque effet reprend
+  une vraie carte de Marvel Snap (`snap`, obligatoire, affichée dans l'éditeur : Heimdall, Magneto,
+  Galactus, Wong, Iron Man…), dont l'effet, les valeurs (réglages par défaut) et, pour la carte,
+  le coût et la puissance servent de repère : ces cartes sont déjà équilibrées. Règle décidée le
+  2026-10-31 : pas d'effet inventé. Chaque effet a une clé, un moment (révélation, permanent,
+  fin de tour, quand elle est détruite, depuis la main, fin de partie), des réglages (nombre
+  borné ou nom de jeton, validés par `paramsSchema` ; les valeurs fixées par la carte Snap, comme
+  « 10 de puissance ou plus » de Shang-Chi, ne se règlent pas) et un modèle de texte
+  (`effectText`). L'admin choisit l'effet d'une carte dans cette liste et règle ses nombres, sans
+  déploiement ; un effet nouveau s'ajoute dans le code, avec sa carte Snap. Plusieurs effets
+  demanderont au moteur de partie des mécaniques à créer (Rochers, lieu inondé ou détruit,
+  cartes cachées, fusion, pioche adverse, fin de partie).
 - `games/tcg/src/cards.ts` : `listSets`, `createSet`, `ensureSet`, `listCards` (par set, réserve
   ou idée), `getCard`, `createCard` (numéro suivant du set, sous verrou, ou réserve), `moveCards`, `updateCard`, `createCardImageUpload` (PUT présigné,
   clé `cards/<uuid>.<ext>`, 5 Mo), `setCardImage` (vérifie l'objet), `importCards`. Toutes
@@ -497,6 +502,11 @@ et modifient les cartes.
 - Variante (`baseCardId`) : elle reprend mana, puissance, type, famille et effet de sa carte de
   base ; `updateCard` sur la carte de base les lui recopie, et sur la variante ne change que le
   nom, la rareté et la description. Pas de variante d'une variante.
+- Mise à jour en masse (même page, `updateCards`) : fichier `{ updates: [{ ideaId, name?, cost?,
+power?, effectKey?, effectParams?, effectText? }] }`. Chaque carte de base est retrouvée par son
+  idée (le nom départage si l'idée a plusieurs cartes) ; seuls le coût, la puissance et l'effet
+  changent, et les variantes suivent. Un nouvel effet sans texte prend le texte du catalogue.
+  Tout ou rien.
 - Import (`/admin/cartes/import`, `importCards`) : fichier JSON `{ set?: { code, name }, cards }`.
   Le set est créé au besoin, les cartes prennent les numéros suivants (sans set : la réserve) ; une carte dont l'idée a
   déjà une carte est ignorée (réimporter ne crée pas de doublon et n'écrase pas les
