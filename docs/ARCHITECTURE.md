@@ -288,16 +288,25 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 décors.
 
 - Un thème est un bloc `[data-theme="…"]` de variables CSS, déclaré aussi dans
-  `packages/ui/src/themes.ts`. Quatre thèmes : **Classique**, le thème par défaut (bleu sobre, sans
+  `packages/ui/src/themes.ts`. Cinq thèmes : **Classique**, le thème par défaut (bleu sobre, sans
   décors), **Fantasy** (or, pourpre, cadres ornés, braises, titres en Cinzel), **RGB** (néon gaming :
   la teinte de l'accent tourne en continu via une propriété CSS animée, cadres à bordure arc-en-ciel,
-  boucle de watercooling animée en fond, titres en Orbitron) et **JoJo** (Stardust Crusaders : nuit
+  boucle de watercooling animée en fond, titres en Orbitron), **JoJo** (Stardust Crusaders : nuit
   indigo, or et violet, cadres encrés façon case de manga avec étoiles Joestar, titres en Anton ;
-  petits textes en capitales pleines pour rester lisibles).
-- Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`, `--jojo`) :
+  petits textes en capitales pleines pour rester lisibles) et **One Piece** (nuit sur la Grand
+  Line : bleu de la mer, or du chapeau de paille, rouge de Luffy, cadres bordés de corde tressée
+  avec roses des vents aux coins, titres en Pirata One ; petits textes en capitales pleines).
+- Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`, `--jojo`,
+  `--onepiece`) :
   un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons,
   portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.png` : Jotaro, Star Platinum, DIO,
   The World), « ゴゴゴ » qui montent, étoiles, Jotaro qui prend la pose (`jotaro-pose.png`).
+  Décor One Piece (`OnePieceDecor`, tout en CSS et SVG) : ciel étoilé, lune et son reflet sur la
+  mer, houle sur trois plans qui boucle sans à-coup, navire au loin qui traverse l'horizon en
+  tanguant, mouettes, pavillon au chapeau de paille qui flotte (`public/onepiece/jolly-roger.svg`,
+  dessiné pour le site, découpé en bandes qui ondulent l'une après l'autre) devant la lune, avis
+  de recherche de Luffy épinglé (image de `public/luffy/luffy-sheet.png`), « ドン!! » qui claquent
+  de temps en temps.
 - Passer au thème JoJo déclenche **ZA WARUDO** (`apps/web/components/ZaWarudo.tsx`, `zaWarudo()` de
   `@app/ui`) : la voix (`public/audio/za-warudo.mp3`), une onde qui inverse les couleurs, la page
   figée et délavée (« 時よ止まれ ! »), puis la reprise (`time-resume.mp3`). Un clic ou Échap
@@ -305,6 +314,10 @@ décors.
   l'horloge commune `timeNow()` (`packages/ui/src/timeStop.ts`), que `stopTime()` fige ; les sons
   en cours sont mis en pause puis reprennent (`trackMedia()`), la musique en Web Audio de Super
   Sonic aussi (`onTimeStop`).
+- Passer au thème One Piece déclenche **ドン!!** (`apps/web/components/Don.tsx`, `don()` de
+  `@app/ui`) : un coup de taiko synthétisé en Web Audio (pas de fichier), un flash, des lignes de
+  vitesse de manga qui convergent vers le centre, et « ドン!! » qui tombe de haut, s'écrase et
+  tremble sous le choc (1,6 s).
 - Le choix se fait avec le bouton palette du header (`ThemeSwitcher`). Il est mémorisé par appareil
   dans le cookie `theme`, que le layout racine lit pour poser `data-theme` dès le rendu serveur, sans
   flash.
