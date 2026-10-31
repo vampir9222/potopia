@@ -70,6 +70,9 @@ export function Art({
         <img
           src={card.imageUrl}
           alt={card.title}
+          // Les planches montrent des dizaines de cartes : on ne charge que celles qu'on voit.
+          loading="lazy"
+          decoding="async"
           style={{
             width: "100%",
             height: "100%",

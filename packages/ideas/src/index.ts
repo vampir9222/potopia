@@ -3,7 +3,7 @@ export {
   getIdea,
   getIdeaImageUrl,
   listIdeaAuthorIds,
-  listIdeaIdsWithImage,
+  listIdeaImageUrls,
   listIdeas,
   type ExportedIdea,
   type Idea,

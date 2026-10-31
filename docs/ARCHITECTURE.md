@@ -431,9 +431,14 @@ et modifient les cartes.
 - Cadrage : sous l'aperçu de l'éditeur, `ImageFramer` montre la fenêtre d'illustration (normale ou
   full art) ; on y fait glisser l'image et on règle le zoom, le cadrage est enregistré avec la
   carte et appliqué partout où elle s'affiche (`frameStyle`).
-- Illustration : `GET /api/admin/cards/[id]/image` (admin, 302 vers une URL présignée de 5 min),
-  celle de la carte ou, à défaut, celle de son idée (`listIdeaIdsWithImage` dit lesquelles en
-  ont une).
+- Illustration : celle de la carte ou, à défaut, celle de son idée (`listIdeaImageUrls`). Les pages
+  admin la signent directement (`cardImageUrls`) avec `presignGetStable` (`@app/storage`) : l'URL
+  reste identique pendant une fenêtre de 5 min (signée au début de la fenêtre, valable 15 min) et
+  autorise la mise en cache (`response-cache-control: private, max-age=600`), donc le navigateur
+  ne retélécharge pas les images d'une page à l'autre ; une nouvelle illustration a une nouvelle
+  clé, donc une nouvelle URL. Sur les planches, les images se chargent à l'approche de l'écran
+  (`loading="lazy"`) et les cartes hors de l'écran ne sont pas dessinées
+  (`content-visibility: auto`).
 
 ## Avatars et place
 

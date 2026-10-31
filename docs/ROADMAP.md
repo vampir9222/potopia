@@ -149,6 +149,8 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
   `https://<account>.r2.cloudflarestorage.com`).
 - `presignPut({ key, contentType, contentLength, expiresIn })`.
 - `presignGet({ key, expiresIn })` et `headObject(key)`.
+- `presignGetStable(key)` : URL GET identique pendant 5 min (valable 15 min), que le navigateur
+  peut garder en cache.
 - Aucune logique métier : les modules décident qui a le droit de faire quoi.
 
 **ui**
@@ -463,12 +465,16 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 - [x] Schéma `tcg` : `TcgSet`, `TcgCard`, enum `TcgRarity` (migration `tcg_cards`, ajout seul).
 - [x] Catalogue d'effets (`src/effects.ts`) et fonctions des cartes (`src/cards.ts`).
 - [x] Admin : `/admin/cartes`, `/admin/cartes/[id]`, `/admin/cartes/nouvelle`,
-      `/admin/cartes/import`, `/admin/cartes/illustrations` (envoi en masse),
-      `/api/admin/cards/[id]/image` ; entrée « Cartes » sur `/admin`.
+      `/admin/cartes/import`, `/admin/cartes/illustrations` (envoi en masse) ; entrée « Cartes »
+      sur `/admin`.
 - [x] Réserve et sets (cartes hors set en attente, déplacement en masse, renumérotation),
       plusieurs cartes par idée et création depuis la page d'une idée (garde-fou anti-doublon),
       titre ajusté à sa longueur ; migration `tcg_card_reserve` (modifie des contraintes, sans
       toucher aux données).
+- [x] Planche plus rapide et plus grande : illustrations signées directement par la page avec des
+      URLs stables 5 min (`presignGetStable`, mises en cache par le navigateur) au lieu d'une
+      redirection par carte, chargement à l'approche de l'écran, cartes hors écran non dessinées ;
+      cartes aux trois quarts de leur taille.
 - [x] Cadrage des illustrations dans l'éditeur (glisser, zoomer), migration
       `tcg_card_image_frame` (ajout d'une colonne).
 - [x] Une carte par idée de la boîte à idées, générée hors du dépôt et importée par l'admin ;
@@ -486,7 +492,9 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
   mal réglé refusé, variantes (stats reprises et recopiées, pas de variante d'une variante), import
   (idées déjà importées ignorées, tout ou rien), illustration (envoi présigné, clé vérifiée dans le
   stockage, formats et droits).
-- Idées : `listIdeaIdsWithImage` réservé aux admins.
+- Idées : `listIdeaImageUrls` réservé aux admins.
+- Stockage : `presignGetStable` donne la même URL pendant 5 min, valable 15 min, avec
+  l'en-tête de cache renvoyé par le stockage.
 
 **Fini quand**
 

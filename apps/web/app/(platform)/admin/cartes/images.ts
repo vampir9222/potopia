@@ -1,29 +1,35 @@
-import { listIdeaIdsWithImage } from "@app/ideas";
+import { listIdeaImageUrls } from "@app/ideas";
+import { presignGetStable } from "@app/storage";
 import type { Card } from "@app/tcg";
 
 type Admin = { discordId: string | null };
 
 /**
  * URL d'illustration de chaque carte (par id) : la sienne, ou celle de son idée quand l'idée a une
- * image. Le paramètre `v` change à chaque modification, pour ne pas garder une ancienne image.
+ * image. URLs présignées directement (pas de redirection par carte) et stables 5 min, pour que le
+ * navigateur garde les images en cache ; une nouvelle illustration a une nouvelle clé, donc une
+ * nouvelle URL.
  */
 export async function cardImageUrls(
   admin: Admin,
   cards: Card[],
 ): Promise<Map<string, string | null>> {
-  const borrowed = new Set(
-    await listIdeaIdsWithImage(
-      admin,
-      cards.flatMap((c) => (!c.imageKey && c.ideaId ? [c.ideaId] : [])),
-    ),
+  const borrowed = await listIdeaImageUrls(
+    admin,
+    cards.flatMap((c) => (!c.imageKey && c.ideaId ? [c.ideaId] : [])),
   );
   return new Map(
-    cards.map((c) => [
-      c.id,
-      c.imageKey || (c.ideaId && borrowed.has(c.ideaId))
-        ? `/api/admin/cards/${c.id}/image?v=${c.updatedAt.getTime()}`
-        : null,
-    ]),
+    await Promise.all(
+      cards.map(
+        async (c) =>
+          [
+            c.id,
+            c.imageKey
+              ? await presignGetStable(c.imageKey)
+              : ((c.ideaId && borrowed.get(c.ideaId)) ?? null),
+          ] as const,
+      ),
+    ),
   );
 }
 
