@@ -32,3 +32,4 @@ export {
   type VolumeState,
 } from "./volume";
 export { VolumeControl } from "./VolumeControl";
+export { WantedPoster } from "./WantedPoster";

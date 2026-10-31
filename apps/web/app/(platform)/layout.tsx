@@ -4,7 +4,14 @@ import { getBalance } from "@app/economy";
 import { BalanceCard } from "@app/economy/ui";
 import { hasAllEmeralds, listItems } from "@app/inventory";
 import { EmeraldsProvider } from "@app/inventory/ui";
-import { Card, resolveTheme, THEME_COOKIE, ThemeSwitcher, VolumeControl } from "@app/ui";
+import {
+  Card,
+  resolveTheme,
+  THEME_COOKIE,
+  ThemeSwitcher,
+  VolumeControl,
+  WantedPoster,
+} from "@app/ui";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/actions/auth";
@@ -43,7 +50,12 @@ export default async function PlatformLayout({ children }: { children: ReactNode
   const sidePanels = (fill: boolean) => (
     <div className={fill ? "flex h-full flex-col gap-4" : "flex flex-col gap-4"}>
       <AccountPanel user={{ ...profile, role: user.role }}>
-        <BalanceCard balance={balance} />
+        {/* thème One Piece : l'avis de recherche du membre, sa prime = son solde (il remplace
+            alors la ligne du profil et le solde, theme-identity / theme-balance) */}
+        <WantedPoster name={profile.name} image={profile.image} bounty={balance} />
+        <div className="theme-balance">
+          <BalanceCard balance={balance} />
+        </div>
         <SideNav isAdmin={user.role === "admin"} />
       </AccountPanel>
       <Card

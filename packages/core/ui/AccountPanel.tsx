@@ -9,9 +9,9 @@ type Props = {
 
 export function AccountPanel({ user, children }: Props) {
   return (
-    // theme-hat : un thème peut poser un objet sur le coin du cadre (One Piece : le chapeau de paille)
-    <section className="theme-frame theme-hat rounded-theme flex flex-col gap-4 p-4">
-      <div className="flex items-center gap-3">
+    <section className="theme-frame rounded-theme flex flex-col gap-4 p-4">
+      {/* theme-identity : un thème peut la remplacer (One Piece : l'avis de recherche du membre) */}
+      <div className="theme-identity flex items-center gap-3">
         <Avatar name={user.name} src={user.image} size={48} />
         <div className="min-w-0">
           <p className="font-display text-text truncate font-semibold tracking-wide">{user.name}</p>

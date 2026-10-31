@@ -293,35 +293,33 @@ décors.
   la teinte de l'accent tourne en continu via une propriété CSS animée, cadres à bordure arc-en-ciel,
   boucle de watercooling animée en fond, titres en Orbitron), **JoJo** (Stardust Crusaders : nuit
   indigo, or et violet, cadres encrés façon case de manga avec étoiles Joestar, titres en Anton ;
-  petits textes en capitales pleines pour rester lisibles) et **One Piece** (nuit sur la Grand
-  Line : bleu de la mer, or du chapeau de paille, rouge de Luffy, cadres translucides bordés de
-  corde tressée avec roses des vents aux coins, titres en Pirata One ; petits textes en capitales
-  pleines).
+  petits textes en capitales pleines pour rester lisibles) et **One Piece** (la Grand Line de
+  nuit : bleu nuit de la mer, jaune du chapeau de paille, rouge de Luffy ; cadres translucides
+  bordés comme une carte marine ancienne, trait or et graduation entre deux filets, Jolly Roger
+  de l'équipage au coin ; titres en Luckiest Guy cerclés de brun comme le logo de la série).
 - Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`, `--jojo`,
   `--onepiece`) :
   un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons,
   portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.png` : Jotaro, Star Platinum, DIO,
   The World), « ゴゴゴ » qui montent, étoiles, Jotaro qui prend la pose (`jotaro-pose.png`).
-  Décor One Piece (`OnePieceDecor`) : ciel étoilé, lune et son reflet sur la mer, houle sur
-  trois plans qui boucle sans à-coup, le Vogue Merry au loin sur l'horizon (`merry.webp`), et au
-  premier plan le grand Thousand Sunny en pixel art (`public/onepiece/sunny-px.webp`, détouré
-  d'une image fournie par l'utilisateur), à droite de la colonne de gauche sur grand écran : il
-  dérive et tangue, la quille dans la houle. L'équipage est à bord, en pixel art animé
-  (`deck-*.png`, planche « Thousand Sunny NPC's » de One Piece: Gigant Battle 2 découpée par
-  personnage) : Luffy qui danse sur la tête de lion, Usopp et Chopper derrière le bastingage de
-  la proue, Zoro aux haltères, Nami et Sanji amoureux sur la pelouse, Robin qui lit et Franky sur
-  le toit de la cabine, Brook au violon sur le dôme ; chacun placé par ses pieds en pixels de
-  l'image du Sunny (`CREW`). L'avant-plan (`sunny-px-front.webp` : bastingage et rambarde) est
-  redessiné par-dessus, si bien qu'ils ont les jambes dans le navire. Les deux pavillons du
-  Sunny, découpés à part (`sunny-flag-*.png`), claquent au vent. En bas à droite, le panneau des
-  avis de recherche (`WantedBoard`, composant client) : cinq piles d'affiches qui se chevauchent
-  (l'équipage, Ace, Shanks, Law, Barbe Blanche, Barbe Noire, Big Mom, Kaido, Crocodile, Buggy,
-  Arlong : `wanted-*.webp`) ; toutes les 4,5 à 9 s, l'affiche du dessus d'une pile se décroche,
-  tombe et repasse sous la pile, à l'infini (seulement quand le thème est affiché). Mouettes et
-  « ドン!! » de temps en temps. Le chapeau de paille de Luffy (`straw-hat.svg`, dessiné pour le
-  site) est posé dans le coin du cadre du compte : la classe `theme-hat` (`AccountPanel`) marque
-  le cadre où un thème peut poser un objet. Images du wiki One Piece (Fandom) et de Sprite
-  Database, détourées et réduites.
+  Décor One Piece (`OnePieceDecor`) : la carte du monde (Red Line, Grand Line, les quatre
+  Blues : `public/onepiece/world-map.webp`) en fond, rendue en luminosité seulement sur le bleu de
+  la nuit (une vieille carte marine), qui dérive très lentement ; Gear 5 qui rit en haut, devant
+  les rayons du soleil de Nika, Zoro et Luffy en bas (`portrait-*.webp`, illustrations
+  officielles détourées), en grand et à peine visibles ; des « ドン!! » de manga. De temps en
+  temps (35 à 80 s), le **Haki des rois** (`OnePieceHaki`, composant client) : des éclairs noirs
+  cerclés de rouge, tirés au hasard (déplacement des milieux, avec ramifications), crépitent
+  depuis les bords dans un voile sombre ; seulement avec ce thème, onglet visible, temps qui
+  s'écoule, jamais si l'appareil demande moins d'animations.
+  Le cadre du compte devient l'**avis de recherche** du membre (`WantedPoster` de `@app/ui`, rendu
+  par le layout de la plateforme pour tous les thèmes, affiché par celui-ci seulement) : une vraie
+  affiche vierge « WANTED / DEAD OR ALIVE / MARINE » (`wanted-blank.webp`, fenêtre de la photo
+  transparente), la photo de profil sous la fenêtre, le nom et la prime écrits en Abril Fatface
+  (`--font-wanted-face`), la prime étant le solde du membre (« 1,500- », à l'anglaise comme sur
+  les affiches) ; le chapeau de paille (`straw-hat.webp`) est accroché au coin. Il remplace alors
+  la ligne du profil et le solde, marqués `theme-identity` (`AccountPanel`) et `theme-balance`
+  (layout). Les images viennent du web (wiki One Piece, illustrations officielles, carte du
+  monde d'un fan), réduites en WebP.
 - Passer au thème JoJo, ou cliquer de nouveau dessus dans le sélecteur, déclenche **ZA WARUDO**
   (`apps/web/components/ZaWarudo.tsx`, `zaWarudo()` de `@app/ui`) : la voix
   (`public/audio/za-warudo.mp3`), une onde qui inverse les couleurs, puis la page figée et délavée
@@ -333,10 +331,11 @@ décors.
   d'avatar, confettis de TROIS…) ; les sons en cours sont mis en pause puis reprennent
   (`trackMedia()`), la musique en Web Audio de Super Sonic aussi (`onTimeStop`).
 - Passer au thème One Piece déclenche **ドン!!** (`apps/web/components/Don.tsx`, `don()` de
-  `@app/ui`) : un coup de taiko synthétisé en Web Audio (pas de fichier), un flash, des lignes de
-  vitesse de manga qui convergent vers le centre, « ドン!! » qui tombe de haut, s'écrase et
-  tremble sous le choc, et le Thousand Sunny (pixel art) qui traverse l'écran en « Coup de Burst » en laissant
-  des nuages de vapeur (1,9 s).
+  `@app/ui`) : les Tambours de la Libération, le cœur de Nika (« ドン・ドッ・トッ・ト », quatre
+  coups de taiko synthétisés en Web Audio, pas de fichier), un flash, des lignes de vitesse de
+  manga qui convergent vers le centre, « ドン!! » qui tombe de haut, s'écrase et tremble sous le
+  choc, et Luffy en Gear 5 qui surgit derrière en riant, rebondit comme du caoutchouc dans une
+  couronne de nuages de vapeur (1,9 s).
 - Le choix se fait avec le bouton palette du header (`ThemeSwitcher`). Il est mémorisé par appareil
   dans le cookie `theme`, que le layout racine lit pour poser `data-theme` dès le rendu serveur, sans
   flash.
