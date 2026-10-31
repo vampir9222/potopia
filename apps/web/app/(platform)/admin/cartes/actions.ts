@@ -3,6 +3,9 @@
 import {
   CardInputError,
   createCard,
+  createSet,
+  listCards,
+  moveCards,
   createCardImageUpload,
   importCards,
   setCardImage,
@@ -28,7 +31,10 @@ function readCard(formData: FormData): CardInput {
   return JSON.parse(String(formData.get("card") ?? "{}")) as CardInput;
 }
 
-/** Crée une carte, puis ouvre sa page (pour y envoyer l'illustration). */
+/**
+ * Crée une carte (dans un set ou la réserve, éventuellement tirée d'une idée), puis ouvre sa page
+ * pour y envoyer l'illustration. Garde-fou : si l'idée a déjà des cartes, il faut le confirmer.
+ */
 export async function createCardAction(
   _prev: CardEditorState,
   formData: FormData,
@@ -37,13 +43,23 @@ export async function createCardAction(
   let id: string;
   try {
     const setId = String(formData.get("setId") ?? "");
-    id = (await createCard(admin, { ...readCard(formData), setId })).id;
+    const ideaId = String(formData.get("ideaId") ?? "") || null;
+    if (ideaId && formData.get("confirmDuplicate") !== "on") {
+      const existing = await listCards(admin, { ideaId });
+      if (existing.length > 0) {
+        return {
+          status: "error",
+          message: `Cette idée a déjà ${existing.length} carte${existing.length > 1 ? "s" : ""} : coche « Créer quand même » pour en ajouter une.`,
+        };
+      }
+    }
+    id = (await createCard(admin, { ...readCard(formData), setId, ideaId })).id;
   } catch (error) {
     const message = inputError(error);
     if (message === null) throw error;
     return { status: "error", message };
   }
-  revalidatePath("/admin/cartes");
+  revalidatePath("/admin/cartes", "layout");
   redirect(`/admin/cartes/${id}`);
 }
 
@@ -61,7 +77,7 @@ export async function updateCardAction(
     if (message === null) throw error;
     return { status: "error", message };
   }
-  revalidatePath("/admin/cartes");
+  revalidatePath("/admin/cartes", "layout");
   return { status: "ok", message: "Carte enregistrée." };
 }
 
@@ -93,7 +109,7 @@ export async function confirmCardImageAction(
     if (message === null) throw error;
     return { error: message };
   }
-  revalidatePath("/admin/cartes");
+  revalidatePath("/admin/cartes", "layout");
   return null;
 }
 
@@ -111,10 +127,53 @@ export async function importCardsAction(
     file instanceof File && file.size > 0 ? await file.text() : String(formData.get("json") ?? "");
   try {
     const { created, skipped } = await importCards(admin, JSON.parse(text) as CardImport);
-    revalidatePath("/admin/cartes");
+    revalidatePath("/admin/cartes", "layout");
     return {
       status: "ok",
       message: `${created} carte${created > 1 ? "s" : ""} créée${created > 1 ? "s" : ""}, ${skipped} déjà importée${skipped > 1 ? "s" : ""}.`,
+    };
+  } catch (error) {
+    const message = inputError(error);
+    if (message === null) throw error;
+    return { status: "error", message };
+  }
+}
+
+export type FormState =
+  { status: "idle" } | { status: "ok"; message: string } | { status: "error"; message: string };
+
+/** Crée un set (code et nom), puis l'ouvre. */
+export async function createSetAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const admin = await actionAdmin();
+  let code: string;
+  try {
+    code = (
+      await createSet(admin, {
+        code: String(formData.get("code") ?? "").toUpperCase(),
+        name: String(formData.get("name") ?? ""),
+      })
+    ).code;
+  } catch (error) {
+    const message = inputError(error);
+    if (message === null) throw error;
+    return { status: "error", message };
+  }
+  revalidatePath("/admin/cartes", "layout");
+  redirect(`/admin/cartes?set=${code}`);
+}
+
+/** Range les cartes cochées (`ids`) dans un set ou dans la réserve (`target` = « reserve »). */
+export async function moveCardsAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const admin = await actionAdmin();
+  const target = String(formData.get("target") ?? "");
+  const ids = formData.getAll("ids").map(String);
+  if (ids.length === 0) return { status: "error", message: "Coche au moins une carte." };
+  try {
+    const { moved } = await moveCards(admin, ids, target === "reserve" ? null : target);
+    revalidatePath("/admin/cartes", "layout");
+    return {
+      status: "ok",
+      message: `${moved} carte${moved > 1 ? "s" : ""} déplacée${moved > 1 ? "s" : ""}.`,
     };
   } catch (error) {
     const message = inputError(error);

@@ -45,11 +45,22 @@ export type CardImageType = keyof typeof CARD_IMAGE_TYPES;
 
 export type CardSet = { id: string; code: string; name: string };
 
+/**
+ * Cadrage d'une illustration : le point de l'image placé au centre de la fenêtre (en % de la
+ * largeur et de la hauteur) et le zoom (1 = l'image remplit juste la fenêtre). Le fichier n'est
+ * jamais rogné : on peut recadrer à tout moment.
+ */
+export type ImageFrame = { x: number; y: number; zoom: number };
+
+export const DEFAULT_FRAME: ImageFrame = { x: 50, y: 50, zoom: 1 };
+export const FRAME_ZOOM = { min: 1, max: 4 } as const;
+
 export type Card = {
   id: string;
-  setId: string;
-  setCode: string;
-  number: number;
+  /** null : la carte attend dans la réserve (hors set, sans numéro). */
+  setId: string | null;
+  setCode: string | null;
+  number: number | null;
   name: string;
   rarity: CardRarityId;
   type: string;
@@ -61,6 +72,7 @@ export type Card = {
   effectText: string;
   flavor: string | null;
   imageKey: string | null;
+  imageFrame: ImageFrame | null;
   ideaId: string | null;
   baseCardId: string | null;
   updatedAt: Date;

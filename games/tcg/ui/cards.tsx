@@ -1,3 +1,4 @@
+import type { ImageFrame } from "../src/card-rules";
 import { Children, type CSSProperties, Fragment, isValidElement, type ReactNode } from "react";
 import { Zoomable } from "./Zoomable";
 
@@ -19,6 +20,8 @@ export type CardData = {
   author?: string;
   /** Numéro dans la série (« 07/18 »), affiché par certains designs. */
   serial?: string;
+  /** Cadrage de l'illustration (cartes du jeu) ; sans lui, l'image est centrée. */
+  imageFrame?: ImageFrame | null;
 };
 
 export const RARITY_LABELS: Record<CardRarity, string> = {
@@ -39,6 +42,16 @@ export const font = (name: string, fallback: string) => `var(--font-${name}), ${
 const W = 300;
 const H = 420;
 
+/** Placement d'une image selon son cadrage : point visé au centre, zoom autour de ce point. */
+export function frameStyle(frame: ImageFrame | null | undefined): CSSProperties {
+  if (!frame) return {};
+  return {
+    objectPosition: `${frame.x}% ${frame.y}%`,
+    transform: frame.zoom > 1 ? `scale(${frame.zoom})` : undefined,
+    transformOrigin: `${frame.x}% ${frame.y}%`,
+  };
+}
+
 /** Illustration de la carte, ou un nuage pixel quand l'idée n'a pas d'image. */
 export function Art({
   card,
@@ -57,7 +70,13 @@ export function Art({
         <img
           src={card.imageUrl}
           alt={card.title}
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+            ...frameStyle(card.imageFrame),
+          }}
         />
       </div>
     );

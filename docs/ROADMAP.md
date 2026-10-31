@@ -465,6 +465,12 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 - [x] Admin : `/admin/cartes`, `/admin/cartes/[id]`, `/admin/cartes/nouvelle`,
       `/admin/cartes/import`, `/admin/cartes/illustrations` (envoi en masse),
       `/api/admin/cards/[id]/image` ; entrée « Cartes » sur `/admin`.
+- [x] Réserve et sets (cartes hors set en attente, déplacement en masse, renumérotation),
+      plusieurs cartes par idée et création depuis la page d'une idée (garde-fou anti-doublon),
+      titre ajusté à sa longueur ; migration `tcg_card_reserve` (modifie des contraintes, sans
+      toucher aux données).
+- [x] Cadrage des illustrations dans l'éditeur (glisser, zoomer), migration
+      `tcg_card_image_frame` (ajout d'une colonne).
 - [x] Une carte par idée de la boîte à idées, générée hors du dépôt et importée par l'admin ;
       illustrations libres (Wikimedia Commons, crédits notés) pour les idées sans image.
 - [ ] Lieux, boosters (stock par set, journal en ajout seul, achat et gains), collection et

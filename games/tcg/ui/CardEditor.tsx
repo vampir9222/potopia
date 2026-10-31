@@ -8,6 +8,8 @@ import {
   CARD_RARITY_LABELS,
   type Card,
   type CardSet,
+  DEFAULT_FRAME,
+  type ImageFrame,
 } from "../src/card-rules";
 import {
   defaultParams,
@@ -19,9 +21,13 @@ import {
   TRIGGER_LABELS,
 } from "../src/effects";
 import { GameCard, GameCardDefs } from "./GameCard";
+import { ImageFramer } from "./ImageFramer";
 
 export type CardEditorState =
   { status: "idle" } | { status: "ok"; message: string } | { status: "error"; message: string };
+
+/** Champs du formulaire (pré-remplissables à la création). */
+export type CardFields = Fields;
 
 type Fields = {
   name: string;
@@ -45,9 +51,21 @@ type Props = {
   imageUrl: string | null;
   /** Nombre de cartes du set, pour le numéro affiché dans l'aperçu. */
   setSize?: number;
+  /** Création : nombre de cartes de chaque set (par id), pour le numéro de l'aperçu. */
+  setSizes?: Record<string, number>;
+  /** Création : set proposé au départ (null : la réserve). */
+  defaultSetId?: string | null;
+  /** Création à partir d'une idée : son id et les champs pré-remplis depuis elle. */
+  fromIdea?: {
+    id: string;
+    initial: Partial<Fields>;
+    /** L'idée a déjà des cartes : il faut cocher « Créer quand même ». */
+    hasCards: boolean;
+  };
   /**
-   * Server action passée par l'app : vérifie l'admin, puis crée ou modifie la carte. Champ envoyé :
-   * `card`, le formulaire en JSON (plus `setId` à la création).
+   * Server action passée par l'app : vérifie l'admin, puis crée ou modifie la carte. Champs
+   * envoyés : `card`, le formulaire en JSON ; à la création, `setId` (vide : réserve), `ideaId` et
+   * `confirmDuplicate`.
    */
   save: (state: CardEditorState, formData: FormData) => Promise<CardEditorState>;
   /**
@@ -70,7 +88,14 @@ const EFFECT_GROUPS = (["reveal", "ongoing", "end_of_turn", "destroyed"] as cons
   }),
 );
 
-function initialFields(card: Card | null): Fields {
+function initialFields(card: Card | null, initial?: Partial<Fields>): Fields {
+  return {
+    ...defaults(card),
+    ...(card ? {} : initial),
+  };
+}
+
+function defaults(card: Card | null): Fields {
   return {
     name: card?.name ?? "",
     rarity: card?.rarity ?? "common",
@@ -89,17 +114,30 @@ function initialFields(card: Card | null): Fields {
  * Formulaire d'une carte, avec l'aperçu du design retenu à côté, mis à jour pendant la saisie. Le
  * texte de l'effet suit l'effet choisi tant qu'on ne l'a pas réécrit à la main.
  */
-export function CardEditor({ card, sets, families, imageUrl, setSize, save, upload }: Props) {
+export function CardEditor({
+  card,
+  sets,
+  families,
+  imageUrl,
+  setSize,
+  setSizes,
+  defaultSetId,
+  fromIdea,
+  save,
+  upload,
+}: Props) {
   const [state, dispatch, pending] = useActionState(save, { status: "idle" });
   const [, startTransition] = useTransition();
-  const [fields, setFields] = useState(() => initialFields(card));
-  const [setId, setSetId] = useState(card?.setId ?? sets.at(-1)?.id ?? "");
+  const [fields, setFields] = useState(() => initialFields(card, fromIdea?.initial));
+  const [setId, setSetId] = useState(card?.setId ?? defaultSetId ?? "");
+  const [confirmDuplicate, setConfirmDuplicate] = useState(false);
   // Texte réécrit à la main : il ne suit plus l'effet.
   const [customText, setCustomText] = useState(
     () => !!card && card.effectText !== effectText(card.effectKey, card.effectParams),
   );
   const [layout, setLayout] = useState<"normal" | "fullart">("normal");
   const [image, setImage] = useState(imageUrl);
+  const [frame, setFrame] = useState<ImageFrame>(card?.imageFrame ?? DEFAULT_FRAME);
   const [uploadState, setUploadState] = useState<string | null>(null);
 
   const variant = !!card?.baseCardId;
@@ -113,10 +151,11 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
       family: fields.family.trim() || null,
       flavor: fields.flavor.trim() || null,
       effectText: shownText,
-      number: card?.number ?? (setSize ?? 0) + 1,
-      setCode: card?.setCode ?? sets.find((s) => s.id === setId)?.code,
+      number: card ? card.number : setId ? (setSizes?.[setId] ?? 0) + 1 : null,
+      setCode: card ? card.setCode : sets.find((s) => s.id === setId)?.code,
+      imageFrame: frame,
     }),
-    [fields, shownText, card?.number, card?.setCode, sets, setId, setSize],
+    [fields, shownText, card, sets, setId, setSizes, frame],
   );
 
   function set<K extends keyof Fields>(key: K, value: Fields[K]) {
@@ -130,8 +169,15 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
 
   function submit() {
     const data = new FormData();
-    data.set("card", JSON.stringify({ ...fields, effectText: shownText }));
-    if (!card) data.set("setId", setId);
+    data.set(
+      "card",
+      JSON.stringify({ ...fields, effectText: shownText, imageFrame: image ? frame : null }),
+    );
+    if (!card) {
+      data.set("setId", setId);
+      if (fromIdea) data.set("ideaId", fromIdea.id);
+      if (confirmDuplicate) data.set("confirmDuplicate", "on");
+    }
     startTransition(() => dispatch(data));
   }
 
@@ -149,6 +195,7 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
     const failed = await upload.confirm(target.key);
     if (failed) return setUploadState(failed.error);
     setImage(URL.createObjectURL(file));
+    setFrame(DEFAULT_FRAME);
     setUploadState("Illustration enregistrée.");
   }
 
@@ -170,7 +217,8 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
         {!card && (
           <Label>
             Set
-            <Select value={setId} onChange={(e) => setSetId(e.target.value)} required>
+            <Select value={setId} onChange={(e) => setSetId(e.target.value)}>
+              <option value="">Réserve (hors set)</option>
               {sets.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.code} · {s.name}
@@ -340,6 +388,16 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
           />
         </Label>
 
+        {fromIdea?.hasCards && (
+          <label className="text-text flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={confirmDuplicate}
+              onChange={(e) => setConfirmDuplicate(e.target.checked)}
+            />
+            Créer quand même une autre carte pour cette idée
+          </label>
+        )}
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={pending}>
             {card ? "Enregistrer" : "Créer la carte"}
@@ -375,6 +433,21 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
             </button>
           ))}
         </div>
+        {image && (
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-muted text-sm">
+              Cadrage : glisse l&apos;image, zoome, puis enregistre la carte.
+            </p>
+            <ImageFramer
+              imageUrl={image}
+              frame={frame}
+              onChange={setFrame}
+              // Proportions de la fenêtre d'illustration : carte normale (264 × 172) ou full art.
+              width={layout === "normal" ? 264 : 200}
+              height={layout === "normal" ? 172 : 280}
+            />
+          </div>
+        )}
         {upload && card && (
           <Label
             className="w-full max-w-[300px]"
