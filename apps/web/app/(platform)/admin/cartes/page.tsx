@@ -1,12 +1,13 @@
 import { CARD_RARITIES, CARD_RARITY_LABELS, listCards, listSets } from "@app/tcg";
 import { GameCard, GameCardDefs } from "@app/tcg/ui";
-import { Button, buttonClasses, Card, cx, EmptyState, Input } from "@app/ui";
+import { buttonClasses, Card, cx, EmptyState } from "@app/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/session";
 import { designFonts } from "../../cartes/fonts";
-import { MoveCardsForm, NewSetForm } from "./forms";
+import { CardSearch, MoveCardsForm, NewSetForm } from "./forms";
 import { cardAuthors, cardImageUrls } from "./images";
+import { Pagination } from "./Pagination";
 
 export const metadata: Metadata = { title: "Cartes" };
 
@@ -32,8 +33,9 @@ export default async function AdminCardsPage({
   const [sets, all] = await Promise.all([listSets(admin), listCards(admin)]);
   const { set: code, page: pageParam, q: rawQuery } = await searchParams;
   const query = (rawQuery ?? "").trim().slice(0, 60);
-  const reserveView = code === RESERVE || (code === undefined && sets.length === 0);
-  const current = reserveView ? null : (sets.find((s) => s.code === code) ?? sets.at(-1) ?? null);
+  // La réserve par défaut : les cartes y attendent avant d'être rangées dans un set.
+  const current = sets.find((s) => s.code === code) ?? null;
+  const reserveView = current === null;
   // Une recherche porte sur toutes les cartes (sets et réserve) : nom, type, famille, textes.
   const words = fold(query).split(/\s+/).filter(Boolean);
   const cards = words.length
@@ -57,24 +59,27 @@ export default async function AdminCardsPage({
 
   const setParam = current ? current.code : RESERVE;
   const searchParam = query ? `&q=${encodeURIComponent(query)}` : "";
-  const pager =
-    pageCount > 1 ? (
-      <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="Pages">
-        {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
-          <Link
-            key={p}
-            href={`/admin/cartes?set=${setParam}${searchParam}&page=${p}`}
-            aria-current={p === page ? "page" : undefined}
-            className={cx(
-              "rounded-md border px-2.5 py-1",
-              p === page ? "border-accent text-text" : "border-border text-muted",
-            )}
-          >
-            {(p - 1) * PAGE_SIZE + 1}–{Math.min(p * PAGE_SIZE, cards.length)}
-          </Link>
-        ))}
-      </nav>
-    ) : null;
+  const pager = (
+    <Pagination
+      page={page}
+      count={pageCount}
+      href={(p) => `/admin/cartes?set=${setParam}${searchParam}&page=${p}`}
+    />
+  );
+  // Recherche juste au-dessus des cartes, avec le compte et la pagination.
+  const searchBar = (
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="flex-1">
+        <CardSearch query={query} set={setParam} />
+      </div>
+      {shown.length > 0 && (
+        <span className="text-muted text-xs tabular-nums">
+          {(page - 1) * PAGE_SIZE + 1}–{(page - 1) * PAGE_SIZE + shown.length} sur {cards.length}
+        </span>
+      )}
+      {pager}
+    </div>
+  );
 
   const tabs = [
     ...sets.map((s) => ({
@@ -144,26 +149,6 @@ export default async function AdminCardsPage({
               </Link>
             ))}
           </nav>
-          <form action="/admin/cartes" role="search" className="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="set" value={setParam} />
-            <Input
-              type="search"
-              name="q"
-              defaultValue={query}
-              placeholder="Chercher une carte : nom, famille, effet…"
-              aria-label="Chercher une carte"
-              maxLength={60}
-              className="max-w-sm"
-            />
-            <Button type="submit" variant="secondary" size="sm">
-              Chercher
-            </Button>
-            {query && (
-              <Link href={`/admin/cartes?set=${setParam}`} className="text-muted hover:underline">
-                Effacer
-              </Link>
-            )}
-          </form>
           {cards.length > 0 && (
             <p className="text-muted">
               {query
@@ -190,61 +175,65 @@ export default async function AdminCardsPage({
       </Card>
 
       <GameCardDefs />
-      {cards.length === 0 ? (
-        <Card>
-          <EmptyState
-            title={
-              query
-                ? `Aucune carte pour « ${query} »`
-                : current
-                  ? "Aucune carte dans ce set"
-                  : "La réserve est vide"
-            }
-            description={
-              query
-                ? "La recherche porte sur le nom, le type, la famille, l'effet et la description."
-                : "Crée une carte, importe un fichier (JSON) ou déplace des cartes ici."
-            }
-          />
-        </Card>
-      ) : (
-        <MoveCardsForm targets={targets}>
-          {pager}
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(400px,100%),1fr))] gap-4">
-            {shown.map((card) => (
-              <li
-                key={card.id}
-                className="flex flex-col items-center gap-1"
-                // Le navigateur ne dessine pas les cartes hors de l'écran (défilement fluide).
-                style={{ contentVisibility: "auto", containIntrinsicSize: "auto 585px" }}
-              >
-                <Link
-                  href={`/admin/cartes/${card.id}`}
-                  aria-label={`Modifier ${card.name}`}
-                  className="flex flex-col items-center"
+      {/* Toujours le même formulaire autour de la recherche : elle garde sa saisie d'un résultat à
+          l'autre, même vide. */}
+      <MoveCardsForm targets={targets}>
+        {searchBar}
+        {cards.length === 0 ? (
+          <Card>
+            <EmptyState
+              title={
+                query
+                  ? `Aucune carte pour « ${query} »`
+                  : current
+                    ? "Aucune carte dans ce set"
+                    : "La réserve est vide"
+              }
+              description={
+                query
+                  ? "La recherche porte sur le nom, le type, la famille, l'effet et la description."
+                  : "Crée une carte, importe un fichier (JSON) ou déplace des cartes ici."
+              }
+            />
+          </Card>
+        ) : (
+          <>
+            <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(400px,100%),1fr))] gap-4">
+              {shown.map((card) => (
+                <li
+                  key={card.id}
+                  className="flex flex-col items-center gap-1"
+                  // Le navigateur ne dessine pas les cartes hors de l'écran (défilement fluide).
+                  style={{ contentVisibility: "auto", containIntrinsicSize: "auto 585px" }}
                 >
-                  {/* Aperçu agrandi d'un tiers (400 × 560) : la carte fait 300 × 420. */}
-                  <div style={{ zoom: 4 / 3 }} className="pointer-events-none">
-                    <GameCard
-                      card={card}
-                      imageUrl={images.get(card.id) ?? null}
-                      setSize={card.setId ? setSizes.get(card.setId) : undefined}
-                      author={authors.get(card.id)}
-                      still
-                    />
-                  </div>
-                </Link>
-                <label className="text-muted flex items-center gap-1.5 text-xs">
-                  <input type="checkbox" name="ids" value={card.id} />
-                  {card.number ?? "—"} · {CARD_RARITY_LABELS[card.rarity]}
-                  {card.baseCardId ? " · variante" : ""}
-                </label>
-              </li>
-            ))}
-          </ul>
-          {pager}
-        </MoveCardsForm>
-      )}
+                  <Link
+                    href={`/admin/cartes/${card.id}`}
+                    aria-label={`Modifier ${card.name}`}
+                    className="flex flex-col items-center"
+                  >
+                    {/* Aperçu agrandi d'un tiers (400 × 560) : la carte fait 300 × 420. */}
+                    <div style={{ zoom: 4 / 3 }} className="pointer-events-none">
+                      <GameCard
+                        card={card}
+                        imageUrl={images.get(card.id) ?? null}
+                        setSize={card.setId ? setSizes.get(card.setId) : undefined}
+                        author={authors.get(card.id)}
+                        still
+                      />
+                    </div>
+                  </Link>
+                  <label className="text-muted flex items-center gap-1.5 text-xs">
+                    <input type="checkbox" name="ids" value={card.id} />
+                    {card.number ?? "—"} · {CARD_RARITY_LABELS[card.rarity]}
+                    {card.baseCardId ? " · variante" : ""}
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-center">{pager}</div>
+          </>
+        )}
+      </MoveCardsForm>
     </div>
   );
 }

@@ -496,6 +496,10 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
       cartes agrandies d'un tiers (400 px de large), planche paginée par 24 cartes (`?page=`),
       cartes figées sur la planche (sans 3D ni animation), illustrations réduites avant l'envoi
       (WebP, 1 200 px), recherche (`?q=`), pied de carte « S1 07/116 · E · idée de … ».
+- [x] Migration `tcg_cartes_en_reserve` (modifie des données, demandée par l'utilisateur) : toutes
+      les cartes passent dans la réserve, on les range ensuite une à une dans le set voulu ;
+      planche ouverte sur la réserve par défaut. Recherche dynamique (sans rechargement) juste
+      au-dessus des cartes, pagination avec flèches, première et dernière page.
 - [x] Migration `tcg_effets_snap` (modifie des données, accord de l'utilisateur) : toutes les
       cartes passent sur les effets Snap (clés renommées ou remplacées, réglages et textes du
       catalogue ; les cartes du set 1, retrouvées par leur idée, prennent la carte Snap retenue
