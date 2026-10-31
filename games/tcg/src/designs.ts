@@ -366,6 +366,36 @@ export const DESIGNS = [
     summary:
       "Bordure fine (7 px), fenêtre arrondie avec une simple ombre légère : le plus épuré. Chaque ligne : puissance en bas puis en haut, en carte normale et en full art.",
   },
+  {
+    id: "final-bandeau",
+    title: "Le 65 affiné",
+    summary:
+      "Le 65 (bandeau, puissance en bas) avec le cadre fin du 66 ; bandeau ajusté au cadre, description en italique sous l'effet, numéro et rareté en pied de carte, étoiles à partir de la légendaire.",
+  },
+  {
+    id: "final-echancre",
+    title: "Le 65 affiné · bandeau échancré",
+    summary:
+      "Le 67, avec le bandeau creusé en arc autour du mana : plus rien ne dépasse à gauche du mana.",
+  },
+  {
+    id: "final-serti",
+    title: "Le 65 affiné · mana serti",
+    summary:
+      "Le 67, avec le mana serti dans un anneau du métal de la bordure, qui recouvre le coin du bandeau.",
+  },
+  {
+    id: "final-court",
+    title: "Le 65 affiné · bandeau court",
+    summary:
+      "Le 67, avec un bandeau moins haut : le mana déborde en dessous, comme une pièce posée.",
+  },
+  {
+    id: "final-sans-bandeau",
+    title: "Le 65 affiné · sans bandeau",
+    summary:
+      "Le 67 sans bandeau : le titre est posé directement sur la carte, ou sur l'image en full art.",
+  },
 ] as const;
 
 export type DesignId = (typeof DESIGNS)[number]["id"];
@@ -373,23 +403,10 @@ export type DesignId = (typeof DESIGNS)[number]["id"];
 export const DESIGN_IDS = DESIGNS.map((d) => d.id) as [DesignId, ...DesignId[]];
 
 /**
- * Onglet « Design » : les propositions en cours (quatrième vague, titre en haut, `ui/v4.tsx`),
- * chacune en carte normale et full art, puissance en bas et en haut.
+ * Onglet « Design » : les propositions en cours (cinquième vague, le 65 affiné, `ui/v5.tsx`), en
+ * carte normale et full art, puis quatre formes du bandeau autour du mana. Tout le reste est aux Archives.
  */
-export const DESIGN_TAB: readonly DesignId[] = [
-  "haut-creuse",
-  "haut-fondu",
-  "haut-grave",
-  "haut-continu",
-  "haut-large",
-  "haut-arche",
-  "haut-coins",
-  "haut-givre",
-  "haut-parchemin",
-  "haut-plaque",
-  "haut-bandeau",
-  "haut-fin",
-];
+export const DESIGN_TAB: readonly DesignId[] = ["final-court"];
 
 /** Onglet « Effets de rareté » : ce que chaque rareté ajoute, posé sur le design « Mix · Sculpté et verre fumé ». */
 export const EFFECTS_TAB: readonly DesignId[] = [
@@ -400,10 +417,10 @@ export const EFFECTS_TAB: readonly DesignId[] = [
 ];
 
 /**
- * Points de départ des propositions en cours, toujours visibles dans l'onglet Design : 39 et 44
- * (les deux préférés), puis 48 (préféré pour la carte normale).
+ * Points de départ des propositions en cours, repliés sous l'onglet Design. Vide depuis la
+ * cinquième vague : le 65 et le 66, comme tout le reste, sont aux Archives.
  */
-export const REFERENCES: readonly DesignId[] = ["arcanes-v2", "raretes-v3", "mix-verre"];
+export const REFERENCES: readonly DesignId[] = [];
 
 /** Numéro affiché d'un design (sa place dans la liste, à partir de 1) : stable, on n'insère qu'à la fin. */
 export function designNumber(id: DesignId): number {

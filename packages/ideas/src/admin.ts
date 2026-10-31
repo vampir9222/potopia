@@ -60,6 +60,20 @@ export async function getIdeaImageUrl(reader: Reader, id: string): Promise<strin
   return presignGet({ key: idea.imageKey, expiresIn: 300 });
 }
 
+/**
+ * Parmi ces idées, celles qui ont une image (pour savoir quelles cartes peuvent l'emprunter).
+ * Lève ForbiddenError pour un non-admin.
+ */
+export async function listIdeaIdsWithImage(reader: Reader, ids: string[]): Promise<string[]> {
+  assertAdmin(reader);
+  if (ids.length === 0) return [];
+  const rows = await db.idea.findMany({
+    where: { id: { in: ids }, imageKey: { not: null } },
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
+}
+
 /** Auteurs ayant envoyé au moins une idée, pour le filtre de la liste admin. */
 export async function listIdeaAuthorIds(reader: Reader): Promise<string[]> {
   assertAdmin(reader);

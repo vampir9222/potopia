@@ -34,6 +34,7 @@ import {
 } from "./v2";
 import { Captioned, type EffectSet, MixCard, type MixDesign } from "./v3";
 import { TOP_STYLES, TOP_VARIANTS, TopCard } from "./v4";
+import { BAND_DESIGNS, FINAL_VARIANTS, FinalCard } from "./v5";
 
 const MIX: Partial<Record<DesignId, MixDesign>> = {
   "mix-verre": "verre",
@@ -126,6 +127,45 @@ function Sheet({ designId, cards, zoom }: Required<Props>) {
   const pictured = withImage(cards).length > 0 ? withImage(cards) : cards;
   // Quatrième vague : titre en haut, quatre versions par ligne (puissance en bas puis en haut,
   // carte normale et full art), sans effet de rareté.
+  // Cinquième vague : le 65 affiné, normale et full art, puis la carte dans chaque rareté.
+  if (designId === "final-bandeau") {
+    const card = pick(pictured, 0);
+    return (
+      <Board zoom={zoom} wrap background={STAGE}>
+        <PremiumDefs />
+        <SnapDefs />
+        {FINAL_VARIANTS.map((v) => (
+          <Captioned key={v.label} label={v.label}>
+            <FinalCard card={card} layout={v.layout} finish={v.finish} />
+          </Captioned>
+        ))}
+      </Board>
+    );
+  }
+  // Variantes du bandeau du 67 autour du mana : normale et full art.
+  if (designId in BAND_DESIGNS) {
+    const band = BAND_DESIGNS[designId as keyof typeof BAND_DESIGNS];
+    const card = pick(pictured, 0);
+    return (
+      <Board zoom={zoom} wrap background={STAGE}>
+        <PremiumDefs />
+        <SnapDefs />
+        <Captioned label="Normale">
+          <FinalCard card={card} layout="normal" band={band} />
+        </Captioned>
+        <Captioned label="Full art">
+          <FinalCard card={card} layout="fullart" band={band} />
+        </Captioned>
+        {/* Le design retenu (n°70) montre aussi le cadre de chaque rareté. */}
+        {designId === "final-court" &&
+          FINAL_VARIANTS.filter((v) => v.finish !== "common").map((v) => (
+            <Captioned key={v.finish} label={v.label}>
+              <FinalCard card={card} layout="normal" band={band} finish={v.finish} />
+            </Captioned>
+          ))}
+      </Board>
+    );
+  }
   if (designId in TOP_STYLES) {
     const style = TOP_STYLES[designId as keyof typeof TOP_STYLES];
     const card = pick(pictured, 0);

@@ -133,7 +133,7 @@ packages/
   ui/            thèmes et composants de base
 games/
   agents/        Agents Doubles, le jeu d'espions coopératif à deux
-  tcg/           futur jeu de cartes : vote du design des cartes (/cartes)
+  tcg/           jeu de cartes : vote du design (/cartes), cartes et effets (admin /admin/cartes)
   trois/         TROIS, le Wordle à 3 mots par jour
 ```
 
@@ -220,6 +220,18 @@ et l'arrêt sur image « To Be Continued », `components/ToBeContinued.tsx`) ; a
 Un bloc `[data-theme="montheme"]` de variables CSS dans `packages/ui/theme.css` (couleurs, dégradés,
 police des titres, décors) et une entrée dans `packages/ui/src/themes.ts`. Le sélecteur du header le
 propose aussitôt.
+
+### Ajouter ou modifier des cartes
+
+Les cartes se gèrent dans **Administration › Cartes** (`/admin/cartes`). Une carte rangée dans un
+set y prend un numéro et ira en prod avec lui ; les autres attendent dans la réserve. Depuis la page
+d'une idée (Administration › Boîte à idées), « Créer une carte » pré-remplit une carte. On y règle : nom, type, famille,
+mana, puissance, rareté, effet (choisi dans le catalogue `games/tcg/src/effects.ts`, puis réglé),
+description et illustration (à envoyer, puis à cadrer en la faisant glisser et en zoomant). Pour en créer beaucoup d'un coup, `/admin/cartes/import` prend un
+fichier JSON (format affiché sur la page), et `/admin/cartes/illustrations` plusieurs images d'un
+coup (chaque fichier porte le numéro de sa carte : `12.jpg`). Les cartes générées à partir des
+idées restent hors du dépôt, puisqu'elles reprennent le contenu des membres. Un effet nouveau s'ajoute dans
+`effects.ts` (clé, moment, réglages, texte) et devient disponible pour toutes les cartes.
 
 ---
 

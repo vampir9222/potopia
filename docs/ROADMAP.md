@@ -244,7 +244,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
     et `IdeaDetail` ;
   - coller une image (Ctrl+V) dans le formulaire.
 - Web :
-  - pages `/ideas`, `/admin/ideas` et `/admin/ideas/[id]` ;
+  - pages `/ideas`, `/admin/ideas` et `/admin/ideas/[id]` (et `/admin/cartes`, étape 13) ;
   - routes `/api/ideas/upload-url`, `/api/admin/ideas/[id]/image` (redirection 302 vers une URL
     présignée GET) et `/api/admin/ideas/export` (fichier JSON, admin) ;
   - tuile « Boîte à idées » dans le registre.
@@ -410,7 +410,7 @@ section « Vote du design des cartes » de [ARCHITECTURE.md](ARCHITECTURE.md).
 - `games/tcg` : schéma Postgres `tcg` (`design_votes`), `rateDesign` (tout membre),
   `listDesignVotes`, propositions dans `src/designs.ts` (numéro = place dans la liste),
   `commentTags` (« à supprimer », « variant », négations ignorées).
-- UI : aperçus de cartes (`ui/DesignPreview.tsx`, vagues `cards`, `premium`, `snap`, `v2`, `v3`, `v4`),
+- UI : aperçus de cartes (`ui/DesignPreview.tsx`, vagues `cards`, `premium`, `snap`, `v2`, `v3`, `v4`, `v5`),
   notation par étoiles et commentaire (`DesignRating`), zoom sur une carte, inclinaison au pointeur.
 - Web : page `/cartes` (onglets Design, Effets de rareté et Variantes masqués pour l'instant,
   Archives), tuile « Vote design des cartes », `/api/cartes/exemple` (image de l'idée exemple),
@@ -419,7 +419,7 @@ section « Vote du design des cartes » de [ARCHITECTURE.md](ARCHITECTURE.md).
 **Tests**
 
 - Vote ouvert aux membres, une note par membre et par design, note de 0 à 5.
-- Numéros stables (39 et 44 restent les références), mots-clés et négations.
+- Numéros stables (le n°70 seul en cours, 65 et 66 aux Archives), mots-clés et négations.
 - `/cartes` et `/api/cartes/exemple` refusent sans session (401) et pour une session révoquée (403) ;
   l'export reste à 403 pour un membre.
 
@@ -457,3 +457,45 @@ corrections en PR séparées par thème.
 **Fini quand**
 
 - Toutes les PR sont fusionnées, CI verte, déployées.
+
+---
+
+## Étape 13 : cartes du jeu (en cours)
+
+Structure retenue : document « Potopia TCG — structure finale » (modèle retenu le 2026-10-30, effets en
+catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITECTURE.md](ARCHITECTURE.md).
+
+**Tâches**
+
+- [x] Schéma `tcg` : `TcgSet`, `TcgCard`, enum `TcgRarity` (migration `tcg_cards`, ajout seul).
+- [x] Catalogue d'effets (`src/effects.ts`) et fonctions des cartes (`src/cards.ts`).
+- [x] Admin : `/admin/cartes`, `/admin/cartes/[id]`, `/admin/cartes/nouvelle`,
+      `/admin/cartes/import`, `/admin/cartes/illustrations` (envoi en masse),
+      `/api/admin/cards/[id]/image` ; entrée « Cartes » sur `/admin`.
+- [x] Réserve et sets (cartes hors set en attente, déplacement en masse, renumérotation),
+      plusieurs cartes par idée et création depuis la page d'une idée (garde-fou anti-doublon),
+      titre ajusté à sa longueur ; migration `tcg_card_reserve` (modifie des contraintes, sans
+      toucher aux données).
+- [x] Cadrage des illustrations dans l'éditeur (glisser, zoomer), migration
+      `tcg_card_image_frame` (ajout d'une colonne).
+- [x] Une carte par idée de la boîte à idées, générée hors du dépôt et importée par l'admin ;
+      illustrations libres (Wikimedia Commons, crédits notés) pour les idées sans image.
+- [ ] Lieux, boosters (stock par set, journal en ajout seul, achat et gains), collection et
+      Potodex, revente des doublons.
+- [ ] Decks, défis, moteur de résolution des tours, page de partie.
+- [ ] Crédits des illustrations libres (CC BY, CC BY-SA : auteur et licence) sur la page
+      Crédits, dès que les cartes seront visibles des membres.
+
+**Tests**
+
+- Catalogue : clés uniques, texte pour chaque effet, réglages bornés.
+- Cartes : réservées aux admins, numérotation à la suite, texte d'effet proposé, effet inconnu ou
+  mal réglé refusé, variantes (stats reprises et recopiées, pas de variante d'une variante), import
+  (idées déjà importées ignorées, tout ou rien), illustration (envoi présigné, clé vérifiée dans le
+  stockage, formats et droits).
+- Idées : `listIdeaIdsWithImage` réservé aux admins.
+
+**Fini quand**
+
+- Les cartes du set 1 sont en base de prod et modifiables dans l'admin ; puis les étapes suivantes
+  (boosters, parties) cochées.

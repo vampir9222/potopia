@@ -1,4 +1,5 @@
-// Domaine tcg : jeu de cartes, en préparation. Seul le vote des designs est ouvert aux membres.
+// Domaine tcg : jeu de cartes, en préparation. Seul le vote des designs est ouvert aux membres ;
+// les cartes ne sont lues et modifiées que par les admins pour l'instant.
 // `userId` référence core.users sans relation.
 
 // Note d'un membre sur une proposition de design de carte (une par membre et par design).
@@ -13,5 +14,69 @@ model TcgDesignVote {
 
   @@unique([designId, userId])
   @@map("design_votes")
+  @@schema("tcg")
+}
+
+// Rareté d'une carte : fixe, portée par la carte (modifiable seulement par un admin).
+enum TcgRarity {
+  common
+  uncommon
+  rare
+  epic
+  legendary
+  sr
+  ssr
+
+  @@schema("tcg")
+}
+
+// Une édition de cartes.
+model TcgSet {
+  id        String   @id @default(uuid(7))
+  code      String   @unique
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  cards TcgCard[]
+
+  @@map("sets")
+  @@schema("tcg")
+}
+
+// Une carte. Dans un set, elle a un numéro et ira en prod avec lui ; sans set, elle attend dans la
+// réserve. L'effet est une clé du catalogue codé (`src/effects.ts`) et ses réglages ; la base ne
+// contient aucune logique. `ideaId` référence ideas.ideas sans relation : un simple lien de gestion
+// (une idée peut donner plusieurs cartes), sans effet en jeu. Une variante full art pointe vers sa
+// carte de base et en reprend toujours les stats.
+model TcgCard {
+  id           String    @id @default(uuid(7))
+  setId        String?   @map("set_id")
+  number       Int?
+  name         String
+  rarity       TcgRarity
+  type         String
+  family       String?
+  cost         Int
+  power        Int
+  effectKey    String?   @map("effect_key")
+  effectParams Json?     @map("effect_params")
+  effectText   String    @default("") @map("effect_text")
+  flavor       String?
+  // Clé de l'illustration dans le stockage (jamais une URL) ; sans elle, l'image de l'idée.
+  imageKey     String?   @map("image_key")
+  // Cadrage de l'illustration (point central en % et zoom) : l'image n'est jamais rognée.
+  imageFrame   Json?     @map("image_frame")
+  ideaId       String?   @map("idea_id")
+  baseCardId   String?   @map("base_card_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  set      TcgSet?   @relation(fields: [setId], references: [id])
+  base     TcgCard?  @relation("TcgCardVariant", fields: [baseCardId], references: [id])
+  variants TcgCard[] @relation("TcgCardVariant")
+
+  @@unique([setId, number])
+  @@index([ideaId])
+  @@map("cards")
   @@schema("tcg")
 }
