@@ -9,7 +9,11 @@ import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/actions/auth";
 import { collectEmerald } from "@/app/actions/inventory";
-import { markAllNotificationsAsRead, markNotificationAsRead } from "@/app/actions/notifications";
+import {
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+  sendTestNotification,
+} from "@/app/actions/notifications";
 import { LuffyGatling } from "@/components/LuffyGatling";
 import { LuffyRun } from "@/components/LuffyRun";
 import { MobileMenu } from "@/components/MobileMenu";
@@ -17,6 +21,7 @@ import { SideNav } from "@/components/SideNav";
 import { SonicRun } from "@/components/SonicRun";
 import { SpinOrb } from "@/components/SpinOrb";
 import { getActivityFeed } from "@/lib/activity";
+import { canSendTestNotification } from "@/lib/notifications";
 import { getCurrentMember } from "@/lib/session";
 
 export default async function PlatformLayout({ children }: { children: ReactNode }) {
@@ -71,6 +76,7 @@ export default async function PlatformLayout({ children }: { children: ReactNode
               unreadCount={unreadCount}
               markAsRead={markNotificationAsRead}
               markAllAsRead={markAllNotificationsAsRead}
+              sendTest={canSendTestNotification(user.role) ? sendTestNotification : undefined}
             />
             <VolumeControl />
           </>

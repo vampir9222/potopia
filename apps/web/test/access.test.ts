@@ -53,7 +53,7 @@ vi.mock("next/font/google", () => {
   return Object.fromEntries(names.map((name) => [name, font]));
 });
 
-const { markAllNotificationsAsRead, markNotificationAsRead } =
+const { markAllNotificationsAsRead, markNotificationAsRead, sendTestNotification } =
   await import("@/app/actions/notifications");
 const { adjustBalance } = await import("@/app/(platform)/admin/economy/actions");
 const { loadMoreIdeas } = await import("@/app/(platform)/admin/ideas/actions");
@@ -120,6 +120,7 @@ const actions: Record<string, () => Promise<unknown>> = {
   markNotificationAsRead: () => markNotificationAsRead("inconnue"),
   markAllNotificationsAsRead: () => markAllNotificationsAsRead(),
   collectEmerald: () => collectEmerald("emerald-green"),
+  sendTestNotification: () => sendTestNotification(),
   rateDesignAction: () => rateDesignAction({ status: "idle" }, rateForm()),
   loadMoreIdeas: () => loadMoreIdeas({}, ideaId),
   adjustBalance: () => adjustBalance({ status: "idle" }, adjustForm("inconnu")),
@@ -346,6 +347,12 @@ describe("server actions", () => {
 
     await markNotificationAsRead(notification.id);
     expect(await countUnread(adminId)).toBe(1);
+  });
+
+  it("sendTestNotification envoie une notification au membre lui-même (hors production)", async () => {
+    const memberId = await signIn(MEMBER_ID);
+    await sendTestNotification();
+    expect(await countUnread(memberId)).toBe(1);
   });
 
   it("collectEmerald ramasse une émeraude une fois, et refuse un objet inconnu", async () => {

@@ -33,14 +33,16 @@ export default async function DashboardPage() {
         title="La place"
         className="flex min-h-0 flex-1 flex-col"
         action={
-          <Link href="/credits" className="text-muted hover:text-text text-xs">
-            Crédits des graphismes
-          </Link>
+          <span className="flex items-center gap-2">
+            <HiddenEmerald color="green" />
+            <Link href="/credits" className="text-muted hover:text-text text-xs">
+              Crédits des graphismes
+            </Link>
+          </span>
         }
       >
         <Place initial={place} layout={avatarLayout} className="flex-1" />
       </Card>
-      <HiddenEmerald color="green" className="absolute -bottom-3 left-1" />
     </div>
   );
 }

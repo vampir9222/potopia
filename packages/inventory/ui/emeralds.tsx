@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { EMERALDS, emeraldId, emeraldSrc, type EmeraldColor } from "../src/catalog";
+import { playClip, SOUNDS } from "./sounds";
 
 type Collect = (itemId: string) => Promise<{ isNew: boolean; emeralds: number }>;
 
@@ -20,6 +21,9 @@ type Ctx = {
 };
 
 const EmeraldsContext = createContext<Ctx | null>(null);
+
+// Ramasser une émeraude : le bruitage de Sonic 2 (10,4 s → 14,7 s de la piste), discret.
+const playPickup = () => playClip(SOUNDS.pickup.src, SOUNDS.pickup.volume, 200);
 
 /**
  * Les émeraudes déjà trouvées par le membre, et le ramassage (server action passée par l'app).
@@ -49,6 +53,7 @@ export function EmeraldsProvider({
   const pick = useCallback(
     (color: EmeraldColor) => {
       const id = emeraldId(color);
+      playPickup();
       setFound((f) => new Set(f).add(id));
       collect(id)
         .then(({ isNew, emeralds }) => {
@@ -57,7 +62,7 @@ export function EmeraldsProvider({
             color,
             text:
               emeralds === EMERALDS.length
-                ? "Les 7 Émeraudes du Chaos ! Clique sur Sonic, dans le header…"
+                ? "Les 7 Émeraudes du Chaos sont réunies !"
                 : `Émeraude du Chaos trouvée ! (${emeralds}/${EMERALDS.length})`,
           });
         })

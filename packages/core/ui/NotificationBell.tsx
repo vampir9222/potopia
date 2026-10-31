@@ -19,6 +19,8 @@ type Props = {
   /** Server actions passées par l'app (elles vérifient la session). */
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  /** S'envoyer une notification de test (en local, ou pour un admin) : bouton en bas de la liste. */
+  sendTest?: () => Promise<void>;
 };
 
 const itemClass = "hover:bg-surface-hover flex gap-3 px-4 py-3";
@@ -38,7 +40,13 @@ function NotificationRow({ notification: n }: { notification: NotificationItem }
   );
 }
 
-export function NotificationBell({ notifications, unreadCount, markAsRead, markAllAsRead }: Props) {
+export function NotificationBell({
+  notifications,
+  unreadCount,
+  markAsRead,
+  markAllAsRead,
+  sendTest,
+}: Props) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const [pending, startTransition] = useTransition();
@@ -146,6 +154,18 @@ export function NotificationBell({ notifications, unreadCount, markAsRead, markA
                 </li>
               ))}
             </ul>
+          )}
+          {sendTest && (
+            <div className="border-border border-t px-4 py-2 text-right">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => startTransition(sendTest)}
+                className="text-muted hover:text-accent text-xs hover:underline disabled:opacity-50"
+              >
+                M&apos;envoyer une notification de test
+              </button>
+            </div>
           )}
         </div>
       )}

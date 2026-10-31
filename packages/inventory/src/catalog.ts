@@ -15,8 +15,6 @@ export type Emerald = {
   id: `emerald-${EmeraldColor}`;
   color: EmeraldColor;
   name: string;
-  /** Indice affiché sur la case vide de l'inventaire. */
-  hint: string;
 };
 
 /**
@@ -24,28 +22,25 @@ export type Emerald = {
  * Les trouver toutes débloque Super Sonic dans le header.
  */
 export const EMERALDS: readonly Emerald[] = [
-  { id: "emerald-green", color: "green", name: "Émeraude verte", hint: "Là où tout commence." },
+  { id: "emerald-green", color: "green", name: "Émeraude verte" },
   {
     id: "emerald-red",
     color: "red",
     name: "Émeraude rouge",
-    hint: "Là où l'on compte ses pièces.",
   },
-  { id: "emerald-blue", color: "blue", name: "Émeraude bleue", hint: "Devant le miroir." },
+  { id: "emerald-blue", color: "blue", name: "Émeraude bleue" },
   {
     id: "emerald-yellow",
     color: "yellow",
     name: "Émeraude jaune",
-    hint: "Jamais deux sans trois.",
   },
-  { id: "emerald-cyan", color: "cyan", name: "Émeraude cyan", hint: "Chez les espions." },
+  { id: "emerald-cyan", color: "cyan", name: "Émeraude cyan" },
   {
     id: "emerald-white",
     color: "white",
     name: "Émeraude blanche",
-    hint: "Avec ceux qu'on remercie.",
   },
-  { id: "emerald-purple", color: "purple", name: "Émeraude violette", hint: "Dans la boîte." },
+  { id: "emerald-purple", color: "purple", name: "Émeraude violette" },
 ];
 
 export const ITEM_IDS: readonly string[] = EMERALDS.map((e) => e.id);

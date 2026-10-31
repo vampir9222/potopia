@@ -2,7 +2,8 @@
 
 import { cx, effectiveVolume, onVolumeChange } from "@app/ui";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
-import { onComboChange, setStage, useHeaderStage } from "./headerStage";
+import { Square } from "lucide-react";
+import { COMBO_CHARGE_MS, fadeAudio, onComboChange, setStage, useHeaderStage } from "./headerStage";
 
 const FRAMES = 48;
 const FRAME_PX = 32;
@@ -48,13 +49,22 @@ export function SpinOrb() {
   // combo avec Luffy : la boule quitte sa place pour rouler sur le liseré (LuffyCombo)
   const { combo } = useHeaderStage();
 
-  // Luffy l'emmène : sa musique s'arrête, la case reste vide le temps du combo.
+  // Luffy l'emmène : elle se charge dans sa case pendant que sa musique s'éteint, puis part
+  // rouler ; sa case montre alors un bouton stop pour annuler le combo.
+  const [comboStage, setComboStage] = useState<"off" | "charging" | "away">("off");
   useEffect(
     () =>
       onComboChange((on) => {
-        if (!on) return;
-        audioRef.current?.pause();
-        setPlaying(false);
+        if (!on) {
+          setComboStage("off");
+          return;
+        }
+        setComboStage("charging");
+        fadeAudio(audioRef.current, 0, COMBO_CHARGE_MS);
+        window.setTimeout(() => {
+          setPlaying(false);
+          setComboStage((s) => (s === "charging" ? "away" : s));
+        }, COMBO_CHARGE_MS);
       }),
     [],
   );
@@ -153,6 +163,8 @@ export function SpinOrb() {
       audio.pause();
       setPlaying(false);
     } else {
+      // le combo l'a peut-être éteinte en fondu (volume à 0) : on le remet
+      audio.volume = effectiveVolume();
       audio.play().catch(() => setPlaying(false));
       setPlaying(true);
     }
@@ -162,19 +174,30 @@ export function SpinOrb() {
     <button
       type="button"
       onClick={toggle}
-      aria-label={playing ? "Mettre la musique en pause" : "Lancer la musique"}
-      aria-pressed={playing}
-      title={playing ? "Pause" : "Musique"}
-      className="hover:bg-surface rounded-md p-1 transition-transform hover:scale-110"
+      aria-label={
+        combo ? "Arrêter le combo" : playing ? "Mettre la musique en pause" : "Lancer la musique"
+      }
+      aria-pressed={playing || combo}
+      title={combo ? "Arrêter le combo" : playing ? "Pause" : "Musique"}
+      className="hover:bg-surface relative rounded-md p-1 transition-transform hover:scale-110"
     >
+      {comboStage === "away" && (
+        <span
+          aria-hidden
+          className="combo-stop border-accent/70 bg-surface text-accent absolute inset-1.5 grid place-items-center rounded-full border-2"
+        >
+          <Square size={14} fill="currentColor" />
+        </span>
+      )}
       <span
         aria-hidden
         data-spin-orb
         className={cx(
-          "relative block transition-opacity",
+          "relative block transition-opacity duration-500",
           playing && "orb-glow",
           fast && "orb-fast",
-          combo && "opacity-0",
+          comboStage === "charging" && "orb-charge",
+          comboStage === "away" && "opacity-0",
         )}
         style={{ width: SIZE, height: SIZE }}
       >

@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { onComboChange, setStage, useHeaderStage } from "./headerStage";
+import { COMBO_LEAVE_MS, onComboChange, setStage, useHeaderStage } from "./headerStage";
 import { LuffyCombo } from "./LuffyCombo";
 import { LUFFY_GROUND } from "./luffyGround";
 
@@ -141,6 +141,7 @@ export function LuffyRun() {
   // place de la case dans le header, pour le calque du combo
   const [geo, setGeo] = useState<{ offset: number; width: number } | null>(null);
   const [combo, setCombo] = useState<{ ballStart: number; luffyStart: number } | null>(null);
+  const [leaving, setLeaving] = useState(false);
   const stage = useHeaderStage();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -228,9 +229,14 @@ export function LuffyRun() {
     () =>
       onComboChange((on) => {
         if (on) return;
-        setCombo(null);
-        setFrame(REST_FRAME);
-        setPhase("sleeping");
+        // la boule et Luffy s'effacent, puis Luffy rentre dans son fruit
+        setLeaving(true);
+        window.setTimeout(() => {
+          setLeaving(false);
+          setCombo(null);
+          setFrame(REST_FRAME);
+          setPhase("sleeping");
+        }, COMBO_LEAVE_MS);
       }),
     [],
   );
@@ -339,6 +345,7 @@ export function LuffyRun() {
           width={geo.width}
           ballStart={combo.ballStart}
           luffyStart={combo.luffyStart}
+          leaving={leaving}
         />
       )}
       <button

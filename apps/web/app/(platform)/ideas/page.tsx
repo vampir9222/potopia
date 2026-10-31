@@ -26,7 +26,9 @@ export default async function IdeasPage() {
         <div className="flex gap-3">
           <Lightbulb size={24} className="text-accent mt-0.5 shrink-0" aria-hidden />
           <div className="flex flex-col gap-3 text-sm">
-            <h1 className="text-text text-base font-semibold">C'est quoi, la boîte à idées ?</h1>
+            <h1 className="text-text flex items-center gap-1 text-base font-semibold">
+              C'est quoi, la boîte à idées ? <HiddenEmerald color="purple" />
+            </h1>
             <p className="text-muted">
               C'est ici qu'on prépare le futur jeu de cartes du serveur. Un moment culte, une blague
               qui revient tout le temps, un membre qui mériterait sa propre carte… Propose ce qui te
@@ -58,7 +60,6 @@ export default async function IdeasPage() {
       <Card title="Proposer une idée">
         <IdeaForm action={sendIdea} />
       </Card>
-      <HiddenEmerald color="purple" className="absolute top-1 right-1" />
     </div>
   );
 }

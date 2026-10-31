@@ -29,7 +29,7 @@ export default async function WalletPage({
       <Card title="Historique">
         <p className="text-muted mb-3 text-sm">
           Chaque gain ou dépense de {BRAND.currency.plural}, du plus récent au plus ancien, avec ton
-          solde après l&apos;opération.
+          solde après l&apos;opération. <HiddenEmerald color="red" className="align-middle" />
         </p>
         <TransactionList transactions={history.items} showBalance />
         {(cursor || history.nextCursor) && (
@@ -50,7 +50,6 @@ export default async function WalletPage({
           </div>
         )}
       </Card>
-      <HiddenEmerald color="red" className="absolute right-3 -bottom-3" />
     </div>
   );
 }

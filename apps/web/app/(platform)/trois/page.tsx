@@ -12,7 +12,7 @@ export default async function TroisPage() {
     <div className="relative flex flex-col gap-4">
       <Breadcrumb />
       <TroisApp me={{ name: user.name, image: user.image }} />
-      <HiddenEmerald color="yellow" className="absolute -top-1 right-24" />
+      <HiddenEmerald color="yellow" className="absolute top-1 left-44" />
     </div>
   );
 }

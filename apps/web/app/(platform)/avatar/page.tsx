@@ -21,7 +21,7 @@ export default async function AvatarPage() {
         action={savePhraseAction}
       />
       <AvatarEditor initialConfig={avatar.config} save={saveAvatarAction} />
-      <HiddenEmerald color="blue" className="absolute top-0 right-1" />
+      <HiddenEmerald color="blue" className="absolute top-1/2 -left-4" />
     </div>
   );
 }

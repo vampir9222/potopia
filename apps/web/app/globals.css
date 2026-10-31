@@ -10,6 +10,7 @@
 @source "../../../packages/core/ui";
 @source "../../../packages/economy/ui";
 @source "../../../packages/ideas/ui";
+@source "../../../packages/inventory/ui";
 @source "../../../games/agents/ui";
 @source "../../../games/tcg/ui";
 @source "../../../games/trois/ui";
@@ -277,9 +278,10 @@
   }
 }
 
-/* Inventaire : émeraude trouvée qui brille, ou silhouette noire à débloquer. */
+/* Inventaire : émeraude trouvée qui brille, ou silhouette noire à débloquer. Mêmes fonctions de
+   filtre dans le même ordre partout, pour que les animations passent de l'un à l'autre en douceur. */
 .emerald-owned {
-  filter: drop-shadow(0 0 6px rgb(255 255 255 / 0.35));
+  filter: grayscale(0) brightness(1) drop-shadow(0 0 6px rgb(255 255 255 / 0.35));
 }
 
 .emerald-locked {
@@ -287,67 +289,142 @@
   opacity: 0.55;
 }
 
-/* « To Be Continued » (ToBeContinued) : l'image se fige en sépia, la flèche glisse en bas. */
-html.tbc-freeze body > :not(.tbc-layer) {
-  filter: sepia(0.9) contrast(1.15) brightness(0.85);
-  transition: filter 0.12s;
+/* Pouvoir scellé : plus d'éclat, des pierres ternes. */
+.emerald-sealed {
+  filter: grayscale(0.75) brightness(0.55) drop-shadow(0 0 0 transparent);
+  opacity: 0.75;
 }
 
-html.tbc-freeze body > :not(.tbc-layer) *,
-html.tbc-freeze body > :not(.tbc-layer) *::before,
-html.tbc-freeze body > :not(.tbc-layer) *::after {
-  animation-play-state: paused !important;
+/* Libéré : chaque pierre, à son tour (délai posé par EmeraldCircle), passe de terne à un éclat
+   blanc puis retombe sur sa brillance ; avant son tour elle reste terne. */
+.emerald-awaken {
+  animation: emerald-awaken var(--stone-ms, 650ms) ease-out both;
 }
 
-.tbc-layer {
-  cursor: pointer;
-  transition: opacity 0.7s;
-}
-
-.tbc-leaving {
-  opacity: 0;
-}
-
-.tbc-arrow {
-  animation: tbc-slide 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
-}
-
-@keyframes tbc-slide {
-  from {
-    transform: translateX(-120%);
+@keyframes emerald-awaken {
+  0% {
+    filter: grayscale(0.75) brightness(0.55) drop-shadow(0 0 0 transparent);
+    opacity: 0.75;
+    scale: 1;
+  }
+  40% {
+    filter: grayscale(0) brightness(2.2) drop-shadow(0 0 14px #fff);
+    opacity: 1;
+    scale: 1.18;
+  }
+  100% {
+    filter: grayscale(0) brightness(1) drop-shadow(0 0 6px rgb(255 255 255 / 0.35));
+    opacity: 1;
+    scale: 1;
   }
 }
 
-/* Nouvelle notification (LuffyGatling) : Luffy surgit, mitraille la cloche, qui tremble. */
-.luffy-gatling {
-  animation: luffy-gatling 1.5s ease-out both;
+/* Scellé : dans l'ordre inverse, chaque pierre brille une dernière fois puis s'éteint. */
+.emerald-fade {
+  animation: emerald-fade var(--stone-ms, 650ms) ease-in-out both;
 }
 
-@keyframes luffy-gatling {
+@keyframes emerald-fade {
+  0% {
+    filter: grayscale(0) brightness(1) drop-shadow(0 0 6px rgb(255 255 255 / 0.35));
+    opacity: 1;
+    scale: 1;
+  }
+  30% {
+    filter: grayscale(0) brightness(2) drop-shadow(0 0 12px #fff);
+    opacity: 1;
+    scale: 1.1;
+  }
+  100% {
+    filter: grayscale(0.75) brightness(0.55) drop-shadow(0 0 0 transparent);
+    opacity: 0.75;
+    scale: 0.96;
+  }
+}
+
+/* Combo Luffy + steel ball : la boule se charge dans sa case (tremble, s'illumine)… */
+.orb-charge {
+  animation: orb-charge 0.9s ease-in both;
+}
+
+@keyframes orb-charge {
+  0% {
+    filter: drop-shadow(0 0 6px rgb(140 230 60 / 0.7));
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translate(-1.5px, 1px) scale(1.06);
+  }
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translate(1.5px, -1px) scale(1.1);
+  }
+  100% {
+    transform: scale(1.25);
+    filter: brightness(1.8) drop-shadow(0 0 16px rgb(190 255 120 / 1));
+  }
+}
+
+/* …puis en jaillit dans un éclair. */
+.combo-burst {
+  animation: combo-burst 0.55s ease-out both;
+  background: radial-gradient(
+    circle,
+    rgb(255 255 255 / 0.9),
+    rgb(160 245 80 / 0.5) 45%,
+    transparent 70%
+  );
+}
+
+@keyframes combo-burst {
   0% {
     opacity: 0;
-    transform: translateX(-20px) scale(0.8);
+    transform: scale(0.3);
   }
-  10%,
-  85% {
+  30% {
     opacity: 1;
-    transform: none;
   }
   100% {
     opacity: 0;
-    transform: translateX(-10px);
+    transform: scale(2.4);
   }
 }
 
-.bell-hit {
-  animation: bell-hit 0.12s linear infinite;
+/* Bouton stop dans la case de la boule pendant le combo. */
+.combo-stop {
+  animation: combo-stop 1.4s ease-in-out infinite alternate;
 }
 
-@keyframes bell-hit {
-  25% {
-    transform: translate(2px, -1px) rotate(8deg);
+@keyframes combo-stop {
+  to {
+    box-shadow: 0 0 10px var(--accent);
   }
-  75% {
-    transform: translate(-1px, 1px) rotate(-6deg);
+}
+
+/* Combo : poussière soulevée quand la boule tape le bord. */
+.combo-dust {
+  width: 24px;
+  height: 14px;
+  background: radial-gradient(
+    ellipse,
+    rgb(220 220 200 / 0.8),
+    rgb(180 180 160 / 0.3) 55%,
+    transparent 70%
+  );
+  animation: combo-dust 0.45s ease-out forwards;
+}
+
+@keyframes combo-dust {
+  from {
+    opacity: 1;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.8, 1.2) translateY(-6px);
   }
 }

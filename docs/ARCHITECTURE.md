@@ -303,19 +303,30 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
 - Sonic : planches en pixel art à l'échelle 1 dans `public/sonic/` (attente, marche, course, sprint,
   puis transformation, course et vol de Super Sonic), tirées de gifs de sources différentes,
   ramenées à la même taille de pixel et aux mêmes bleus et rouges que la marche. À l'arrêt il
-  attend (la pause du gif d'origine allongée) ; au clic, musique `public/audio/sonic.mp3` : il
-  marche, accélère, court, pique des sprints, avec une traînée en tirets sur le liseré. Les 7
-  Émeraudes du Chaos trouvées (`superSonic`, voir Inventaire), le clic le transforme en Super
-  Sonic (`public/audio/super-sonic.mp3`) : transformation, sprint doré, puis il s'envole.
+  attend (la pause du gif d'origine allongée) ; au clic, musique `public/audio/sonic.mp3` (silences
+  de début et de fin coupés, pour boucler sans trou) : il marche, accélère, court, pique des
+  sprints de 2,6 à 4,2 s, avec une traînée en tirets sur le liseré, à la couleur du thème. Les 7
+  Émeraudes du Chaos trouvées et leur pouvoir libéré (`superSonic`, voir Inventaire), le clic le
+  transforme en Super Sonic (`public/audio/super-sonic.mp3`) : transformation, sprint doré, puis
+  il s'envole. Une fois transformé, il le reste (mémorisé sur l'appareil) : son attente devient
+  celle de Super Sonic (`sonic-ss-idle.png`), en lévitation au-dessus du liseré, et les clics
+  suivants sautent la transformation.
 - Combo Luffy + steel ball (`components/LuffyCombo.tsx`, état partagé dans
-  `components/headerStage.ts`) : si la boule tourne et qu'on clique sur le fruit, la boule quitte
-  sa case et roule sur le liseré (rotation = distance / rayon, dans le sens du mouvement), Luffy
-  sort du fruit quand elle passe (`public/luffy/luffy-run-sheet.png`) et lui court après ; au bout
-  du header elle rebondit et c'est elle qui le poursuit, sur le générique de One Piece
-  (`public/audio/one-piece.mp3`). Un clic sur le fruit ou sur la case de la boule arrête tout.
+  `components/headerStage.ts`) : si la boule tourne et qu'on clique sur le fruit, Luffy sort du
+  fruit en courant sur place (`public/luffy/luffy-run-sheet.png`) puis file vers la gauche. La
+  boule se charge dans sa case pendant que sa musique s'éteint (0,9 s), en jaillit dans un éclair
+  et le poursuit en roulant sur le liseré (rotation = distance / rayon, dans le sens du
+  mouvement). Aux bords, elle freine, s'écrase, soulève un peu de poussière et repart en
+  accélérant ; Luffy fait demi-tour en sautant et c'est lui qui la poursuit. Le générique de One
+  Piece (`public/audio/one-piece.mp3`) arrive ensuite en fondu. Pendant le combo, la case de la
+  boule montre un bouton stop ; à l'arrêt, tout s'efface en 0,6 s et chacun regagne sa case. Le
+  calque ne déborde jamais du header (pas de barre de défilement).
 - Nouvelle notification (`components/LuffyGatling.tsx`, juste avant la cloche) : Luffy surgit et
   mitraille la cloche (Gomu Gomu no Gatling, `public/luffy/luffy-gatling.png`), qui tremble. Une
-  fois par hausse du nombre de non lues, mémorisé sur l'appareil (`localStorage`).
+  fois par hausse du nombre de non lues, mémorisé sur l'appareil (`localStorage`). Pour tester :
+  « M'envoyer une notification de test » en bas de la liste de la cloche (server action
+  `sendTestNotification`), proposé à tous en local et aux admins seulement en production
+  (`lib/notifications.ts`).
 - Luffy : à l'arrêt, son fruit du démon flotte au-dessus du liseré (`public/luffy/devil-fruit.png`,
   pixel art 24 × 33, étoiles de l'image d'origine retirées) avec quelques étincelles qui
   s'allument au hasard. Au clic, le fruit tremble, éclate en lumière et Luffy en sort en
@@ -338,15 +349,24 @@ sous les yeux du joueur à Agents Doubles. L'intro de Roundabout (`public/audio/
 **Inventaire** (`packages/inventory`, schéma `inventory`, table `items` : `user_id`, `item_id`,
 `found_at`, unique par membre et objet).
 
-- Catalogue dans le code (`src/catalog.ts`) : les 7 Émeraudes du Chaos, chacune avec un indice.
-  `collectItem` (idempotent, refuse un objet hors catalogue) et `listItems`.
+- Catalogue dans le code (`src/catalog.ts`) : les 7 Émeraudes du Chaos. `collectItem`
+  (idempotent, refuse un objet hors catalogue) et `listItems`.
 - Chaque émeraude est cachée dans une page (`HiddenEmerald`, discrète, un éclat de temps en
-  temps) : accueil, Ma monnaie, Mon avatar, TROIS, Agents Doubles, Crédits, Boîte à idées. Le
-  layout `(platform)` charge les objets du membre et pose `EmeraldsProvider`, qui cache celles déjà
-  trouvées ; un clic appelle la server action `collectEmerald` (`app/actions/inventory.ts`), qui
-  rafraîchit le layout (Super Sonic débloqué dès la 7e).
-- Page `/inventaire` (« Mon inventaire », dans le menu sous « Mon avatar ») : les 7 cases, en
-  noir avec un indice tant que l'émeraude n'est pas trouvée, puis les hauts faits (à venir).
+  temps), à des endroits variés : accueil (à côté du lien des crédits de la place), Ma monnaie
+  (au bout de la phrase de l'historique), Mon avatar (bord gauche), TROIS (après le fil d'Ariane),
+  Agents Doubles (bord droit), Crédits (tout en bas), Boîte à idées (dans le titre). Le layout
+  `(platform)` charge les objets du membre et pose `EmeraldsProvider`, qui cache celles déjà
+  trouvées ; un clic joue un bruitage de Sonic 2 (`public/audio/emerald.mp3`, discret) et appelle
+  la server action `collectEmerald` (`app/actions/inventory.ts`), qui rafraîchit le layout.
+- Page `/inventaire` (« Mon inventaire », dans le menu sous « Mon avatar ») : « Chaos Emerald »,
+  les 7 pierres disposées comme sur l'image d'origine (six en cercle autour de la bleue), en noir
+  tant qu'elles ne sont pas trouvées ; puis les hauts faits (à venir).
+- Les 7 réunies, « Sceller le pouvoir » / « Libérer le pouvoir » (`EmeraldCircle`, réglage gardé
+  sur l'appareil, `ui/superSonic.ts`) : scellées, les pierres sont ternes et Sonic reste Sonic de
+  base. La bascule passe d'une pierre à l'autre en vague (libéré : de la bleue vers le cercle,
+  chacune s'illumine puis retombe sur son éclat ; scellé : en sens inverse, chacune brille une
+  dernière fois puis s'éteint), avec un bruitage de Sonic 2 (`emeralds-unseal.mp3`,
+  `emeralds-seal.mp3`).
 
 **Dates.** Toutes les dates affichées passent par `BRAND.timeZone` (`Europe/Paris`) : le serveur
 Vercel tourne en UTC, les navigateurs des membres en France ; sans fuseau explicite, l'heure

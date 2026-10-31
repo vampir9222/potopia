@@ -13,7 +13,7 @@ export default async function AgentsPage() {
     <div className="relative flex flex-col gap-4">
       <Breadcrumb />
       <AgentsLobby />
-      <HiddenEmerald color="cyan" className="absolute -bottom-3 left-1/2" />
+      <HiddenEmerald color="cyan" className="absolute top-[38%] -right-4" />
     </div>
   );
 }
