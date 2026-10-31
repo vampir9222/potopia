@@ -8,6 +8,9 @@ et celui de la monnaie viennent de `packages/config/brand.ts`.
 
 - Choix techniques et règles d'architecture : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Étapes de réalisation : [docs/ROADMAP.md](docs/ROADMAP.md)
+- Intégration de GOTY Party (planifiée, pas encore disponible) :
+  [plan d’action](docs/PLAN_INTEGRATION_GOTY_PARTY.md) et
+  [contrat fonctionnel](docs/CONTRAT_FONCTIONNEL_GOTY_PARTY.md).
 
 **Stack** : monorepo pnpm + Turborepo, TypeScript strict, Next.js 16 (App Router), Tailwind v4,
 PostgreSQL + Prisma 7, Better Auth (Discord), stockage S3 (Cloudflare R2 en prod, RustFS en

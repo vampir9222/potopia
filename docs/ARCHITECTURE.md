@@ -792,6 +792,13 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 
 ## Hors périmètre (pour l'instant)
 
+L’intégration native de GOTY Party est définie dans le
+[plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) et le
+[contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Le futur module `games/goty` utilisera
+les identités de `core` et un schéma PostgreSQL `goty`, sans reprise des anciennes données.
+Les archives seront accessibles à tous les membres du portail. Le module, ses routes et ses
+tables ne sont pas encore implémentés ; le contrat fixe les règles des prochains lots.
+
 Côté cartes : boosters, collection, decks et parties (étape 13, à venir). Pas de récompense en
 monnaie dans TROIS pour l'instant.
 

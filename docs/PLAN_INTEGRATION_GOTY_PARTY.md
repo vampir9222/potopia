@@ -1,7 +1,12 @@
 # Plan d’intégration de GOTY Party dans Potopia
 
-Statut : proposition à valider avant réalisation. Analyse des deux dépôts locaux le 31 octobre
-2026. Ce document ne déclenche ni migration ni déploiement.
+Statut : lot 1 terminé ; implémentation à partir du lot 2. Analyse des deux dépôts locaux le
+31 octobre 2026. Ce document ne déclenche ni migration ni déploiement.
+
+Le [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) détaille les droits, transitions,
+contrats HTTP et scénarios de recette. Décisions utilisateur : départ à zéro et archives
+accessibles à tous les membres de Potopia. La reprise facultative décrite plus bas n’est donc
+pas retenue pour le premier périmètre.
 
 ## 1. Objectif et approche recommandée
 
@@ -23,18 +28,18 @@ l’inventaire. Aucun gain de PotoCoins n’est prévu dans le premier périmèt
 
 ## 2. Ce que les sources permettent de réutiliser
 
-| Source dans goty-party | Traitement dans Potopia |
-| --- | --- |
-| `apps/api/src/domain.ts` et ses tests | Reprendre les règles pures, adapter les types d’identifiants et les erreurs |
-| `apps/api/src/routes.ts` | Extraire les règles des handlers dans des services métier testables |
-| `apps/api/src/editions.ts` | Porter les droits, transactions et projections de données vers Prisma/PostgreSQL |
-| Migrations Knex | Utiliser comme référence pour de nouvelles migrations Prisma ; ne pas les exécuter dans Potopia |
-| `apps/api/src/catalog.ts` | Adapter l’intégration IGDB, les délais, le cache et les limites de requêtes |
-| Vues et composants Vue | Refaire en React en conservant les parcours et les comportements |
-| Imports et fonctions de présentation TypeScript | Reprendre ce qui ne dépend pas de Vue et adapter les tests |
-| Authentification et gestion locale des comptes | Remplacer par Better Auth/Discord et les services `core` |
-| Avatars envoyés sur disque | Utiliser l’identité du portail ; reprise des anciens portraits hors périmètre par défaut |
-| Docker/Nginx/Caddy et sauvegardes MariaDB | Remplacer par le circuit d’exploitation de Potopia |
+| Source dans goty-party                          | Traitement dans Potopia                                                                         |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `apps/api/src/domain.ts` et ses tests           | Reprendre les règles pures, adapter les types d’identifiants et les erreurs                     |
+| `apps/api/src/routes.ts`                        | Extraire les règles des handlers dans des services métier testables                             |
+| `apps/api/src/editions.ts`                      | Porter les droits, transactions et projections de données vers Prisma/PostgreSQL                |
+| Migrations Knex                                 | Utiliser comme référence pour de nouvelles migrations Prisma ; ne pas les exécuter dans Potopia |
+| `apps/api/src/catalog.ts`                       | Adapter l’intégration IGDB, les délais, le cache et les limites de requêtes                     |
+| Vues et composants Vue                          | Refaire en React en conservant les parcours et les comportements                                |
+| Imports et fonctions de présentation TypeScript | Reprendre ce qui ne dépend pas de Vue et adapter les tests                                      |
+| Authentification et gestion locale des comptes  | Remplacer par Better Auth/Discord et les services `core`                                        |
+| Avatars envoyés sur disque                      | Utiliser l’identité du portail ; reprise des anciens portraits hors périmètre par défaut        |
+| Docker/Nginx/Caddy et sauvegardes MariaDB       | Remplacer par le circuit d’exploitation de Potopia                                              |
 
 Les sources de référence sont le README et le cahier des charges de goty-party, les migrations,
 les services et les tests des deux projets. La base et les médias locaux n’ont pas été inspectés :
@@ -43,20 +48,20 @@ source ne doivent pas être recopiés dans le dépôt public de Potopia.
 
 ## 3. Décisions à fixer au début
 
-| Sujet | Proposition de départ |
-| --- | --- |
-| Identité | Compte Discord de Potopia ; aucun second mot de passe |
-| Participation | Inscription explicite par édition ; être membre du portail ne donne pas accès à une édition active |
-| Organisation et présentation | Rôles propres à chaque édition, cumulables avec la participation |
-| Administration | Les admins Potopia conservent les pouvoirs de gestion prévus par la source, sans accès aux réponses secrètes d’autrui |
-| Archives | Éditions clôturées consultables par tous les membres du portail, comme dans la source pour les utilisateurs connectés |
-| Données de départ | Nouvelle base GOTY vide ; reprise de l’existant uniquement si demandée |
-| Visuel | Conserver la personnalité GOTY Party dans les composants et thèmes du portail |
-| Synchronisation | Requêtes périodiques pendant la cérémonie ; serveur temps réel reporté |
-| Écran TV | Route authentifiée dédiée ; aucun lien public donnant accès aux données privées |
+| Sujet                        | Proposition de départ                                                                                                 |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Identité                     | Compte Discord de Potopia ; aucun second mot de passe                                                                 |
+| Participation                | Inscription explicite par édition ; être membre du portail ne donne pas accès à une édition active                    |
+| Organisation et présentation | Rôles propres à chaque édition, cumulables avec la participation                                                      |
+| Administration               | Les admins Potopia conservent les pouvoirs de gestion prévus par la source, sans accès aux réponses secrètes d’autrui |
+| Archives                     | Éditions clôturées consultables par tous les membres du portail, comme dans la source pour les utilisateurs connectés |
+| Données de départ            | Nouvelle base GOTY vide ; reprise de l’existant uniquement si demandée                                                |
+| Visuel                       | Conserver la personnalité GOTY Party dans les composants et thèmes du portail                                         |
+| Synchronisation              | Requêtes périodiques pendant la cérémonie ; serveur temps réel reporté                                                |
+| Écran TV                     | Route authentifiée dédiée ; aucun lien public donnant accès aux données privées                                       |
 
-La reprise de données et la politique d’archives doivent être confirmées avant une bascule. Les
-autres propositions peuvent servir de base à la première version.
+La reprise de données et la politique d’archives sont confirmées dans le contrat fonctionnel.
+Les autres propositions y sont précisées pour servir de base à la première version.
 
 ## 4. Architecture cible
 
@@ -89,7 +94,7 @@ index, phases, statuts et règles de suppression ; aucune table de comptes ou de
 
 ## 5. Réalisation par lots et critères de fin
 
-### Lot 1 — Figer le contrat fonctionnel
+### Lot 1 — Figer le contrat fonctionnel ✅
 
 - Relever les parcours et les règles dans le code et les tests source ; résoudre tout écart avec
   le cahier des charges avant portage.
@@ -101,6 +106,9 @@ index, phases, statuts et règles de suppression ; aucune table de comptes ou de
 
 **Fini quand :** les comportements attendus et les scénarios de recette sont écrits, avec un
 choix explicite sur les données existantes.
+
+Livré : [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md), avec matrice des droits,
+transitions, projections par lecteur, adaptations de la source et scénarios R01 à R30.
 
 ### Lot 2 — Créer le module et les données
 
