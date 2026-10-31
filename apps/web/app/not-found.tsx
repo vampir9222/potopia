@@ -2,6 +2,7 @@ import { buttonClasses, EmptyState } from "@app/ui";
 import { Compass } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Mascot } from "@/components/Mascot";
 
 export const metadata: Metadata = { title: "Page introuvable" };
 
@@ -9,7 +10,7 @@ export default function NotFound() {
   return (
     <main className="flex min-h-dvh items-center justify-center p-4">
       <EmptyState
-        icon={<Compass size={32} />}
+        icon={<Mascot mood="perdu" height={140} fallback={<Compass size={32} />} />}
         title="Page introuvable"
         description="Cette page n'existe pas, ou plus. Vérifie l'adresse ou repars de l'accueil."
         action={

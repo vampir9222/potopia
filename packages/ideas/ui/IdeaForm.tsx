@@ -5,6 +5,7 @@ import { CircleCheck, ClipboardPaste, ImagePlus, X } from "lucide-react";
 import {
   type ClipboardEvent,
   type FormEvent,
+  type ReactNode,
   startTransition,
   useActionState,
   useEffect,
@@ -25,6 +26,8 @@ type Props = {
   action: (state: IdeaFormState, formData: FormData) => Promise<IdeaFormState>;
   /** Route qui renvoie `{ key, url }` pour envoyer l'image directement au stockage. */
   uploadUrlEndpoint?: string;
+  /** Illustration du message « C'est envoyé » (la mascotte de l'app) ; une coche par défaut. */
+  successIcon?: ReactNode;
 };
 
 const ACCEPT = Object.keys(IMAGE_TYPES).join(",");
@@ -65,7 +68,11 @@ function pastedImage(event: ClipboardEvent): File | undefined {
   });
 }
 
-export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }: Props) {
+export function IdeaForm({
+  action,
+  uploadUrlEndpoint = "/api/ideas/upload-url",
+  successIcon,
+}: Props) {
   const [state, formAction, submitting] = useActionState(action, { status: "idle" });
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -273,8 +280,10 @@ export function IdeaForm({ action, uploadUrlEndpoint = "/api/ideas/upload-url" }
         {error ? (
           <p className="text-danger text-sm">{error}</p>
         ) : state.status === "ok" && !pending ? (
-          <div className="border-success/40 bg-success/10 rounded-theme flex gap-3 border p-3">
-            <CircleCheck size={20} className="text-success mt-0.5 shrink-0" aria-hidden />
+          <div className="border-success/40 bg-success/10 rounded-theme flex items-start gap-3 border p-3">
+            {successIcon ?? (
+              <CircleCheck size={20} className="text-success mt-0.5 shrink-0" aria-hidden />
+            )}
             <div className="text-sm">
               <p className="text-text font-medium">C'est envoyé, merci !</p>
               <p className="text-muted">

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BRAND } from "@app/config/brand";
 import { Card } from "@app/ui";
 import { countIdeas } from "@app/ideas";
-import { Coins, Layers, Lightbulb } from "lucide-react";
+import { Coins, Layers, Lightbulb, Smile } from "lucide-react";
 import type { Metadata } from "next";
 import { getCurrentAdmin } from "@/lib/session";
 
@@ -26,6 +26,12 @@ const SECTIONS = (ideasCount: number) => [
     title: "Cartes",
     description: "Cartes du jeu : créer, modifier, importer.",
     icon: Layers,
+  },
+  {
+    href: "/admin/mascotte",
+    title: "Mascotte",
+    description: "Images de la mascotte (stockage privé).",
+    icon: Smile,
   },
 ];
 
