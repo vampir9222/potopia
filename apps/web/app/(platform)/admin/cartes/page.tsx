@@ -13,20 +13,46 @@ export const metadata: Metadata = { title: "Cartes" };
 /** Valeur de `?set=` pour la réserve (cartes hors set). */
 const RESERVE = "reserve";
 
+/** Cartes par page : au-delà, la planche devient lourde à afficher et à faire défiler. */
+const PAGE_SIZE = 24;
+
 export default async function AdminCardsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ set?: string }>;
+  searchParams: Promise<{ set?: string; page?: string }>;
 }) {
   const admin = await getCurrentAdmin();
   const [sets, all] = await Promise.all([listSets(admin), listCards(admin)]);
-  const { set: code } = await searchParams;
+  const { set: code, page: pageParam } = await searchParams;
   const reserveView = code === RESERVE || (code === undefined && sets.length === 0);
   const current = reserveView ? null : (sets.find((s) => s.code === code) ?? sets.at(-1) ?? null);
   const cards = all.filter((c) => c.setId === (current?.id ?? null));
-  const images = await cardImageUrls(admin, cards);
+  const pageCount = Math.max(1, Math.ceil(cards.length / PAGE_SIZE));
+  const page = Math.min(Math.max(1, Number.parseInt(pageParam ?? "1", 10) || 1), pageCount);
+  const shown = cards.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const images = await cardImageUrls(admin, shown);
   const counts = CARD_RARITIES.map((r) => [r, cards.filter((c) => c.rarity === r).length] as const);
   const reserveCount = all.filter((c) => c.setId === null).length;
+
+  const setParam = current ? current.code : RESERVE;
+  const pager =
+    pageCount > 1 ? (
+      <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="Pages">
+        {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
+          <Link
+            key={p}
+            href={`/admin/cartes?set=${setParam}&page=${p}`}
+            aria-current={p === page ? "page" : undefined}
+            className={cx(
+              "rounded-md border px-2.5 py-1",
+              p === page ? "border-accent text-text" : "border-border text-muted",
+            )}
+          >
+            {(p - 1) * PAGE_SIZE + 1}–{Math.min(p * PAGE_SIZE, cards.length)}
+          </Link>
+        ))}
+      </nav>
+    ) : null;
 
   const tabs = [
     ...sets.map((s) => ({
@@ -126,8 +152,9 @@ export default async function AdminCardsPage({
         </Card>
       ) : (
         <MoveCardsForm targets={targets}>
+          {pager}
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(400px,100%),1fr))] gap-4">
-            {cards.map((card) => (
+            {shown.map((card) => (
               <li
                 key={card.id}
                 className="flex flex-col items-center gap-1"
@@ -156,6 +183,7 @@ export default async function AdminCardsPage({
               </li>
             ))}
           </ul>
+          {pager}
         </MoveCardsForm>
       )}
     </div>

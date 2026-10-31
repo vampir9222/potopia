@@ -502,7 +502,8 @@ et modifient les cartes.
   déjà une carte est ignorée (réimporter ne crée pas de doublon et n'écrase pas les
   modifications). Tout ou rien, avec la carte fautive dans le message. Les fichiers de cartes
   générées depuis les idées ne vont jamais dans le dépôt (contenu des membres).
-- Pages : `/admin/cartes` (un onglet par set et la réserve, `?set=<code>` ou `?set=reserve` ;
+- Pages : `/admin/cartes` (un onglet par set et la réserve, `?set=<code>` ou `?set=reserve`,
+  24 cartes par page avec `?page=` ;
   cases à cocher pour déplacer des cartes d'un coup ; création d'un set), `/admin/cartes/[id]` et
   `/admin/cartes/nouvelle` (`CardEditor` : formulaire et aperçu en direct, normale ou full art,
   envoi d'illustration), `/admin/cartes/import`, `/admin/cartes/illustrations` (`CardImagesUpload` :
