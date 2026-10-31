@@ -690,7 +690,7 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
   left: 0;
   top: 0;
   width: clamp(180px, 26vw, 340px);
-  aspect-ratio: 204 / 180;
+  aspect-ratio: 640 / 564;
   background: center / contain no-repeat;
   filter: drop-shadow(0 12px 18px rgb(0 0 0 / 0.55));
   animation: don-sunny 1.5s cubic-bezier(0.3, 0.1, 0.4, 1) 0.18s both;

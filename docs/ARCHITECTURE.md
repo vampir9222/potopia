@@ -303,14 +303,22 @@ décors.
   portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.png` : Jotaro, Star Platinum, DIO,
   The World), « ゴゴゴ » qui montent, étoiles, Jotaro qui prend la pose (`jotaro-pose.png`).
   Décor One Piece (`OnePieceDecor`) : ciel étoilé, lune et son reflet sur la mer, houle sur
-  trois plans qui boucle sans à-coup, le Thousand Sunny qui navigue entre deux vagues
-  (`public/onepiece/sunny.webp`) et le Vogue Merry au loin sur l'horizon (`merry.webp`),
-  mouettes, chapeau de paille emporté par le vent, pavillon au chapeau de paille qui flotte devant
-  la lune (`jolly-roger.svg`, dessiné pour le site, découpé en bandes qui ondulent l'une après
-  l'autre), l'équipage qui défile dans les deux coins en fondu enchaîné (`crew-*.webp`, portraits
-  du jeu One Piece: Gigant Battle), les avis de recherche des neuf membres épinglés
-  (`wanted-*.webp`), « ドン!! » qui claquent de temps en temps. Images du wiki One Piece (Fandom),
-  détourées et réduites en WebP (~380 Ko en tout).
+  trois plans qui boucle sans à-coup, le Vogue Merry au loin sur l'horizon (`merry.webp`), et au
+  premier plan à gauche le grand Thousand Sunny (`public/onepiece/sunny.webp`, version chibi
+  détourée) qui dérive et tangue, la coque dans la houle. Sur le pont, l'équipage en pixel art
+  animé (`deck-*.png`, planche « Thousand Sunny NPC's » de One Piece: Gigant Battle 2 découpée
+  par personnage) : Luffy qui danse sur la tête de lion, Zoro aux haltères dans la vigie, Usopp,
+  Chopper, Nami, Sanji amoureux, Robin qui lit, Brook au violon, Franky ; chacun placé par ses
+  pieds en pixels de l'image du Sunny (`CREW`). Le pavillon au chapeau de paille
+  (`jolly-roger.svg`, dessiné pour le site) claque en haut du grand mât. En bas à droite, le
+  panneau des avis de recherche (`WantedBoard`, composant client) : cinq piles d'affiches qui se
+  chevauchent (l'équipage, Ace, Shanks, Law, Barbe Blanche, Barbe Noire, Big Mom, Kaido,
+  Crocodile, Buggy, Arlong : `wanted-*.webp`) ; toutes les 4,5 à 9 s, l'affiche du dessus d'une
+  pile se décroche, tombe et repasse sous la pile, à l'infini (seulement quand le thème est
+  affiché). Mouettes et « ドン!! » de temps en temps. Le chapeau de paille de Luffy
+  (`straw-hat.svg`) est posé dans le coin du cadre du compte : la classe `theme-hat`
+  (`AccountPanel`) marque le cadre où un thème peut poser un objet. Images du wiki One Piece
+  (Fandom) et de Sprite Database, détourées et réduites (~400 Ko en tout).
 - Passer au thème JoJo déclenche **ZA WARUDO** (`apps/web/components/ZaWarudo.tsx`, `zaWarudo()` de
   `@app/ui`) : la voix (`public/audio/za-warudo.mp3`), une onde qui inverse les couleurs, la page
   figée et délavée (« 時よ止まれ ! »), puis la reprise (`time-resume.mp3`). Un clic ou Échap
