@@ -145,3 +145,24 @@ model GotyVote {
   @@map("votes")
   @@schema("goty")
 }
+
+// Métadonnées publiques IGDB ; aucun jeton ou secret fournisseur n'est stocké.
+model GotyCatalogCache {
+  key       String   @id
+  games     Json
+  expiresAt DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("catalog_cache")
+  @@schema("goty")
+}
+
+// Quotas partagés entre instances (membre par minute et fournisseur par seconde).
+model GotyCatalogQuota {
+  scope     String   @id
+  startedAt DateTime @map("started_at")
+  count     Int
+
+  @@map("catalog_quotas")
+  @@schema("goty")
+}

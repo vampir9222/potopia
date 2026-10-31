@@ -39,7 +39,7 @@ Pourquoi Better Auth plutôt qu'Auth.js :
 apps/web/            app Next mince : routes, layouts, server actions, route handlers
 games/
   agents/            Agents Doubles, jeu d'espions coopératif à deux (règles de Codenames Duet)
-  goty/              GOTY Party : socle serveur (éditions, accès, inscriptions), UI à venir
+  goty/              GOTY Party : socle et préparation serveur, imports, IGDB ; UI à venir
   tcg/               futur jeu de cartes : pour l'instant, le vote du design des cartes (/cartes)
   trois/             Wordle français à 3 mots par jour (premier jeu intégré)
 packages/
@@ -194,7 +194,7 @@ passe d'une partie à l'autre sans rechargement.
 
 ### goty
 
-Huit tables dans le schéma `goty` : `editions`, `members`, `rounds`, `games`, `choices`,
+Huit tables métier dans le schéma `goty` : `editions`, `members`, `rounds`, `games`, `choices`,
 `predictions`, `proposals`, `votes`. Le module utilise les identités de `core` sans FK entre
 domaines. Année unique, clés composites pour inscriptions, choix, pronostics et votes ; noms
 normalisés et positions uniques dans le conducteur. Les FK de jeux utilisés sont restrictives.
@@ -206,7 +206,19 @@ partagé sur cette ligne pour stabiliser phase, version et inscriptions. Les dro
 recalculés via `core`, et les archives sont lisibles par tous les membres du portail.
 
 La migration `20261031230000_goty` est additive et n’importe aucune donnée de goty-party.
-Préparation, pronostics, cérémonie et leurs projections complètes sont à venir ; voir le
+Le lot 3 ajoute catégories/votes, ouverture en préparation, jeux et palmarès privés. Chaque
+écriture verrouille l’édition et incrémente sa version ; les lectures partagées ne transmettent
+ni choix caché ni ordre futur de révélation. Les imports CSV/XLSX disposent d’un aperçu réutilisable
+et sont revalidés atomiquement au moment de l’ajout.
+
+La migration additive `20261101010000_goty_catalog` ajoute deux tables techniques :
+`catalog_cache` (métadonnées IGDB publiques, expiration d’une heure) et `catalog_quotas` (limites
+communes entre instances : 30 recherches/membre/minute et 4 appels fournisseur/seconde, fenêtres
+fixes, protégées par verrou consultatif). Aucun secret ou jeton OAuth en base. Les variables
+facultatives `IGDB_CLIENT_ID` et `IGDB_CLIENT_SECRET` restent côté serveur ; sans clés ou en cas
+de panne, la saisie manuelle reste possible. Les appels réseau sont bornés à 10 secondes chacun.
+
+Pronostics, cérémonie et projections complètes sont à venir ; voir le
 [README du module](../games/goty/README.md) pour les services disponibles et les contraintes.
 
 ### trois et agents
@@ -812,8 +824,8 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 
 L’intégration native de GOTY Party est définie dans le
 [plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) et le
-[contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Son socle serveur est disponible,
-mais préparation, cérémonie, snapshots complets, interface et routes HTTP restent à implémenter.
+[contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Socle et préparation serveur sont
+disponibles ; pronostics, cérémonie, snapshots complets, interface et routes HTTP restent à implémenter.
 
 Côté cartes : boosters, collection, decks et parties (étape 13, à venir). Pas de récompense en
 monnaie dans TROIS pour l'instant.

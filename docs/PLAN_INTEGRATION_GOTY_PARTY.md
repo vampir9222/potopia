@@ -1,6 +1,6 @@
 # Plan d’intégration de GOTY Party dans Potopia
 
-Statut : lots 1 et 2 terminés ; préparation à partir du lot 3. Analyse des deux dépôts locaux le
+Statut : lots 1 à 3 terminés ; pronostics et cérémonie à partir du lot 4. Analyse des dépôts le
 31 octobre 2026. Ce document ne déclenche ni migration ni déploiement.
 
 Le [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) détaille les droits, transitions,
@@ -127,7 +127,7 @@ migration additive, règles pures, services d’accès, création d’édition e
 Les tests vérifient les rôles, les archives, la concurrence et les transactions composables.
 Aucune route ou interface GOTY n’est encore exposée dans le portail.
 
-### Lot 3 — Porter la préparation
+### Lot 3 — Porter la préparation ✅
 
 - Gérer les propositions et votes, les catégories de base, le passage en préparation et l’ajout
   de rubriques pendant cette phase selon les règles existantes.
@@ -140,6 +140,10 @@ Aucune route ou interface GOTY n’est encore exposée dans le portail.
 
 **Fini quand :** deux participants peuvent préparer leur édition sans consulter les choix secrets
 de l’autre ; un import invalide ne produit pas d’écriture partielle non annoncée.
+
+Livré côté serveur : catégories, votes, ouverture en préparation, jeux, imports CSV/XLSX et
+aperçus réutilisables, choix personnels, IGDB avec cache et quotas PostgreSQL partagés. Les
+interfaces React restent au lot 5 ; voir le [README du module](../games/goty/README.md).
 
 ### Lot 4 — Porter les pronostics et la cérémonie
 

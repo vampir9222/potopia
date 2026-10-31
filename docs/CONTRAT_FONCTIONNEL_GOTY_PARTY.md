@@ -133,6 +133,10 @@ les erreurs avant confirmation autant que possible. Les cellules sont traitées 
 données, sans exécution de formule. Les valeurs `x`, `oui`, `yes`, `true`, `1`, `vrai`, `✓`
 signifient vrai, sans distinction de casse ni espaces autour. Les lignes vides sont ignorées.
 
+Précisions du lot 3 : fichier limité à 5 Mo, CSV en UTF-8 ou première feuille d’un XLSX.
+L’aperçu indique les lignes et champs invalides ; la confirmation revalide le lot et les droits
+avant écriture. Les dates XLSX sont converties en date ISO. Les formulaires restent au lot 5.
+
 Recherche IGDB facultative, côté serveur ; saisie manuelle toujours possible. Trailer intégré
 si connu, recherche YouTube de secours sinon ; fermer le lecteur arrête la lecture. Aucun fichier
 vidéo n’est envoyé. Une indisponibilité du catalogue ne bloque pas la préparation manuelle.
