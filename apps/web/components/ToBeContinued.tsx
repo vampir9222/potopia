@@ -1,12 +1,13 @@
 "use client";
 
-import { cx, effectiveVolume, TO_BE_CONTINUED_EVENT } from "@app/ui";
+import { cx, effectiveVolume, preloadImages, TO_BE_CONTINUED_EVENT } from "@app/ui";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 // Intro de Roundabout coupée pour l'occasion (public/audio/roundabout.mp3, ~9 s) : la montée du
 // piano inversé culmine à 2,4 s, c'est là que l'image se fige.
 const MUSIC = "/audio/roundabout.mp3";
+const ARROW = "/jojo/to-be-continued.png"; // la même image que la classe de fond de la flèche
 const FREEZE_MS = 2400;
 const END_MS = 9000;
 const FADE_MS = 700;
@@ -25,6 +26,9 @@ export function ToBeContinued() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timers = useRef<number[]>([]);
   const dismissRef = useRef<() => void>(() => {});
+
+  // la flèche est chargée d'avance : elle doit tomber pile avec la musique
+  useEffect(() => void preloadImages([ARROW]), []);
 
   useEffect(() => {
     const go = (next: Phase) => {

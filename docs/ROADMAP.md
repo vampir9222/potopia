@@ -187,8 +187,9 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
       rebondit sur le liseré du header ; combo avec la boule, qu'il poursuit sur le liseré),
       boule musicale, thème, cloche, volume,
       menu du profil (déconnexion).
-    - « Mon inventaire » (`/inventaire`) : les Émeraudes du Chaos cachées dans les pages, puis
-      les hauts faits.
+    - « Mon inventaire » (`/inventaire`) : les Émeraudes du Chaos cachées dans les pages (un
+      clic sur une pierre trouvée : sursaut, éclats et note de cristal, jamais deux fois pareils),
+      puis les hauts faits.
     - Défaite dans un jeu : arrêt sur image « To Be Continued » (JoJo).
     - Thème JoJo (Stardust Crusaders) : décor manga, portraits, « ゴゴゴ » ; le choisir déclenche
       ZA WARUDO, qui fige vraiment tout le site (animations et musiques) le temps de l'effet.

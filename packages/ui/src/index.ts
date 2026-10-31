@@ -9,6 +9,7 @@ export { EmptyState } from "./EmptyState";
 export { Input, Label, Select, Textarea } from "./fields";
 export { Modal, Sheet } from "./Modal";
 export { AppLink, NavigationProvider, useNavigate, type LinkComponent } from "./navigation";
+export { imagesReady, preloadImages } from "./preload";
 export { RgbFans } from "./RgbFans";
 export { ThemeSwitcher } from "./ThemeSwitcher";
 export { TO_BE_CONTINUED_EVENT, toBeContinued } from "./toBeContinued";

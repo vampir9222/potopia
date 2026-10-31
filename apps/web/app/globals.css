@@ -296,6 +296,15 @@
   opacity: 0.55;
 }
 
+/* Éclat qui jaillit d'une pierre quand on tape dessus (trajectoire posée par EmeraldCircle). */
+.emerald-tap-spark {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  pointer-events: none;
+  box-shadow: 0 0 4px rgb(255 255 255 / 0.8);
+}
+
 /* Pouvoir scellé : plus d'éclat, des pierres ternes. */
 .emerald-sealed {
   filter: grayscale(0.75) brightness(0.55) drop-shadow(0 0 0 transparent);

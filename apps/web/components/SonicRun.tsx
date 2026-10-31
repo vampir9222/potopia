@@ -5,7 +5,7 @@ import {
   useEmeraldsDisabled,
   useSuperSonicTransformed,
 } from "@app/inventory/ui";
-import { cx, effectiveVolume, onVolumeChange, timeNow } from "@app/ui";
+import { cx, effectiveVolume, imagesReady, onVolumeChange, preloadImages, timeNow } from "@app/ui";
 import { useEffect, useRef, useState } from "react";
 import { LoopTrack } from "./loopTrack";
 
@@ -23,6 +23,7 @@ const SHEETS = {
   ssIdle: { src: "/sonic/sonic-ss-idle.png", frames: 3, w: 24, h: 48 },
 } satisfies Record<string, Sheet>;
 type SheetName = keyof typeof SHEETS;
+const SHEET_SRCS = Object.values(SHEETS).map((s) => s.src);
 
 const MUSIC = "/audio/sonic.mp3";
 // Super Sonic : le morceau d'origine boucle tout seul (thème de 19,69 s qui se répète dès le
@@ -93,6 +94,9 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
   const windRef = useRef<SVGSVGElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const superTrack = useRef<LoopTrack | null>(null);
+
+  // Toutes les planches sont chargées dès l'affichage : passer de l'une à l'autre est instantané.
+  useEffect(() => void preloadImages(SHEET_SRCS), []);
 
   // La musique s'arrête quand on quitte la page, et suit le volume global du header.
   useEffect(
@@ -294,6 +298,11 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
   }, [mode, idleSuper]);
 
   function toggle() {
+    // clic très tôt, planches pas encore là : il part dès qu'elles le sont (sinon il disparaîtrait)
+    if (mode === "idle" && !imagesReady(SHEET_SRCS)) {
+      void preloadImages(SHEET_SRCS).then(toggle);
+      return;
+    }
     audioRef.current?.pause();
     superTrack.current?.stop();
     if (mode !== "idle") {

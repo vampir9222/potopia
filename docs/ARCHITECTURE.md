@@ -362,11 +362,18 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
   liseré en SVG, déformé, avec le même dégradé.
 
 **To Be Continued** (`apps/web/components/ToBeContinued.tsx`, monté dans le layout racine).
-`toBeContinued()` de `@app/ui` le déclenche : un mot raté pour de vrai à TROIS, une mission perdue
+`toBeContinued()` de `@app/ui` le déclenche : un mot raté à TROIS (mode test compris), une mission perdue
 sous les yeux du joueur à Agents Doubles. L'intro de Roundabout (`public/audio/roundabout.mp3`,
 ~9 s coupées dans le morceau) démarre ; à son pic (2,4 s) la page se fige en sépia
 (`html.tbc-freeze`, animations en pause) et la flèche « To Be Continued »
 (`public/jojo/to-be-continued.png`) glisse en bas à gauche. Un clic ou Échap écourte.
+
+**Images préchargées** (`preloadImages` / `imagesReady` de `@app/ui`, `src/preload.ts`). Les
+planches de sprites et images d'effets (Sonic et Super Sonic, fruit, Luffy et combo, flèche « To
+Be Continued », « ゴゴゴゴ » de TROIS) sont téléchargées et décodées dès l'affichage du composant,
+et gardées en mémoire : sinon le navigateur ne les charge qu'au premier affichage et le
+personnage disparaît le temps du chargement. Un clic sur Sonic ou le fruit avant la fin du
+chargement attend que les planches soient prêtes.
 
 **Inventaire** (`packages/inventory`, schéma `inventory`, table `items` : `user_id`, `item_id`,
 `found_at`, unique par membre et objet).
@@ -389,6 +396,10 @@ sous les yeux du joueur à Agents Doubles. L'intro de Roundabout (`public/audio/
   chacune s'illumine puis retombe sur son éclat ; scellé : en sens inverse, chacune brille une
   dernière fois puis s'éteint), avec un bruitage de Sonic 2 (`emeralds-unseal.mp3`,
   `emeralds-seal.mp3`, découpés à la main).
+- Un clic sur une pierre trouvée : elle sursaute en penchant, s'illumine et lâche quelques éclats
+  de sa couleur, avec un « tink » de cristal synthétisé (`playTink`, `ui/sounds.ts`). Sens, angle,
+  hauteur, éclats et note (gamme pentatonique, jamais la même deux fois de suite) changent à
+  chaque coup, comme les coups de pioche d'un jeu de minage.
 
 **Dates.** Toutes les dates affichées passent par `BRAND.timeZone` (`Europe/Paris`) : le serveur
 Vercel tourne en UTC, les navigateurs des membres en France ; sans fuseau explicite, l'heure
