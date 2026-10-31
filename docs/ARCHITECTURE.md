@@ -311,8 +311,9 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
 - Sonic (`apps/web/components/SonicRun.tsx`, masqué sous 1024 px), Luffy
   (`components/LuffyRun.tsx`, masqué sous 640 px) et la boule (`components/SpinOrb.tsx`) lancent
   une animation et une musique en boucle au clic, et se mettent en pause au second. Au repos, la
-  boule (46 px) dessine de temps en temps la spirale dorée de la Golden Rotation ou fait un petit
-  rebond sur place, tiré au hasard toutes les 5 à 11 s.
+  boule (46 px) rebondit régulièrement sur place (toutes les 6 à 8 s) : elle descend toucher le
+  liseré, s'écrase, rebondit sans sortir de l'écran, avec des étincelles dorées et un reflet au
+  contact.
 - Sonic : planches en pixel art à l'échelle 1 dans `public/sonic/` (attente, marche, course, sprint,
   puis transformation, course, vol et attente de Super Sonic), tirées de gifs de sources
   différentes, ramenées à la même taille de pixel et aux mêmes couleurs. À l'arrêt il attend (la
