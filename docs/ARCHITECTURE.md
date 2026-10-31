@@ -461,9 +461,9 @@ membre : ses images ne sont jamais dans le repo ni dans `public/`.
   dans `globals.css` (bloc « Mascotte », coupées si l'utilisateur réduit les animations), à
   l'échelle `--s` ; les paupières (couleur peau) et la couronne y sont placées en px du dessin
   d'origine. Si l'image ne charge pas (401, 404), le composant affiche `fallback`.
-- Accueil : en bas à droite du cadre « Apps », à côté de la grille (`components/MascotToy.tsx`,
-  180 px comme sous le podium de TROIS, masquée sous 640 px) : elle respire et cligne des yeux, un
-  clic la fait sauter. Sans image envoyée, le bouton disparaît.
+- Accueil : flottante en bas à droite du cadre « Apps », la grille gardant une marge pour elle
+  (`components/MascotToy.tsx`, 180 px comme sous le podium de TROIS, masquée sous 640 px) : elle
+  respire et cligne des yeux, un clic la fait sauter. Sans image envoyée, le bouton disparaît.
 - Utilisée aussi par les pages d'erreur, la 404, le chargement, la confirmation de la boîte à
   idées (prop `successIcon` d'`IdeaForm`) et sous le podium de TROIS (prop `belowPodium` de
   `TroisApp`, qui reçoit la réaction au dernier mot : saut sur un mot trouvé, affaissée sur un
