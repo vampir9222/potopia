@@ -2,7 +2,14 @@
 
 import { putObject } from "@app/storage";
 import { redirect } from "next/navigation";
-import { MASCOT_MAX_BYTES, MASCOT_TYPES, mascotKey, mascotPartSchema } from "@/lib/mascot";
+import {
+  MASCOT_MAX_BYTES,
+  MASCOT_PHRASES_KEY,
+  MASCOT_TYPES,
+  mascotKey,
+  mascotPartSchema,
+  mascotPhrasesSchema,
+} from "@/lib/mascot";
 import { actionAdmin } from "@/lib/session";
 
 /** Le type annoncé par le navigateur ne suffit pas : on vérifie la signature du fichier. */
@@ -31,4 +38,21 @@ export async function uploadMascotAction(formData: FormData): Promise<void> {
   }
   for (const upload of uploads) await putObject(upload);
   redirect(uploads.length > 0 ? "/admin/mascotte?ok=1" : "/admin/mascotte");
+}
+
+/** Remplace les phrases de la mascotte (une par ligne, lignes vides ignorées). */
+export async function saveMascotPhrasesAction(formData: FormData): Promise<void> {
+  await actionAdmin();
+  const lines = String(formData.get("phrases") ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const phrases = mascotPhrasesSchema.safeParse(lines);
+  if (!phrases.success) redirect("/admin/mascotte?erreur=phrases");
+  await putObject({
+    key: MASCOT_PHRASES_KEY,
+    body: new TextEncoder().encode(JSON.stringify(phrases.data)),
+    contentType: "application/json",
+  });
+  redirect("/admin/mascotte?ok=phrases");
 }

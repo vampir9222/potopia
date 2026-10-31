@@ -245,7 +245,9 @@ La mascotte a le visage d'un membre : ses images ne sont pas dans le dépôt. El
 **Administration › Mascotte** (`/admin/mascotte`) : le corps (512 × 673 px, fond transparent, sans
 la couronne) et la couronne (102 × 92 px environ), en PNG ou WebP. Tant que rien n'est envoyé, le
 site affiche les icônes habituelles à sa place. Un dessin aux proportions différentes demande de
-recaler les paupières et la couronne dans `apps/web/app/globals.css` (bloc « Mascotte »).
+recaler les paupières et la couronne dans `apps/web/app/globals.css` (bloc « Mascotte »). Ses
+phrases (bulle sur TROIS) s'éditent sur la même page, une par ligne ; elles ne sont pas dans le
+dépôt non plus.
 
 ---
 
@@ -300,7 +302,7 @@ recaler les paupières et la couronne dans `apps/web/app/globals.css` (bloc « M
   présignées de 5 minutes (et, pour la seule idée exemple `SHOWCASE_IDEA_ID`, à tout membre via
   `/api/cartes/exemple`) ; la base ne stocke que leur clé. Les images envoyées puis abandonnées
   sont purgées au bout de 24 h.
-- Les images de la mascotte (visage d'un membre) sont dans le même bucket privé, servies aux seuls
-  membres connectés par `/api/mascotte/<partie>`.
+- Les images de la mascotte (visage d'un membre) et ses phrases sont dans le même bucket privé,
+  servies aux seuls membres connectés par `/api/mascotte/<partie>` et `/api/mascotte/phrases`.
 - Pseudo, image et e-mail viennent de Discord : les endpoints de Better Auth qui permettraient de
   les changer depuis le site sont désactivés.

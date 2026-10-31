@@ -14,7 +14,9 @@ export function TroisWithMascot({ me }: { me: Me }) {
   return (
     <TroisApp
       me={me}
-      belowPodium={(reaction) => <MascotAnchor mood={reaction ? MOODS[reaction] : "repos"} />}
+      belowPodium={(reaction) => (
+        <MascotAnchor mood={reaction ? MOODS[reaction] : "repos"} chatty />
+      )}
     />
   );
 }
