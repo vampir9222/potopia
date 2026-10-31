@@ -111,7 +111,8 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
     lines.classList.remove("sonic-speedlines-fly");
     lines.style.opacity = "0";
     const rush = (k: number, fly = false) => {
-      lines.style.opacity = String(Math.max(0, Math.min(1, k)));
+      // traits discrets : ils accompagnent le dédoublement sans le cacher
+      lines.style.opacity = String(Math.max(0, Math.min(1, k)) * (fly ? 0.6 : 0.55));
       lines.style.width = `${Math.round(fly ? 260 : 40 + 80 * k)}px`;
       const next = fly ? "fly" : k > 0.5 ? "run" : "";
       if (next !== level) {
