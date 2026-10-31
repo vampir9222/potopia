@@ -39,6 +39,8 @@ const TRANS_MS = [190, 190, 190, 190, 190, 190, 190, 380];
 // qui s'allonge), avant de s'envoler.
 const SUPER_RUN_MS = 4500;
 const SUPER_RAMP_MS = 1400;
+// hauteur de vol moyenne, pour laquelle sont placés les traits de vitesse du vol (globals.css)
+const FLY_LIFT = 9;
 const SUPER_STEP_SLOW = 190;
 // à pleine vitesse, bien plus vite que Sonic (40 ms) : c'est Super Sonic
 const SUPER_STEP_FAST = 24;
@@ -110,7 +112,9 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
     sprite.classList.remove("sonic-ghost", "sonic-ghost-fly");
     lines.classList.remove("sonic-speedlines-fly");
     lines.style.opacity = "0";
-    const rush = (k: number, fly = false) => {
+    // `lift` : hauteur de vol de Super Sonic ; les traits montent et descendent avec lui
+    const rush = (k: number, fly = false, lift = FLY_LIFT) => {
+      lines.style.translate = `0 ${fly ? FLY_LIFT - lift : 0}px`;
       // traits discrets : ils accompagnent le dédoublement sans le cacher
       lines.style.opacity = String(Math.max(0, Math.min(1, k)) * (fly ? 0.6 : 0.55));
       lines.style.width = `${Math.round(fly ? 260 : 40 + 80 * k)}px`;
@@ -225,7 +229,7 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
           // en vol : traînée immense, tirets qui défilent à toute allure (toujours dorée, quel que
           // soit le thème)
           trail(600 + 60 * Math.sin(now / 35), "gold", 30);
-          rush(1, true);
+          rush(1, true, lift);
         }
       }
       raf = requestAnimationFrame(tick);
