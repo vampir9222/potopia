@@ -149,6 +149,8 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
   `https://<account>.r2.cloudflarestorage.com`).
 - `presignPut({ key, contentType, contentLength, expiresIn })`.
 - `presignGet({ key, expiresIn })` et `headObject(key)`.
+- `presignGetStable(key)` : URL GET identique pendant 5 min (valable 15 min), que le navigateur
+  peut garder en cache.
 - Aucune logique métier : les modules décident qui a le droit de faire quoi.
 
 **ui**
@@ -472,13 +474,30 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 
 - [x] Schéma `tcg` : `TcgSet`, `TcgCard`, enum `TcgRarity` (migration `tcg_cards`, ajout seul).
 - [x] Catalogue d'effets (`src/effects.ts`) et fonctions des cartes (`src/cards.ts`).
+- [x] Effet Heimdall (`reveal_move_allies_left` : tes autres cartes passent d'un lieu vers la
+      gauche), pour la carte « SPINNING SPINNING ».
+- [x] Catalogue d'effets refait d'après de vraies cartes Marvel Snap (85 effets, chacun avec sa
+      carte ; les effets inventés sont retirés ou corrigés), moments « depuis la main » et « fin
+      de partie », mana jusqu'à 8 (Skaar, Death) ; mise à jour en masse des cartes existantes
+      (`updates` sur `/admin/cartes/import`).
 - [x] Admin : `/admin/cartes`, `/admin/cartes/[id]`, `/admin/cartes/nouvelle`,
-      `/admin/cartes/import`, `/admin/cartes/illustrations` (envoi en masse),
-      `/api/admin/cards/[id]/image` ; entrée « Cartes » sur `/admin`.
+      `/admin/cartes/import`, `/admin/cartes/illustrations` (envoi en masse) ; entrée « Cartes »
+      sur `/admin`.
 - [x] Réserve et sets (cartes hors set en attente, déplacement en masse, renumérotation),
       plusieurs cartes par idée et création depuis la page d'une idée (garde-fou anti-doublon),
       titre ajusté à sa longueur ; migration `tcg_card_reserve` (modifie des contraintes, sans
       toucher aux données).
+- [x] Planche plus rapide et plus grande : illustrations signées directement par la page avec des
+      URLs stables 5 min (`presignGetStable`, mises en cache par le navigateur) au lieu d'une
+      redirection par carte, chargement à l'approche de l'écran, cartes hors écran non dessinées ;
+      cartes agrandies d'un tiers (400 px de large), planche paginée par 24 cartes (`?page=`),
+      cartes figées sur la planche (sans 3D ni animation), illustrations réduites avant l'envoi
+      (WebP, 1 200 px), recherche (`?q=`), pied de carte « S1 07/116 · E · idée de … ».
+- [x] Migration `tcg_effets_snap` (modifie des données, accord de l'utilisateur) : toutes les
+      cartes passent sur les effets Snap (clés renommées ou remplacées, réglages et textes du
+      catalogue ; les cartes du set 1, retrouvées par leur idée, prennent la carte Snap retenue
+      avec son coût et sa puissance). Les textes d'effet personnalisés se remettent avec le
+      fichier `updates`, hors dépôt.
 - [x] Cadrage des illustrations dans l'éditeur (glisser, zoomer), migration
       `tcg_card_image_frame` (ajout d'une colonne).
 - [x] Une carte par idée de la boîte à idées, générée hors du dépôt et importée par l'admin ;
@@ -496,7 +515,11 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
   mal réglé refusé, variantes (stats reprises et recopiées, pas de variante d'une variante), import
   (idées déjà importées ignorées, tout ou rien), illustration (envoi présigné, clé vérifiée dans le
   stockage, formats et droits).
-- Idées : `listIdeaIdsWithImage` réservé aux admins.
+- Mise à jour en masse : carte retrouvée par son idée (le nom départage), reste gardé, variantes
+  suivies, tout ou rien, admins seulement.
+- Idées : `listIdeaImageUrls` réservé aux admins.
+- Stockage : `presignGetStable` donne la même URL pendant 5 min, valable 15 min, avec
+  l'en-tête de cache renvoyé par le stockage.
 
 **Fini quand**
 

@@ -31,7 +31,8 @@ export const CARD_LIMITS = {
   family: 40,
   effectText: 300,
   flavor: 300,
-  cost: { min: 0, max: 6 },
+  // Jusqu'à 8, comme Skaar (7) et Death (8) dans Snap : des cartes qui coûtent moins en main.
+  cost: { min: 0, max: 8 },
   power: { min: -20, max: 30 },
   imageBytes: 5 * 1024 * 1024,
 } as const;

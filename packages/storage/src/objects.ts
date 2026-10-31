@@ -62,6 +62,31 @@ export async function presignGet(
   });
 }
 
+/** Fenêtre des URLs stables : la même URL sert pendant 5 min. */
+export const STABLE_WINDOW = 300;
+
+/**
+ * URL GET présignée identique pendant toute une fenêtre de 5 min (signée au début de la fenêtre,
+ * valable 15 min, donc encore au moins 10 min après l'appel). Le navigateur garde ainsi l'image en
+ * cache d'une page à l'autre au lieu de la retélécharger, ce qu'une URL toujours nouvelle empêche.
+ */
+export async function presignGetStable(
+  key: string,
+  storage: Storage = getStorage(),
+  now: number = Date.now(),
+): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: storage.bucket,
+    Key: keySchema.parse(key),
+    // La clé change à chaque nouvel envoi : le contenu derrière une URL ne change jamais.
+    ResponseCacheControl: `private, max-age=${MAX_EXPIRES_IN - STABLE_WINDOW}`,
+  });
+  return getSignedUrl(storage.s3, command, {
+    expiresIn: MAX_EXPIRES_IN,
+    signingDate: new Date(now - (now % (STABLE_WINDOW * 1000))),
+  });
+}
+
 export type ObjectInfo = { contentType: string | null; contentLength: number };
 
 /** Métadonnées d'un objet, ou null s'il n'existe pas. */

@@ -2,6 +2,7 @@
 
 import { Button, Input, Label } from "@app/ui";
 import { useState } from "react";
+import { shrinkImage } from "./shrinkImage";
 
 type Row = { file: string; status: string; ok: boolean | null };
 
@@ -50,15 +51,16 @@ export function CardImagesUpload({ cards, request, confirm }: Props) {
       }
       const label = `n°${card.number} · ${card.name}`;
       update(i, { file: file.name, status: `Envoi vers ${label}…`, ok: null });
-      const target = await request(file.type, file.size);
+      const image = await shrinkImage(file);
+      const target = await request(image.type, image.size);
       if ("error" in target) {
         update(i, { file: file.name, status: target.error, ok: false });
         continue;
       }
       const put = await fetch(target.url, {
         method: "PUT",
-        body: file,
-        headers: { "content-type": file.type },
+        body: image,
+        headers: { "content-type": image.type },
       }).catch(() => null);
       const failed = put?.ok ? await confirm(card.id, target.key) : { error: "L'envoi a échoué." };
       update(

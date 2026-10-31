@@ -226,15 +226,18 @@ monté dans ce layout et affiché par une variable du thème (exemples : `JojoDe
 
 ### Ajouter ou modifier des cartes
 
-Les cartes se gèrent dans **Administration › Cartes** (`/admin/cartes`). Une carte rangée dans un
+Les cartes se gèrent dans **Administration › Cartes** (`/admin/cartes`, 24 cartes par page, avec
+une recherche par nom, famille ou effet). Une carte rangée dans un
 set y prend un numéro et ira en prod avec lui ; les autres attendent dans la réserve. Depuis la page
 d'une idée (Administration › Boîte à idées), « Créer une carte » pré-remplit une carte. On y règle : nom, type, famille,
 mana, puissance, rareté, effet (choisi dans le catalogue `games/tcg/src/effects.ts`, puis réglé),
 description et illustration (à envoyer, puis à cadrer en la faisant glisser et en zoomant). Pour en créer beaucoup d'un coup, `/admin/cartes/import` prend un
-fichier JSON (format affiché sur la page), et `/admin/cartes/illustrations` plusieurs images d'un
+fichier JSON (format affiché sur la page ; un fichier `updates` y change en masse le coût, la
+puissance et l'effet de cartes existantes), et `/admin/cartes/illustrations` plusieurs images d'un
 coup (chaque fichier porte le numéro de sa carte : `12.jpg`). Les cartes générées à partir des
 idées restent hors du dépôt, puisqu'elles reprennent le contenu des membres. Un effet nouveau s'ajoute dans
-`effects.ts` (clé, moment, réglages, texte) et devient disponible pour toutes les cartes.
+`effects.ts` (clé, moment, réglages, texte, carte Marvel Snap reprise) et devient disponible pour
+toutes les cartes : chaque effet reprend une vraie carte Snap, déjà équilibrée.
 
 ---
 

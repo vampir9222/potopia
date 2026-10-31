@@ -15,6 +15,7 @@ import {
   defaultParams,
   EFFECTS,
   type EffectDef,
+  type EffectTrigger,
   type EffectParams,
   effectText,
   getEffect,
@@ -22,6 +23,7 @@ import {
 } from "../src/effects";
 import { GameCard, GameCardDefs } from "./GameCard";
 import { ImageFramer } from "./ImageFramer";
+import { shrinkImage } from "./shrinkImage";
 
 export type CardEditorState =
   { status: "idle" } | { status: "ok"; message: string } | { status: "error"; message: string };
@@ -49,6 +51,8 @@ type Props = {
   /** Familles déjà utilisées, proposées à la saisie. */
   families: string[];
   imageUrl: string | null;
+  /** Auteur de l'idée d'origine, affiché en pied de carte (« idée de … »). */
+  author?: string | null;
   /** Nombre de cartes du set, pour le numéro affiché dans l'aperçu. */
   setSize?: number;
   /** Création : nombre de cartes de chaque set (par id), pour le numéro de l'aperçu. */
@@ -81,12 +85,10 @@ type Props = {
   };
 };
 
-const EFFECT_GROUPS = (["reveal", "ongoing", "end_of_turn", "destroyed"] as const).map(
-  (trigger) => ({
-    trigger,
-    effects: (EFFECTS as readonly EffectDef[]).filter((e) => e.trigger === trigger),
-  }),
-);
+const EFFECT_GROUPS = (Object.keys(TRIGGER_LABELS) as EffectTrigger[]).map((trigger) => ({
+  trigger,
+  effects: (EFFECTS as readonly EffectDef[]).filter((e) => e.trigger === trigger),
+}));
 
 function initialFields(card: Card | null, initial?: Partial<Fields>): Fields {
   return {
@@ -119,6 +121,7 @@ export function CardEditor({
   sets,
   families,
   imageUrl,
+  author,
   setSize,
   setSizes,
   defaultSetId,
@@ -181,9 +184,10 @@ export function CardEditor({
     startTransition(() => dispatch(data));
   }
 
-  async function sendImage(file: File) {
+  async function sendImage(original: File) {
     if (!upload || !card) return;
     setUploadState("Envoi…");
+    const file = await shrinkImage(original);
     const target = await upload.request(file.type, file.size);
     if ("error" in target) return setUploadState(target.error);
     const put = await fetch(target.url, {
@@ -299,7 +303,7 @@ export function CardEditor({
           ))}
         </datalist>
 
-        <Label hint={effect?.snap ? `Inspiré de ${effect.snap} (Marvel Snap).` : undefined}>
+        <Label hint={effect?.snap ? `Repris de ${effect.snap} (Marvel Snap).` : undefined}>
           Effet
           <Select
             value={fields.effectKey}
@@ -415,7 +419,13 @@ export function CardEditor({
 
       <div className="flex flex-col items-center gap-3">
         <GameCardDefs />
-        <GameCard card={preview} imageUrl={image} layout={layout} setSize={setSize} />
+        <GameCard
+          card={preview}
+          imageUrl={image}
+          layout={layout}
+          setSize={setSize}
+          author={author}
+        />
         <div className="flex gap-2 text-sm">
           {(["normal", "fullart"] as const).map((l) => (
             <button

@@ -185,7 +185,7 @@ passe d'une partie à l'autre sans rechargement.
 - `TcgSet` : code (unique, `S1`), name, createdAt. Une édition de cartes.
 - `TcgCard` : setId?, number? (`(set_id, number)` unique ; contrainte `cards_set_number_check` : un
   numéro si et seulement si la carte est dans un set, sinon elle est dans la réserve), name, rarity (enum `TcgRarity` :
-  common, uncommon, rare, epic, legendary, sr, ssr), type, family?, cost (0 à 6), power, effectKey?,
+  common, uncommon, rare, epic, legendary, sr, ssr), type, family?, cost (0 à 8), power, effectKey?,
   effectParams? (JSON), effectText, flavor?, imageKey?, imageFrame? (JSON : cadrage de
   l'illustration, point central x/y en % et zoom de 1 à 4 ; l'image n'est jamais rognée), ideaId? (index simple, `ideas.ideas`
   sans relation : lien de gestion, une idée peut donner plusieurs cartes), baseCardId? (variante full art → sa carte de base), createdAt, updatedAt. La base ne
@@ -495,13 +495,18 @@ et modifient les cartes.
   famille et la description pré-remplis et l'image de l'idée. Garde-fou : si l'idée a déjà des
   cartes, elles sont listées et il faut cocher « Créer quand même » (vérifié côté serveur).
 
-- Catalogue d'effets (`games/tcg/src/effects.ts`, `EFFECTS`, 48 effets) : chaque effet a une clé,
-  un moment (à la révélation, permanent, fin de tour, quand elle est détruite), des réglages
-  (nombre borné, famille ou nom de jeton, validés par `paramsSchema`), un modèle de texte
-  (`effectText`) et, souvent, la carte de Marvel Snap qui l'inspire (`snap`, affichée dans
-  l'éditeur : Iron Man, Wong, Sera, Armor, Shang-Chi, Killmonger, Deadpool…). L'admin choisit
-  l'effet d'une carte dans cette liste et règle ses nombres, sans déploiement ; un effet nouveau
-  s'ajoute dans le code.
+- Catalogue d'effets (`games/tcg/src/effects.ts`, `EFFECTS`, 85 effets) : chaque effet reprend
+  une vraie carte de Marvel Snap (`snap`, obligatoire, affichée dans l'éditeur : Heimdall, Magneto,
+  Galactus, Wong, Iron Man…), dont l'effet, les valeurs (réglages par défaut) et, pour la carte,
+  le coût et la puissance servent de repère : ces cartes sont déjà équilibrées. Règle décidée le
+  2026-10-31 : pas d'effet inventé. Chaque effet a une clé, un moment (révélation, permanent,
+  fin de tour, quand elle est détruite, depuis la main, fin de partie), des réglages (nombre
+  borné ou nom de jeton, validés par `paramsSchema` ; les valeurs fixées par la carte Snap, comme
+  « 10 de puissance ou plus » de Shang-Chi, ne se règlent pas) et un modèle de texte
+  (`effectText`). L'admin choisit l'effet d'une carte dans cette liste et règle ses nombres, sans
+  déploiement ; un effet nouveau s'ajoute dans le code, avec sa carte Snap. Plusieurs effets
+  demanderont au moteur de partie des mécaniques à créer (Rochers, lieu inondé ou détruit,
+  cartes cachées, fusion, pioche adverse, fin de partie).
 - `games/tcg/src/cards.ts` : `listSets`, `createSet`, `ensureSet`, `listCards` (par set, réserve
   ou idée), `getCard`, `createCard` (numéro suivant du set, sous verrou, ou réserve), `moveCards`, `updateCard`, `createCardImageUpload` (PUT présigné,
   clé `cards/<uuid>.<ext>`, 5 Mo), `setCardImage` (vérifie l'objet), `importCards`. Toutes
@@ -510,25 +515,45 @@ et modifient les cartes.
 - Variante (`baseCardId`) : elle reprend mana, puissance, type, famille et effet de sa carte de
   base ; `updateCard` sur la carte de base les lui recopie, et sur la variante ne change que le
   nom, la rareté et la description. Pas de variante d'une variante.
+- Mise à jour en masse (même page, `updateCards`) : fichier `{ updates: [{ ideaId, name?, cost?,
+power?, effectKey?, effectParams?, effectText? }] }`. Chaque carte de base est retrouvée par son
+  idée (le nom départage si l'idée a plusieurs cartes) ; seuls le coût, la puissance et l'effet
+  changent, et les variantes suivent. Un nouvel effet sans texte prend le texte du catalogue.
+  Tout ou rien.
 - Import (`/admin/cartes/import`, `importCards`) : fichier JSON `{ set?: { code, name }, cards }`.
   Le set est créé au besoin, les cartes prennent les numéros suivants (sans set : la réserve) ; une carte dont l'idée a
   déjà une carte est ignorée (réimporter ne crée pas de doublon et n'écrase pas les
   modifications). Tout ou rien, avec la carte fautive dans le message. Les fichiers de cartes
   générées depuis les idées ne vont jamais dans le dépôt (contenu des membres).
-- Pages : `/admin/cartes` (un onglet par set et la réserve, `?set=<code>` ou `?set=reserve` ;
-  cases à cocher pour déplacer des cartes d'un coup ; création d'un set), `/admin/cartes/[id]` et
+- Pages : `/admin/cartes` (un onglet par set et la réserve, `?set=<code>` ou `?set=reserve`,
+  24 cartes par page avec `?page=` ; recherche `?q=` sur le nom, le type, la famille, l'effet et
+  la description, dans tous les sets et la réserve, sans tenir compte des accents ; cases à cocher pour déplacer des cartes d'un coup ; création d'un set), `/admin/cartes/[id]` et
   `/admin/cartes/nouvelle` (`CardEditor` : formulaire et aperçu en direct, normale ou full art,
   envoi d'illustration), `/admin/cartes/import`, `/admin/cartes/illustrations` (`CardImagesUpload` :
   plusieurs images d'un coup, chacune posée sur la carte dont elle porte le numéro, « 12.jpg »). Les cartes s'affichent dans le design retenu
   (n°70, `GameCard`, ligne de type « {type} — {famille} », « Réserve » en pied de carte hors set).
+  Pied des vraies cartes (`gameFooter` de `FinalCard`, les propositions notées gardent le leur) :
+  numéro, rareté abrégée (C, PC, R, E, L, SR, SSR) avec ses étoiles, puis « idée de {auteur} »
+  (`getIdeaAuthorIds` + nom du membre, `cardAuthors`). Pour l'instant seuls les admins voient les
+  cartes ; quand les membres les verront, ce pied dira qui a proposé l'idée (à décider avec la
+  règle de la boîte noire). Sur la planche, les cartes sont figées (`GameCard still`, classe
+  `tcg-still`) : sans 3D, animation, reflet ni grande ombre floue, pour un défilement fluide ;
+  l'éditeur garde la carte vivante.
+- Illustrations réduites dans le navigateur avant l'envoi (`shrinkImage` : WebP, 1 200 px au plus
+  de côté ; une image déjà petite part telle quelle), dans l'éditeur comme dans l'envoi en masse.
   Titre (`FitTitle`) : la taille baisse avec la longueur jusqu'à 13 px, puis le titre passe sur
   deux lignes.
 - Cadrage : sous l'aperçu de l'éditeur, `ImageFramer` montre la fenêtre d'illustration (normale ou
   full art) ; on y fait glisser l'image et on règle le zoom, le cadrage est enregistré avec la
   carte et appliqué partout où elle s'affiche (`frameStyle`).
-- Illustration : `GET /api/admin/cards/[id]/image` (admin, 302 vers une URL présignée de 5 min),
-  celle de la carte ou, à défaut, celle de son idée (`listIdeaIdsWithImage` dit lesquelles en
-  ont une).
+- Illustration : celle de la carte ou, à défaut, celle de son idée (`listIdeaImageUrls`). Les pages
+  admin la signent directement (`cardImageUrls`) avec `presignGetStable` (`@app/storage`) : l'URL
+  reste identique pendant une fenêtre de 5 min (signée au début de la fenêtre, valable 15 min) et
+  autorise la mise en cache (`response-cache-control: private, max-age=600`), donc le navigateur
+  ne retélécharge pas les images d'une page à l'autre ; une nouvelle illustration a une nouvelle
+  clé, donc une nouvelle URL. Sur les planches, les images se chargent à l'approche de l'écran
+  (`loading="lazy"`) et les cartes hors de l'écran ne sont pas dessinées
+  (`content-visibility: auto`).
 
 ## Avatars et place
 

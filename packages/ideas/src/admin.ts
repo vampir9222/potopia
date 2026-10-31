@@ -1,6 +1,6 @@
 import { ForbiddenError, isAdmin } from "@app/core";
 import { db } from "@app/db";
-import { MAX_EXPIRES_IN, presignGet } from "@app/storage";
+import { MAX_EXPIRES_IN, presignGet, presignGetStable } from "@app/storage";
 import { z } from "zod";
 import { RARITIES, type Rarity } from "./validation";
 
@@ -61,17 +61,42 @@ export async function getIdeaImageUrl(reader: Reader, id: string): Promise<strin
 }
 
 /**
- * Parmi ces idées, celles qui ont une image (pour savoir quelles cartes peuvent l'emprunter).
+ * URL présignée stable (`presignGetStable`) de l'image de chacune de ces idées qui en a une, par
+ * id : les cartes sans illustration propre empruntent celle de leur idée.
  * Lève ForbiddenError pour un non-admin.
  */
-export async function listIdeaIdsWithImage(reader: Reader, ids: string[]): Promise<string[]> {
+export async function listIdeaImageUrls(
+  reader: Reader,
+  ids: string[],
+): Promise<Map<string, string>> {
   assertAdmin(reader);
-  if (ids.length === 0) return [];
+  if (ids.length === 0) return new Map();
   const rows = await db.idea.findMany({
     where: { id: { in: ids }, imageKey: { not: null } },
-    select: { id: true },
+    select: { id: true, imageKey: true },
   });
-  return rows.map((r) => r.id);
+  return new Map(
+    await Promise.all(
+      rows.map(async (r) => [r.id, await presignGetStable(r.imageKey ?? "")] as const),
+    ),
+  );
+}
+
+/**
+ * Auteur (id) de chacune de ces idées, par id d'idée : les cartes tirées d'une idée affichent
+ * « idée de … ». Lève ForbiddenError pour un non-admin.
+ */
+export async function getIdeaAuthorIds(
+  reader: Reader,
+  ids: string[],
+): Promise<Map<string, string>> {
+  assertAdmin(reader);
+  if (ids.length === 0) return new Map();
+  const rows = await db.idea.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, authorId: true },
+  });
+  return new Map(rows.map((r) => [r.id, r.authorId]));
 }
 
 /** Auteurs ayant envoyé au moins une idée, pour le filtre de la liste admin. */

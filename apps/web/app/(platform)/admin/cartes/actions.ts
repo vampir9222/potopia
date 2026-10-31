@@ -10,8 +10,10 @@ import {
   importCards,
   setCardImage,
   updateCard,
+  updateCards,
   type CardImport,
   type CardInput,
+  type CardUpdates,
 } from "@app/tcg";
 import type { CardEditorState } from "@app/tcg/ui";
 import { revalidatePath } from "next/cache";
@@ -126,7 +128,17 @@ export async function importCardsAction(
   const text =
     file instanceof File && file.size > 0 ? await file.text() : String(formData.get("json") ?? "");
   try {
-    const { created, skipped } = await importCards(admin, JSON.parse(text) as CardImport);
+    const json = JSON.parse(text) as CardImport | CardUpdates;
+    // Fichier de mise à jour : `updates` au lieu de `cards`.
+    if ("updates" in json) {
+      const { updated } = await updateCards(admin, json);
+      revalidatePath("/admin/cartes", "layout");
+      return {
+        status: "ok",
+        message: `${updated} carte${updated > 1 ? "s" : ""} mise${updated > 1 ? "s" : ""} à jour.`,
+      };
+    }
+    const { created, skipped } = await importCards(admin, json);
     revalidatePath("/admin/cartes", "layout");
     return {
       status: "ok",
