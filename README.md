@@ -221,7 +221,9 @@ propose aussitôt.
 
 ### Ajouter ou modifier des cartes
 
-Les cartes se gèrent dans **Administration › Cartes** (`/admin/cartes`) : nom, type, famille,
+Les cartes se gèrent dans **Administration › Cartes** (`/admin/cartes`). Une carte rangée dans un
+set y prend un numéro et ira en prod avec lui ; les autres attendent dans la réserve. Depuis la page
+d'une idée (Administration › Boîte à idées), « Créer une carte » pré-remplit une carte. On y règle : nom, type, famille,
 mana, puissance, rareté, effet (choisi dans le catalogue `games/tcg/src/effects.ts`, puis réglé),
 description et illustration (à envoyer, puis à cadrer en la faisant glisser et en zoomant). Pour en créer beaucoup d'un coup, `/admin/cartes/import` prend un
 fichier JSON (format affiché sur la page), et `/admin/cartes/illustrations` plusieurs images d'un

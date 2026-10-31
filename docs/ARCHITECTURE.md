@@ -182,11 +182,12 @@ passe d'une partie à l'autre sans rechargement.
   comment?, createdAt, updatedAt. Une note par membre et par design (`(design_id, user_id)`
   unique). Les designs eux-mêmes sont dans le code (`games/tcg/src/designs.ts`), pas en base.
 - `TcgSet` : code (unique, `S1`), name, createdAt. Une édition de cartes.
-- `TcgCard` : setId, number (`(set_id, number)` unique), name, rarity (enum `TcgRarity` :
+- `TcgCard` : setId?, number? (`(set_id, number)` unique ; contrainte `cards_set_number_check` : un
+  numéro si et seulement si la carte est dans un set, sinon elle est dans la réserve), name, rarity (enum `TcgRarity` :
   common, uncommon, rare, epic, legendary, sr, ssr), type, family?, cost (0 à 6), power, effectKey?,
   effectParams? (JSON), effectText, flavor?, imageKey?, imageFrame? (JSON : cadrage de
-  l'illustration, point central x/y en % et zoom de 1 à 4 ; l'image n'est jamais rognée), ideaId? (unique, `ideas.ideas` sans
-  relation), baseCardId? (variante full art → sa carte de base), createdAt, updatedAt. La base ne
+  l'illustration, point central x/y en % et zoom de 1 à 4 ; l'image n'est jamais rognée), ideaId? (index simple, `ideas.ideas`
+  sans relation : lien de gestion, une idée peut donner plusieurs cartes), baseCardId? (variante full art → sa carte de base), createdAt, updatedAt. La base ne
   contient aucune logique d'effet : seulement la clé d'un effet du catalogue et ses réglages.
 
 ### trois et agents
@@ -389,6 +390,16 @@ rafraîchit le routeur client sans recharger la page.
 full art qui reprennent les stats de leur carte de base. Pour l'instant, seuls les admins lisent
 et modifient les cartes.
 
+- Sets et réserve : une carte rangée dans un set y prend un numéro (le suivant) et ira en prod avec
+  lui ; hors set, elle attend dans la réserve, sans numéro. `moveCards` déplace une ou plusieurs
+  cartes vers un set (à la suite) ou la réserve, et renumérote de 1 à N le set qu'elles quittent ;
+  `createSet` crée un set (code unique).
+- Lien avec une idée (`ideaId`) : seulement pour la gestion (retrouver la description et l'image
+  proposées), aucun effet en jeu ; une idée peut donner plusieurs cartes. Depuis la page admin d'une
+  idée, « Créer une carte » ouvre `/admin/cartes/nouvelle?idee=<id>` avec le nom, la rareté, la
+  famille et la description pré-remplis et l'image de l'idée. Garde-fou : si l'idée a déjà des
+  cartes, elles sont listées et il faut cocher « Créer quand même » (vérifié côté serveur).
+
 - Catalogue d'effets (`games/tcg/src/effects.ts`, `EFFECTS`, 48 effets) : chaque effet a une clé,
   un moment (à la révélation, permanent, fin de tour, quand elle est détruite), des réglages
   (nombre borné, famille ou nom de jeton, validés par `paramsSchema`), un modèle de texte
@@ -396,24 +407,27 @@ et modifient les cartes.
   l'éditeur : Iron Man, Wong, Sera, Armor, Shang-Chi, Killmonger, Deadpool…). L'admin choisit
   l'effet d'une carte dans cette liste et règle ses nombres, sans déploiement ; un effet nouveau
   s'ajoute dans le code.
-- `games/tcg/src/cards.ts` : `listSets`, `ensureSet`, `listCards`, `getCard`, `createCard`
-  (numéro suivant du set, sous verrou), `updateCard`, `createCardImageUpload` (PUT présigné,
+- `games/tcg/src/cards.ts` : `listSets`, `createSet`, `ensureSet`, `listCards` (par set, réserve
+  ou idée), `getCard`, `createCard` (numéro suivant du set, sous verrou, ou réserve), `moveCards`, `updateCard`, `createCardImageUpload` (PUT présigné,
   clé `cards/<uuid>.<ext>`, 5 Mo), `setCardImage` (vérifie l'objet), `importCards`. Toutes
   prennent l'admin en premier argument et lèvent `ForbiddenError` sinon. Constantes sans
   dépendance serveur dans `src/card-rules.ts` (importables côté navigateur).
 - Variante (`baseCardId`) : elle reprend mana, puissance, type, famille et effet de sa carte de
   base ; `updateCard` sur la carte de base les lui recopie, et sur la variante ne change que le
   nom, la rareté et la description. Pas de variante d'une variante.
-- Import (`/admin/cartes/import`, `importCards`) : fichier JSON `{ set: { code, name }, cards }`.
-  Le set est créé au besoin, les cartes prennent les numéros suivants ; une carte dont l'idée a
+- Import (`/admin/cartes/import`, `importCards`) : fichier JSON `{ set?: { code, name }, cards }`.
+  Le set est créé au besoin, les cartes prennent les numéros suivants (sans set : la réserve) ; une carte dont l'idée a
   déjà une carte est ignorée (réimporter ne crée pas de doublon et n'écrase pas les
   modifications). Tout ou rien, avec la carte fautive dans le message. Les fichiers de cartes
   générées depuis les idées ne vont jamais dans le dépôt (contenu des membres).
-- Pages : `/admin/cartes` (planche du set, `?set=<code>`), `/admin/cartes/[id]` et
+- Pages : `/admin/cartes` (un onglet par set et la réserve, `?set=<code>` ou `?set=reserve` ;
+  cases à cocher pour déplacer des cartes d'un coup ; création d'un set), `/admin/cartes/[id]` et
   `/admin/cartes/nouvelle` (`CardEditor` : formulaire et aperçu en direct, normale ou full art,
   envoi d'illustration), `/admin/cartes/import`, `/admin/cartes/illustrations` (`CardImagesUpload` :
   plusieurs images d'un coup, chacune posée sur la carte dont elle porte le numéro, « 12.jpg »). Les cartes s'affichent dans le design retenu
-  (n°70, `GameCard`, ligne de type « {type} — {famille} »).
+  (n°70, `GameCard`, ligne de type « {type} — {famille} », « Réserve » en pied de carte hors set).
+  Titre (`FitTitle`) : la taille baisse avec la longueur jusqu'à 13 px, puis le titre passe sur
+  deux lignes.
 - Cadrage : sous l'aperçu de l'éditeur, `ImageFramer` montre la fenêtre d'illustration (normale ou
   full art) ; on y fait glisser l'image et on règle le zoom, le cadrage est enregistré avec la
   carte et appliqué partout où elle s'affiche (`frameStyle`).

@@ -5,12 +5,14 @@ import { ZodError } from "zod";
 import {
   CardInputError,
   createCard,
+  createSet,
   createCardImageUpload,
   EFFECTS,
   effectText,
   ensureSet,
   importCards,
   listCards,
+  moveCards,
   paramsSchema,
   setCardImage,
   updateCard,
@@ -219,5 +221,58 @@ describe("illustration", () => {
     await expect(
       createCardImageUpload(MEMBER, { contentType: "image/png", size: 10 }),
     ).rejects.toThrow("Réservé aux admins.");
+  });
+});
+
+describe("réserve et sets", () => {
+  it("crée une carte dans la réserve, sans numéro", async () => {
+    const card = await createCard(ADMIN, { ...BASE });
+    expect(card).toMatchObject({ setId: null, setCode: null, number: null });
+    expect(await listCards(ADMIN, { setId: null })).toHaveLength(1);
+  });
+
+  it("range des cartes dans un set, puis renumérote ce qui en sort", async () => {
+    const a = await createCard(ADMIN, { ...BASE, name: "A", setId });
+    await createCard(ADMIN, { ...BASE, name: "B", setId });
+    await createCard(ADMIN, { ...BASE, name: "C", setId });
+    const r = await createCard(ADMIN, { ...BASE, name: "R" });
+    expect(await moveCards(ADMIN, [a.id, r.id], null)).toEqual({ moved: 1 });
+    const left = await listCards(ADMIN, { setId });
+    expect(left.map((x) => [x.name, x.number])).toEqual([
+      ["B", 1],
+      ["C", 2],
+    ]);
+    await moveCards(ADMIN, [r.id, a.id], setId);
+    const after = await listCards(ADMIN, { setId });
+    expect(after.map((x) => [x.name, x.number])).toEqual([
+      ["B", 1],
+      ["C", 2],
+      ["R", 3],
+      ["A", 4],
+    ]);
+  });
+
+  it("refuse un set inconnu, une carte inconnue, un code de set déjà pris", async () => {
+    const card = await createCard(ADMIN, { ...BASE });
+    await expect(moveCards(ADMIN, [card.id], "inconnu")).rejects.toThrow(CardInputError);
+    await expect(moveCards(ADMIN, ["inconnue"], setId)).rejects.toThrow(CardInputError);
+    await expect(createSet(ADMIN, { code: "S1", name: "Doublon" })).rejects.toThrow(
+      "Le set S1 existe déjà.",
+    );
+    await expect(moveCards(MEMBER, [card.id], setId)).rejects.toThrow("Réservé aux admins.");
+  });
+
+  it("une idée peut donner plusieurs cartes", async () => {
+    await createCard(ADMIN, { ...BASE, ideaId: "idea-x" });
+    await createCard(ADMIN, { ...BASE, name: "Autre version", ideaId: "idea-x", setId });
+    expect(await listCards(ADMIN, { ideaId: "idea-x" })).toHaveLength(2);
+  });
+
+  it("importe dans la réserve un fichier sans set", async () => {
+    expect(await importCards(ADMIN, { cards: [{ ...BASE, ideaId: "idea-y" }] })).toEqual({
+      created: 1,
+      skipped: 0,
+    });
+    expect(await listCards(ADMIN, { setId: null })).toHaveLength(1);
   });
 });

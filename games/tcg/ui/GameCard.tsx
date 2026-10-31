@@ -11,7 +11,7 @@ export type GameCardFields = Pick<
   "name" | "rarity" | "type" | "family" | "cost" | "power" | "effectText" | "flavor" | "number"
 > & {
   /** Code du set, affiché devant le numéro (« S1 07/116 »). */
-  setCode?: string;
+  setCode?: string | null;
   /** Cadrage de l'illustration. */
   imageFrame?: Card["imageFrame"];
 };
@@ -64,9 +64,13 @@ export function GameCard({
     power: card.power,
     imageUrl,
     imageFrame: card.imageFrame,
-    serial: [card.setCode, setSize ? `${pad(card.number)}/${pad(setSize)}` : pad(card.number)]
-      .filter(Boolean)
-      .join(" "),
+    // Hors set, pas de numéro : la carte est dans la réserve.
+    serial:
+      card.number === null
+        ? "Réserve"
+        : [card.setCode, setSize ? `${pad(card.number)}/${pad(setSize)}` : pad(card.number)]
+            .filter(Boolean)
+            .join(" "),
   };
   return (
     <FinalCard

@@ -10,7 +10,6 @@ import {
   SIDE,
   TEXT,
   TITLE,
-  TitleText,
   type TopLayout,
   type TopStyle,
   TYPE,
@@ -112,7 +111,7 @@ function Band({ card, layout, shape }: { card: CardData; layout: TopLayout; shap
           textShadow: "0 1px 3px rgb(0 0 0 / 0.9), 0 0 10px rgb(0 0 0 / 0.6)",
         }}
       >
-        <TitleText card={card} />
+        <FitTitle title={card.title} width={300 - 2 * TITLE.inset} />
       </Layer>
     );
   }
@@ -164,7 +163,10 @@ function Band({ card, layout, shape }: { card: CardData; layout: TopLayout; shap
           }}
         />
       )}
-      <TitleText card={card} />
+      <FitTitle
+        title={card.title}
+        width={300 - 2 * (short ? Math.round(MANA.x + MANA.r) + 2 : TITLE.inset)}
+      />
     </Layer>
   );
 }
@@ -187,6 +189,48 @@ function Socket({ finish }: { finish: CardFinish }) {
         }}
       />
     </Layer>
+  );
+}
+
+/** Largeur moyenne d'un caractère du titre (police « magic », gras), en fraction de sa taille. */
+const TITLE_CHAR = 0.53;
+const TITLE_SIZE = { max: 17, min: 13, twoLines: 12 } as const;
+
+/**
+ * Titre qui tient dans sa place : la taille baisse avec la longueur (jusqu'à 13 px), puis le titre
+ * passe sur deux lignes, un peu plus petit. Estimé d'après le nombre de caractères, pour que le
+ * rendu serveur soit déjà le bon.
+ */
+function FitTitle({ title, width }: { title: string; width: number }) {
+  const fits = (size: number) => title.length * TITLE_CHAR * size <= width;
+  let size: number = TITLE_SIZE.max;
+  while (!fits(size) && size > TITLE_SIZE.min) size -= 0.5;
+  const twoLines = !fits(size);
+  if (twoLines) {
+    // Sur deux lignes : la taille qui fait tenir le titre en deux largeurs, bornée.
+    size = Math.max(
+      TITLE_SIZE.twoLines,
+      Math.min(15, Math.floor(((2 * width) / (title.length * TITLE_CHAR)) * 2) / 2),
+    );
+  }
+  return (
+    <span
+      style={{
+        fontFamily: font("magic", "serif"),
+        fontWeight: 800,
+        fontSize: size,
+        lineHeight: twoLines ? 1.1 : 1.2,
+        textAlign: "center",
+        maxWidth: "100%",
+        overflow: "hidden",
+        display: "-webkit-box",
+        WebkitBoxOrient: "vertical",
+        WebkitLineClamp: twoLines ? 2 : 1,
+        wordBreak: "break-word",
+      }}
+    >
+      {title}
+    </span>
   );
 }
 

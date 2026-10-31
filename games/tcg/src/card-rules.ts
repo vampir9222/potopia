@@ -57,9 +57,10 @@ export const FRAME_ZOOM = { min: 1, max: 4 } as const;
 
 export type Card = {
   id: string;
-  setId: string;
-  setCode: string;
-  number: number;
+  /** null : la carte attend dans la réserve (hors set, sans numéro). */
+  setId: string | null;
+  setCode: string | null;
+  number: number | null;
   name: string;
   rarity: CardRarityId;
   type: string;

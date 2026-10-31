@@ -29,7 +29,9 @@ export default async function CardImagesPage({
         </p>
         {current ? (
           <CardImagesUpload
-            cards={cards.map((c) => ({ id: c.id, number: c.number, name: c.name }))}
+            cards={cards.flatMap((c) =>
+              c.number === null ? [] : [{ id: c.id, number: c.number, name: c.name }],
+            )}
             request={requestCardImageAction}
             confirm={confirmCardImageAction}
           />

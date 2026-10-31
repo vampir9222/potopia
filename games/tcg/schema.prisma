@@ -43,13 +43,15 @@ model TcgSet {
   @@schema("tcg")
 }
 
-// Une carte d'un set. L'effet est une clé du catalogue codé (`src/effects.ts`) et ses réglages ;
-// la base ne contient aucune logique. `ideaId` référence ideas.ideas sans relation. Une variante
-// full art pointe vers sa carte de base et en reprend toujours les stats.
+// Une carte. Dans un set, elle a un numéro et ira en prod avec lui ; sans set, elle attend dans la
+// réserve. L'effet est une clé du catalogue codé (`src/effects.ts`) et ses réglages ; la base ne
+// contient aucune logique. `ideaId` référence ideas.ideas sans relation : un simple lien de gestion
+// (une idée peut donner plusieurs cartes), sans effet en jeu. Une variante full art pointe vers sa
+// carte de base et en reprend toujours les stats.
 model TcgCard {
   id           String    @id @default(uuid(7))
-  setId        String    @map("set_id")
-  number       Int
+  setId        String?   @map("set_id")
+  number       Int?
   name         String
   rarity       TcgRarity
   type         String
@@ -64,16 +66,17 @@ model TcgCard {
   imageKey     String?   @map("image_key")
   // Cadrage de l'illustration (point central en % et zoom) : l'image n'est jamais rognée.
   imageFrame   Json?     @map("image_frame")
-  ideaId       String?   @unique @map("idea_id")
+  ideaId       String?   @map("idea_id")
   baseCardId   String?   @map("base_card_id")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  set      TcgSet    @relation(fields: [setId], references: [id])
+  set      TcgSet?   @relation(fields: [setId], references: [id])
   base     TcgCard?  @relation("TcgCardVariant", fields: [baseCardId], references: [id])
   variants TcgCard[] @relation("TcgCardVariant")
 
   @@unique([setId, number])
+  @@index([ideaId])
   @@map("cards")
   @@schema("tcg")
 }
