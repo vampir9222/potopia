@@ -2,6 +2,7 @@ import { BRAND } from "@app/config/brand";
 import { getBalance, getHistory } from "@app/economy";
 import { BalanceCard, TransactionList } from "@app/economy/ui";
 import { buttonClasses, Card } from "@app/ui";
+import { HiddenEmerald } from "@app/inventory/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -22,13 +23,13 @@ export default async function WalletPage({
   ]);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
       <Breadcrumb />
       <BalanceCard balance={balance} />
       <Card title="Historique">
         <p className="text-muted mb-3 text-sm">
           Chaque gain ou dépense de {BRAND.currency.plural}, du plus récent au plus ancien, avec ton
-          solde après l&apos;opération.
+          solde après l&apos;opération. <HiddenEmerald color="red" className="align-middle" />
         </p>
         <TransactionList transactions={history.items} showBalance />
         {(cursor || history.nextCursor) && (

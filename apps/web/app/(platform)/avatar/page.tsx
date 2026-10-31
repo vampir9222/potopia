@@ -1,5 +1,6 @@
 import { AvatarEditor, PhraseForm } from "@app/avatar/ui";
 import { AVATAR_PHRASE_MAX, ensureAvatar } from "@app/core";
+import { HiddenEmerald } from "@app/inventory/ui";
 import type { Metadata } from "next";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { sprites } from "@/lib/avatar";
@@ -12,7 +13,7 @@ export default async function AvatarPage() {
   const user = await getCurrentMember();
   const avatar = await ensureAvatar({ userId: user.id, sprites });
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
       <Breadcrumb />
       <PhraseForm
         initialPhrase={avatar.phrase}
@@ -20,6 +21,7 @@ export default async function AvatarPage() {
         action={savePhraseAction}
       />
       <AvatarEditor initialConfig={avatar.config} save={saveAvatarAction} />
+      <HiddenEmerald color="blue" className="absolute top-1/2 -left-4" />
     </div>
   );
 }

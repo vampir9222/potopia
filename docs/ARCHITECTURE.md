@@ -50,6 +50,7 @@ packages/
   avatar-assets/     sprites LPC importés, catalogue, palettes, crédits (pnpm assets:import)
   economy/           monnaie : ledger + wallets
   ideas/             boîte à idées (module autonome, indépendant du futur TCG)
+  inventory/         inventaire : objets trouvés (Émeraudes du Chaos), puis hauts faits
   storage/           client R2 + URLs présignées (aucune logique métier)
   ui/                thème (variables CSS, sombre par défaut) + composants de base
 ```
@@ -287,12 +288,23 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 décors.
 
 - Un thème est un bloc `[data-theme="…"]` de variables CSS, déclaré aussi dans
-  `packages/ui/src/themes.ts`. Trois thèmes : **Classique**, le thème par défaut (bleu sobre, sans
-  décors), **Fantasy** (or, pourpre, cadres ornés, braises, titres en Cinzel) et **RGB** (néon gaming :
+  `packages/ui/src/themes.ts`. Quatre thèmes : **Classique**, le thème par défaut (bleu sobre, sans
+  décors), **Fantasy** (or, pourpre, cadres ornés, braises, titres en Cinzel), **RGB** (néon gaming :
   la teinte de l'accent tourne en continu via une propriété CSS animée, cadres à bordure arc-en-ciel,
-  boucle de watercooling animée en fond, titres en Orbitron).
-- Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`) : un thème
-  sobre les coupe sans toucher aux composants.
+  boucle de watercooling animée en fond, titres en Orbitron) et **JoJo** (Stardust Crusaders : nuit
+  indigo, or et violet, cadres encrés façon case de manga avec étoiles Joestar, titres en Anton ;
+  petits textes en capitales pleines pour rester lisibles).
+- Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`, `--jojo`) :
+  un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons,
+  portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.png` : Jotaro, Star Platinum, DIO,
+  The World), « ゴゴゴ » qui montent, étoiles, Jotaro qui prend la pose (`jotaro-pose.png`).
+- Passer au thème JoJo déclenche **ZA WARUDO** (`apps/web/components/ZaWarudo.tsx`, `zaWarudo()` de
+  `@app/ui`) : la voix (`public/audio/za-warudo.mp3`), une onde qui inverse les couleurs, la page
+  figée et délavée (« 時よ止まれ ! »), puis la reprise (`time-resume.mp3`). Un clic ou Échap
+  abrège. Pendant l'effet, tout le reste s'arrête vraiment : les animations en JavaScript lisent
+  l'horloge commune `timeNow()` (`packages/ui/src/timeStop.ts`), que `stopTime()` fige ; les sons
+  en cours sont mis en pause puis reprennent (`trackMedia()`), la musique en Web Audio de Super
+  Sonic aussi (`onTimeStop`).
 - Le choix se fait avec le bouton palette du header (`ThemeSwitcher`). Il est mémorisé par appareil
   dans le cookie `theme`, que le layout racine lit pour poser `data-theme` dès le rendu serveur, sans
   flash.
@@ -302,11 +314,41 @@ décors.
   feuille CSS par jeu (`games/*/ui/*.css`), importée dans `apps/web/app/globals.css`.
 
 **Header** (`packages/core/ui/Header.tsx`, boutons passés par `(platform)/layout.tsx`). De gauche à
-droite : Luffy, la boule musicale, thème, cloche, volume, menu du profil.
+droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil.
 
-- Luffy (`apps/web/components/LuffyRun.tsx`, masqué sous 640 px) et la boule
-  (`components/SpinOrb.tsx`) lancent une animation et une musique en boucle au clic, et se mettent
-  en pause au second.
+- Sonic (`apps/web/components/SonicRun.tsx`, masqué sous 1024 px), Luffy
+  (`components/LuffyRun.tsx`, masqué sous 640 px) et la boule (`components/SpinOrb.tsx`) lancent
+  une animation et une musique en boucle au clic, et se mettent en pause au second. Au repos, la
+  boule (46 px) rebondit régulièrement sur place (toutes les 3 s environ) : elle descend toucher le
+  liseré, s'écrase, rebondit sans sortir de l'écran, avec des étincelles dorées et un reflet au
+  contact.
+- Sonic : planches en pixel art à l'échelle 1 dans `public/sonic/` (attente, marche, course, sprint,
+  puis transformation, course, vol et attente de Super Sonic), tirées de gifs de sources
+  différentes, ramenées à la même taille de pixel et aux mêmes couleurs. À l'arrêt il attend (la
+  pause du gif d'origine allongée) ; au clic, musique `public/audio/sonic.mp3` (silences de début
+  et de fin coupés, pour boucler sans trou) : il marche, accélère, court, pique des sprints de 4,5
+  à 7 s, avec de petits traits de vitesse dans son bleu. Traînée en tirets sur le liseré, à la couleur du thème, dont les tirets défilent à sa
+  vitesse. Les 7 Émeraudes du Chaos trouvées et leur pouvoir libéré (`superSonic`, voir
+  Inventaire), le clic le transforme en Super Sonic : transformation (~1,7 s), départ en
+  trottinant puis sprint bien plus rapide que Sonic (4,5 s en tout), puis il s'envole. Traînée
+  toujours dorée quel que soit le thème, de plus en plus longue (vol : ~600 px, le double du
+  sprint), avec images rémanentes et lignes de vitesse quand il fonce. Sa musique
+  (`public/audio/super-sonic.mp3`, morceau d'origine) boucle sans blanc ni fondu grâce à
+  `components/loopTrack.ts` (Web Audio, trois tours exacts du thème de 19,69 s). Une fois transformé, il le reste (mémorisé sur
+  l'appareil) : son attente devient celle de Super Sonic (`sonic-ss-idle.png`), en lévitation
+  au-dessus du liseré, et les clics suivants sautent la transformation.
+- Combo Luffy + steel ball (`components/LuffyCombo.tsx`, état partagé dans
+  `components/headerStage.ts`) : si la boule tourne et qu'on clique sur le fruit, Luffy sort du
+  fruit en courant sur place (`public/luffy/luffy-run-sheet.png`) puis file vers la gauche. La
+  boule se charge dans sa case pendant que sa musique s'éteint (0,9 s), en jaillit dans un éclair
+  et le poursuit en roulant sur le liseré (rotation = distance / rayon, dans le sens du
+  mouvement). Aux bords, elle freine, s'écrase, soulève un peu de poussière et repart en
+  accélérant ; Luffy fait demi-tour en sautant et c'est lui qui la poursuit. Le générique de One
+  Piece (`public/audio/one-piece.mp3`) arrive ensuite en fondu. Pendant le combo, la case de la
+  boule montre un bouton stop ; à l'arrêt, tout s'efface en 0,6 s et chacun regagne sa case. Le
+  calque ne déborde jamais du header (pas de barre de défilement).
+- Notification de test : « M'envoyer une notification de test » en bas de la liste de la cloche
+  (server action `sendTestNotification`, réservée aux admins, `lib/notifications.ts`).
 - Luffy : à l'arrêt, son fruit du démon flotte au-dessus du liseré (`public/luffy/devil-fruit.png`,
   pixel art 24 × 33, étoiles de l'image d'origine retirées) avec quelques étincelles qui
   s'allument au hasard. Au clic, le fruit tremble, éclate en lumière et Luffy en sort en
@@ -318,6 +360,35 @@ droite : Luffy, la boule musicale, thème, cloche, volume, menu du profil.
   s'allume quand elle se tend). Le liseré du header accepte une trouée, `--line-gap-from` /
   `--line-gap-to` (px depuis son bord gauche) posées sur le `<header>` ; Luffy y redessine le
   liseré en SVG, déformé, avec le même dégradé.
+
+**To Be Continued** (`apps/web/components/ToBeContinued.tsx`, monté dans le layout racine).
+`toBeContinued()` de `@app/ui` le déclenche : un mot raté pour de vrai à TROIS, une mission perdue
+sous les yeux du joueur à Agents Doubles. L'intro de Roundabout (`public/audio/roundabout.mp3`,
+~9 s coupées dans le morceau) démarre ; à son pic (2,4 s) la page se fige en sépia
+(`html.tbc-freeze`, animations en pause) et la flèche « To Be Continued »
+(`public/jojo/to-be-continued.png`) glisse en bas à gauche. Un clic ou Échap écourte.
+
+**Inventaire** (`packages/inventory`, schéma `inventory`, table `items` : `user_id`, `item_id`,
+`found_at`, unique par membre et objet).
+
+- Catalogue dans le code (`src/catalog.ts`) : les 7 Émeraudes du Chaos. `collectItem`
+  (idempotent, refuse un objet hors catalogue) et `listItems`.
+- Chaque émeraude est cachée dans une page (`HiddenEmerald`, discrète, un éclat de temps en
+  temps), à des endroits variés : accueil (à côté du lien des crédits de la place), Ma monnaie
+  (au bout de la phrase de l'historique), Mon avatar (bord gauche), TROIS (après le fil d'Ariane),
+  Agents Doubles (bord droit), Crédits (tout en bas), Boîte à idées (dans le titre). Le layout
+  `(platform)` charge les objets du membre et pose `EmeraldsProvider`, qui cache celles déjà
+  trouvées ; un clic joue un bruitage de Sonic 2 (`public/audio/emerald.mp3`, découpé à la main, discret) et appelle
+  la server action `collectEmerald` (`app/actions/inventory.ts`), qui rafraîchit le layout.
+- Page `/inventaire` (« Mon inventaire », dans le menu sous « Mon avatar ») : « Chaos Emerald »,
+  les 7 pierres disposées comme sur l'image d'origine (six en cercle autour de la bleue), en noir
+  tant qu'elles ne sont pas trouvées ; puis les hauts faits (à venir).
+- Les 7 réunies, « Sceller le pouvoir » / « Libérer le pouvoir » (`EmeraldCircle`, réglage gardé
+  sur l'appareil, `ui/superSonic.ts`) : scellées, les pierres sont ternes et Sonic reste Sonic de
+  base. La bascule passe d'une pierre à l'autre en vague (libéré : de la bleue vers le cercle,
+  chacune s'illumine puis retombe sur son éclat ; scellé : en sens inverse, chacune brille une
+  dernière fois puis s'éteint), avec un bruitage de Sonic 2 (`emeralds-unseal.mp3`,
+  `emeralds-seal.mp3`, découpés à la main).
 
 **Dates.** Toutes les dates affichées passent par `BRAND.timeZone` (`Europe/Paris`) : le serveur
 Vercel tourne en UTC, les navigateurs des membres en France ; sans fuseau explicite, l'heure

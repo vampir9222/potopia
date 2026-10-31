@@ -10,6 +10,7 @@
 @source "../../../packages/core/ui";
 @source "../../../packages/economy/ui";
 @source "../../../packages/ideas/ui";
+@source "../../../packages/inventory/ui";
 @source "../../../games/agents/ui";
 @source "../../../games/tcg/ui";
 @source "../../../games/trois/ui";
@@ -197,5 +198,534 @@
     opacity: 1;
     transform: scale(1);
     filter: brightness(1);
+  }
+}
+
+/* Sonic du header (SonicRun) : traînée de vitesse sur le liseré, en tirets qui défilent. */
+.sonic-streak {
+  mask-image: repeating-linear-gradient(to left, #000 0 14px, transparent 14px 20px);
+  animation: sonic-dash 180ms linear infinite;
+}
+
+@keyframes sonic-dash {
+  to {
+    mask-position: -20px 0;
+  }
+}
+
+/* Super Sonic : aura dorée qui pulse. */
+.sonic-super {
+  filter: drop-shadow(0 0 5px rgb(255 215 60 / 0.85));
+  animation: sonic-aura 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes sonic-aura {
+  to {
+    filter: drop-shadow(0 0 10px rgb(255 235 120 / 1));
+  }
+}
+
+/* Émeraude du Chaos cachée (HiddenEmerald) : discrète, un éclat de temps en temps. */
+.emerald-hidden {
+  opacity: 0.28;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+  animation: emerald-glint 7s ease-in-out infinite;
+}
+
+.emerald-hidden:hover,
+.emerald-hidden:focus-visible {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+@keyframes emerald-glint {
+  0%,
+  90%,
+  100% {
+    filter: none;
+  }
+  95% {
+    filter: brightness(2) drop-shadow(0 0 4px #fff);
+  }
+}
+
+/* Ramassée : elle grossit, s'illumine et disparaît. */
+.emerald-burst {
+  animation: emerald-burst 0.7s ease-out forwards;
+}
+
+@keyframes emerald-burst {
+  40% {
+    transform: scale(2.2) rotate(-12deg);
+    filter: brightness(2) drop-shadow(0 0 10px #fff);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.2) translateY(-30px);
+    opacity: 0;
+  }
+}
+
+.emerald-spin {
+  animation: emerald-spin 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes emerald-spin {
+  to {
+    transform: scaleX(-1);
+  }
+}
+
+/* Les pierres de l'inventaire restent toujours sur leur propre calque : sans ça, le navigateur
+   les recale au pixel près à la fin de chaque animation (un micro-saut visible). */
+.emerald-slot {
+  will-change: transform, filter, opacity;
+  backface-visibility: hidden;
+}
+
+/* Inventaire : émeraude trouvée qui brille, ou silhouette noire à débloquer. Mêmes fonctions de
+   filtre dans le même ordre partout, pour que les animations passent de l'un à l'autre en douceur. */
+.emerald-owned {
+  filter: grayscale(0) brightness(1) drop-shadow(0 0 6px rgb(255 255 255 / 0.35));
+}
+
+.emerald-locked {
+  filter: brightness(0);
+  opacity: 0.55;
+}
+
+/* Pouvoir scellé : plus d'éclat, des pierres ternes. */
+.emerald-sealed {
+  filter: grayscale(0.75) brightness(0.55) drop-shadow(0 0 0 transparent);
+  opacity: 0.75;
+}
+
+/* Libéré : chaque pierre, à son tour (délai posé par EmeraldCircle), passe de terne à un éclat
+   blanc puis retombe sur sa brillance ; avant son tour elle reste terne. */
+.emerald-awaken {
+  animation: emerald-awaken var(--stone-ms, 650ms) ease-out both;
+}
+
+@keyframes emerald-awaken {
+  0% {
+    filter: grayscale(0.75) brightness(0.55) drop-shadow(0 0 0 transparent);
+    opacity: 0.75;
+    scale: 1;
+  }
+  40% {
+    filter: grayscale(0) brightness(2.2) drop-shadow(0 0 14px #fff);
+    opacity: 1;
+    scale: 1.18;
+  }
+  100% {
+    filter: grayscale(0) brightness(1) drop-shadow(0 0 6px rgb(255 255 255 / 0.35));
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* Scellé : dans l'ordre inverse, chaque pierre brille une dernière fois puis s'éteint. */
+.emerald-fade {
+  animation: emerald-fade var(--stone-ms, 650ms) ease-in-out both;
+}
+
+@keyframes emerald-fade {
+  0% {
+    filter: grayscale(0) brightness(1) drop-shadow(0 0 6px rgb(255 255 255 / 0.35));
+    opacity: 1;
+    scale: 1;
+  }
+  30% {
+    filter: grayscale(0) brightness(2) drop-shadow(0 0 12px #fff);
+    opacity: 1;
+    scale: 1.1;
+  }
+  100% {
+    filter: grayscale(0.75) brightness(0.55) drop-shadow(0 0 0 transparent);
+    opacity: 0.75;
+    scale: 1;
+  }
+}
+
+/* « To Be Continued » (ToBeContinued) : l'image se fige en sépia, la flèche glisse en bas. */
+html.tbc-freeze body > :not(.tbc-layer) {
+  filter: sepia(0.9) contrast(1.15) brightness(0.85);
+  transition: filter 0.12s;
+}
+
+html.tbc-freeze body > :not(.tbc-layer) *,
+html.tbc-freeze body > :not(.tbc-layer) *::before,
+html.tbc-freeze body > :not(.tbc-layer) *::after {
+  animation-play-state: paused !important;
+}
+
+.tbc-layer {
+  cursor: pointer;
+  transition: opacity 0.7s;
+}
+
+.tbc-leaving {
+  opacity: 0;
+}
+
+.tbc-arrow {
+  animation: tbc-slide 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+
+@keyframes tbc-slide {
+  from {
+    transform: translateX(-120%);
+  }
+}
+
+/* Combo Luffy + steel ball : la boule se charge dans sa case (tremble, s'illumine)… */
+.orb-charge {
+  animation: orb-charge 0.9s ease-in both;
+}
+
+@keyframes orb-charge {
+  0% {
+    filter: drop-shadow(0 0 6px rgb(140 230 60 / 0.7));
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translate(-1.5px, 1px) scale(1.06);
+  }
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translate(1.5px, -1px) scale(1.1);
+  }
+  100% {
+    transform: scale(1.25);
+    filter: brightness(1.8) drop-shadow(0 0 16px rgb(190 255 120 / 1));
+  }
+}
+
+/* …puis en jaillit dans un éclair. */
+.combo-burst {
+  animation: combo-burst 0.55s ease-out both;
+  background: radial-gradient(
+    circle,
+    rgb(255 255 255 / 0.9),
+    rgb(160 245 80 / 0.5) 45%,
+    transparent 70%
+  );
+}
+
+@keyframes combo-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+/* Bouton stop dans la case de la boule pendant le combo. */
+.combo-stop {
+  animation: combo-stop 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes combo-stop {
+  to {
+    box-shadow: 0 0 10px var(--accent);
+  }
+}
+
+/* Combo : poussière soulevée quand la boule tape le bord. */
+.combo-dust {
+  width: 24px;
+  height: 14px;
+  background: radial-gradient(
+    ellipse,
+    rgb(220 220 200 / 0.8),
+    rgb(180 180 160 / 0.3) 55%,
+    transparent 70%
+  );
+  animation: combo-dust 0.45s ease-out forwards;
+}
+
+@keyframes combo-dust {
+  from {
+    opacity: 1;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.8, 1.2) translateY(-6px);
+  }
+}
+
+/* Super Sonic lancé : images rémanentes dorées derrière lui… */
+.sonic-super.sonic-ghost {
+  animation: sonic-ghost 0.12s steps(2) infinite;
+}
+
+@keyframes sonic-ghost {
+  from {
+    filter: drop-shadow(0 0 6px rgb(255 225 90 / 0.9)) drop-shadow(-10px 0 0 rgb(255 215 60 / 0.45))
+      drop-shadow(-20px 0 0 rgb(255 200 40 / 0.2));
+  }
+  to {
+    filter: drop-shadow(0 0 9px rgb(255 240 140 / 1)) drop-shadow(-14px 0 0 rgb(255 215 60 / 0.4))
+      drop-shadow(-28px 0 0 rgb(255 200 40 / 0.18));
+  }
+}
+
+/* …et lignes de vitesse : trois traits dorés qui filent vers la gauche. */
+.sonic-speedlines {
+  background:
+    repeating-linear-gradient(to left, rgb(255 236 150 / 0.95) 0 16px, transparent 16px 30px) 0
+      3px / 100% 2px no-repeat,
+    repeating-linear-gradient(to left, rgb(255 210 60 / 0.8) 0 24px, transparent 24px 34px) 6px
+      13px / 100% 2px no-repeat,
+    repeating-linear-gradient(to left, rgb(255 236 150 / 0.9) 0 12px, transparent 12px 26px) 2px
+      23px / 100% 2px no-repeat;
+  mask-image: linear-gradient(to left, #000, transparent);
+  animation: sonic-speedlines 90ms linear infinite;
+  transition: opacity 0.3s;
+}
+
+@keyframes sonic-speedlines {
+  to {
+    background-position:
+      -30px 3px,
+      -28px 13px,
+      -24px 23px;
+  }
+}
+
+/* Super Sonic en vol : un cran au-dessus de la course. Quatre images rémanentes, très loin
+   derrière, qui tremblent très vite… */
+.sonic-super.sonic-ghost-fly {
+  animation: sonic-ghost-fly 0.06s steps(2) infinite;
+}
+
+@keyframes sonic-ghost-fly {
+  from {
+    filter: drop-shadow(0 0 10px rgb(255 240 140 / 1)) drop-shadow(-16px 0 0 rgb(255 225 80 / 0.6))
+      drop-shadow(-32px 0 0 rgb(255 210 60 / 0.4)) drop-shadow(-50px 0 0 rgb(255 200 40 / 0.22))
+      drop-shadow(-70px 0 1px rgb(255 190 30 / 0.12));
+  }
+  to {
+    filter: drop-shadow(0 0 14px rgb(255 250 190 / 1))
+      drop-shadow(-22px 1px 0 rgb(255 225 80 / 0.55))
+      drop-shadow(-42px -1px 0 rgb(255 210 60 / 0.35)) drop-shadow(-64px 0 0 rgb(255 200 40 / 0.2))
+      drop-shadow(-88px 0 1px rgb(255 190 30 / 0.1));
+  }
+}
+
+/* …et un vent doré : cinq traits en SVG (SonicRun) qui ondulent en vagues vers la gauche, dont
+   les tirets filent très vite, et qui s'effacent en s'éloignant de lui. */
+.sonic-wind {
+  mask-image: linear-gradient(to left, #000 10%, transparent);
+  transition: opacity 0.3s;
+}
+
+.sonic-wind path {
+  animation: sonic-wind 60ms linear infinite;
+}
+
+@keyframes sonic-wind {
+  to {
+    stroke-dashoffset: -56;
+  }
+}
+
+/* « ZA WARUDO » (ZaWarudo, thème JoJo) : onde qui inverse les couleurs, puis temps arrêté. */
+.za-wave {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: invert(1) hue-rotate(180deg) saturate(1.6);
+  clip-path: circle(0 at 50% 50%);
+  animation: za-wave 0.95s cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
+}
+
+@keyframes za-wave {
+  55% {
+    clip-path: circle(80vmax at 50% 50%);
+  }
+  100% {
+    clip-path: circle(0 at 50% 50%);
+  }
+}
+
+/* la reprise : l'onde part du bord et se referme sur le centre */
+.za-wave-out {
+  animation: za-wave-out 0.5s ease-in forwards;
+}
+
+@keyframes za-wave-out {
+  0% {
+    clip-path: circle(80vmax at 50% 50%);
+  }
+  100% {
+    clip-path: circle(0 at 50% 50%);
+  }
+}
+
+.za-shout {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+  font-size: clamp(2.5rem, 9vw, 7rem);
+  letter-spacing: 0.08em;
+  color: #f4c430;
+  filter: drop-shadow(4px 4px 0 #050308);
+  animation: za-shout 0.95s ease-out forwards;
+}
+
+@keyframes za-shout {
+  0% {
+    opacity: 0;
+    transform: scale(2.4) skewX(-8deg);
+  }
+  25%,
+  70% {
+    opacity: 1;
+    transform: scale(1) skewX(-8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) skewX(-8deg);
+  }
+}
+
+.za-stopped {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: clamp(2rem, 7vw, 5rem);
+  font-weight: 900;
+  color: rgb(255 255 255 / 0.16);
+  letter-spacing: 0.2em;
+  animation: za-stopped 0.6s ease-out both;
+}
+
+@keyframes za-stopped {
+  from {
+    opacity: 0;
+    letter-spacing: 0.6em;
+  }
+}
+
+/* temps arrêté : tout se fige dans une teinte délavée, vert-gris */
+html.time-stop body > :not(.za-layer) {
+  filter: grayscale(0.85) sepia(0.25) hue-rotate(70deg) brightness(0.8) contrast(1.15);
+  transition: filter 0.2s;
+}
+
+html.time-stop body > :not(.za-layer) *,
+html.time-stop body > :not(.za-layer) *::before,
+html.time-stop body > :not(.za-layer) *::after {
+  animation-play-state: paused !important;
+}
+
+/* Sonic de base au sprint : les mêmes petits traits, dans son bleu à lui, plus courts. */
+.sonic-speedlines.sonic-speedlines-plain {
+  background:
+    repeating-linear-gradient(to left, rgb(150 190 255 / 0.95) 0 12px, transparent 12px 24px) 0
+      6px / 100% 2px no-repeat,
+    repeating-linear-gradient(to left, rgb(40 90 230 / 0.9) 0 18px, transparent 18px 28px) 6px
+      15px / 100% 2px no-repeat,
+    repeating-linear-gradient(to left, rgb(120 170 255 / 0.9) 0 10px, transparent 10px 22px) 2px
+      24px / 100% 2px no-repeat;
+}
+
+/* Steel ball au repos (SpinOrb) : rebond sur place. Elle descend toucher le liseré (5 px plus
+   bas : la boule dessinée a une petite marge transparente), s'écrase au contact, rebondit de quelques pixels seulement (sans sortir de l'écran),
+   retouche plus doucement, puis se pose. */
+.orb-hop {
+  animation: orb-hop 1.1s cubic-bezier(0.45, 0, 0.55, 1);
+  transform-origin: 50% 100%;
+}
+
+@keyframes orb-hop {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+  22% {
+    translate: 0 -3px;
+    scale: 0.97 1.03;
+  }
+  42% {
+    translate: 0 5px;
+    scale: 1.16 0.82;
+  }
+  58% {
+    translate: 0 -3px;
+    scale: 0.95 1.05;
+  }
+  74% {
+    translate: 0 5px;
+    scale: 1.07 0.93;
+  }
+  86% {
+    translate: 0 -1px;
+    scale: 1;
+  }
+}
+
+/* au contact : un reflet blanc qui balaie la boule… */
+.orb-glint {
+  background: linear-gradient(
+      115deg,
+      transparent 35%,
+      rgb(255 255 255 / 0.75) 50%,
+      transparent 65%
+    ) -60%
+    0 / 220% 100% no-repeat;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: orb-glint 0.6s ease-out 0.44s;
+}
+
+@keyframes orb-glint {
+  from {
+    opacity: 1;
+    background-position: 140% 0;
+  }
+  to {
+    opacity: 0;
+    background-position: -60% 0;
+  }
+}
+
+/* …et des étincelles dorées qui partent du liseré. */
+.orb-spark {
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #fff 0%, #ffe27a 45%, transparent 70%);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  opacity: 0;
+  animation: orb-spark 0.55s ease-out 0.46s;
+}
+
+@keyframes orb-spark {
+  from {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1.4;
+  }
+  to {
+    opacity: 0;
+    translate: var(--spark-x) var(--spark-y);
+    scale: 0.4;
   }
 }

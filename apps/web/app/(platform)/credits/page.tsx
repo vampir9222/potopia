@@ -2,6 +2,7 @@ import { catalog } from "@app/avatar-assets";
 import { credits } from "@app/avatar-assets/credits";
 import { CATEGORY_LABELS } from "@app/avatar/ui";
 import { Card } from "@app/ui";
+import { HiddenEmerald } from "@app/inventory/ui";
 import type { Metadata } from "next";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getCurrentMember } from "@/lib/session";
@@ -19,7 +20,7 @@ export default async function CreditsPage() {
   ].sort();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
       <Breadcrumb />
       <Card title="Crédits des graphismes">
         <div className="text-muted flex flex-col gap-3 text-sm">
@@ -88,6 +89,7 @@ export default async function CreditsPage() {
           ))}
         </ul>
       </Card>
+      <HiddenEmerald color="white" className="absolute right-2 -bottom-4" />
     </div>
   );
 }

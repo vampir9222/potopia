@@ -217,3 +217,46 @@ html.boobzilla button:nth-child(3n) {
     animation: none;
   }
 }
+
+/* Dernier essai : « ゴゴゴゴ » qui surgissent puis ondulent (Menacing), ligne en cours qui pulse. */
+.trois-menacing {
+  animation:
+    menacing-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both,
+    menacing-wave 1.6s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 6px rgb(160 80 255 / 0.6));
+}
+
+@keyframes menacing-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3) translateY(12px);
+  }
+}
+
+@keyframes menacing-wave {
+  from {
+    transform: translateY(0) skewY(0deg);
+  }
+  to {
+    transform: translateY(-6px) skewY(-6deg);
+    filter: drop-shadow(0 0 12px rgb(170 90 255 / 0.9));
+  }
+}
+
+/* lueur sur la ligne entière (pas sur les cases, qui gardent leurs animations de saisie) */
+.trois-last-row {
+  animation: last-row 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes last-row {
+  to {
+    filter: drop-shadow(0 0 8px rgb(168 85 247 / 0.85));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trois-menacing,
+  .trois-last-row {
+    animation: none;
+  }
+}

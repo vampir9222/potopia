@@ -1,5 +1,6 @@
 import { IdeaForm } from "@app/ideas/ui";
 import { Card } from "@app/ui";
+import { HiddenEmerald } from "@app/inventory/ui";
 import { EyeOff, Lightbulb } from "lucide-react";
 import type { Metadata } from "next";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -18,14 +19,16 @@ const FIELDS = [
 export default async function IdeasPage() {
   await getCurrentMember();
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
       <Breadcrumb />
 
       <Card>
         <div className="flex gap-3">
           <Lightbulb size={24} className="text-accent mt-0.5 shrink-0" aria-hidden />
           <div className="flex flex-col gap-3 text-sm">
-            <h1 className="text-text text-base font-semibold">C'est quoi, la boîte à idées ?</h1>
+            <h1 className="text-text flex items-center gap-1 text-base font-semibold">
+              C'est quoi, la boîte à idées ? <HiddenEmerald color="purple" />
+            </h1>
             <p className="text-muted">
               C'est ici qu'on prépare le futur jeu de cartes du serveur. Un moment culte, une blague
               qui revient tout le temps, un membre qui mériterait sa propre carte… Propose ce qui te

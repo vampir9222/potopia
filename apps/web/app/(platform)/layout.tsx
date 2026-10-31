@@ -2,16 +2,25 @@ import { countUnread, listNotifications } from "@app/core";
 import { AccountPanel, ActivityFeed, Header, NotificationBell } from "@app/core/ui";
 import { getBalance } from "@app/economy";
 import { BalanceCard } from "@app/economy/ui";
+import { hasAllEmeralds, listItems } from "@app/inventory";
+import { EmeraldsProvider } from "@app/inventory/ui";
 import { Card, resolveTheme, THEME_COOKIE, ThemeSwitcher, VolumeControl } from "@app/ui";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/actions/auth";
-import { markAllNotificationsAsRead, markNotificationAsRead } from "@/app/actions/notifications";
+import { collectEmerald } from "@/app/actions/inventory";
+import {
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+  sendTestNotification,
+} from "@/app/actions/notifications";
 import { LuffyRun } from "@/components/LuffyRun";
 import { MobileMenu } from "@/components/MobileMenu";
 import { SideNav } from "@/components/SideNav";
+import { SonicRun } from "@/components/SonicRun";
 import { SpinOrb } from "@/components/SpinOrb";
 import { getActivityFeed } from "@/lib/activity";
+import { canSendTestNotification } from "@/lib/notifications";
 import { getCurrentMember } from "@/lib/session";
 
 export default async function PlatformLayout({ children }: { children: ReactNode }) {
@@ -20,11 +29,12 @@ export default async function PlatformLayout({ children }: { children: ReactNode
   // client : pas d'email ni d'identifiant Discord dans le HTML ni le bundle).
   const profile = { name: user.name, image: user.image };
   const theme = resolveTheme((await cookies()).get(THEME_COOKIE)?.value);
-  const [notifications, unreadCount, balance, feed] = await Promise.all([
+  const [notifications, unreadCount, balance, feed, items] = await Promise.all([
     listNotifications(user.id, 15),
     countUnread(user.id),
     getBalance(user.id),
     getActivityFeed(),
+    listItems(user.id),
   ]);
 
   // Colonne de gauche (compte puis activité) : fixe sur grand écran, où l'activité prend la hauteur
@@ -44,14 +54,17 @@ export default async function PlatformLayout({ children }: { children: ReactNode
     </div>
   );
 
+  // Émeraudes du Chaos déjà trouvées : les pages cachent les autres (`HiddenEmerald`), et les 7
+  // transforment Sonic en Super Sonic.
   return (
-    <>
+    <EmeraldsProvider found={items} collect={collectEmerald}>
       <Header
         user={profile}
         signOut={signOut}
         menuButton={<MobileMenu>{sidePanels(false)}</MobileMenu>}
         actions={
           <>
+            <SonicRun superSonic={hasAllEmeralds(items)} />
             <LuffyRun />
             <SpinOrb />
             <ThemeSwitcher current={theme} />
@@ -60,6 +73,7 @@ export default async function PlatformLayout({ children }: { children: ReactNode
               unreadCount={unreadCount}
               markAsRead={markNotificationAsRead}
               markAllAsRead={markAllNotificationsAsRead}
+              sendTest={canSendTestNotification(user.role) ? sendTestNotification : undefined}
             />
             <VolumeControl />
           </>
@@ -72,6 +86,6 @@ export default async function PlatformLayout({ children }: { children: ReactNode
         </aside>
         <main className="page-stagger min-w-0 flex-1">{children}</main>
       </div>
-    </>
+    </EmeraldsProvider>
   );
 }
