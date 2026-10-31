@@ -17,6 +17,7 @@
     "@app/config": "workspace:*",
     "@app/core": "workspace:*",
     "@app/db": "workspace:*",
+    "@app/storage": "workspace:*",
     "@app/ui": "workspace:*",
     "lucide-react": "1.61.0",
     "zod": "4.6.7"

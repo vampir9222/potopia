@@ -163,6 +163,9 @@ importers:
       '@app/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@app/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@app/ui':
         specifier: workspace:*
         version: link:../../packages/ui

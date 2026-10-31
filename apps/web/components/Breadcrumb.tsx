@@ -1,8 +1,15 @@
 import { apps } from "@app/core";
 import { BreadcrumbNav } from "./BreadcrumbNav";
 
-/** Libellés des sections qui ne sont pas des apps du registre. Ajouter ici les nouvelles sections. */
+/**
+ * Libellés des sections qui ne sont pas des apps du registre (par segment, ou par chemin complet
+ * quand le segment seul est ambigu). Ajouter ici les nouvelles sections.
+ */
 const SECTION_LABELS: Record<string, string> = {
+  "admin/cartes": "Cartes",
+  "admin/cartes/illustrations": "Illustrations",
+  "admin/cartes/import": "Import",
+  "admin/cartes/nouvelle": "Nouvelle carte",
   avatar: "Mon avatar",
   credits: "Crédits",
   economy: "Monnaie",

@@ -224,10 +224,10 @@ export default async function CardsVotePage({
 
       {tab === "design" && (
         <p className="text-muted text-sm">
-          Titre en haut, et la même grille pour la carte normale et la full art : titre, mana,
-          puissance, type et texte ne bougent pas, seule l&apos;image change (et les encadrés
-          deviennent transparents en full art). Chaque ligne montre la puissance en bas puis en
-          haut, en normale et en full art, sans effet de rareté. Rien n&apos;apparaît au survol.
+          La carte retenue pour l&apos;instant : le 65 affiné, bandeau court (n°70), en carte
+          normale et en full art, sans effet de rareté. La rareté se verra à la bordure et aux
+          effets. Toutes les autres propositions sont aux Archives avec leurs notes et leurs
+          commentaires.
         </p>
       )}
       {tab === "effets" && (
@@ -265,8 +265,8 @@ export default async function CardsVotePage({
               wide={tab === "effets" || tab === "design"}
             />
           ))}
-          {tab === "design" && (
-            <Card title="Points de départ : 39, 44 et 48">
+          {tab === "design" && kept(REFERENCES).length > 0 && (
+            <Card title="Points de départ">
               <div className="flex flex-col gap-2">
                 {visible(kept(REFERENCES)).map((r) => (
                   <Folded key={r.design.id} row={r} cards={cards} name={name} />

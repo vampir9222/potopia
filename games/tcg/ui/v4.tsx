@@ -65,19 +65,19 @@ export type TopStyleId = keyof typeof TOP_STYLES;
 
 /* ── Grille commune : identique en carte normale et en full art ── */
 const FRAME = 12;
-const FRAME_THIN = 7;
-const SIDE = 18;
-const TITLE = { top: 16, height: 36, inset: 62 };
+export const FRAME_THIN = 7;
+export const SIDE = 18;
+export const TITLE = { top: 16, height: 36, inset: 62 };
 const ART = { top: 60, height: 172 };
-const TYPE = { top: 240, height: 26 };
-const TEXT = { top: 272, bottom: 40 };
-const BADGE = 0.86;
+export const TYPE = { top: 240, height: 26 };
+export const TEXT = { top: 272, bottom: 40 };
+export const BADGE = 0.86;
 
 const FINISH = "common";
 const METAL_FRAME = METAL[FINISH];
 
 /** Fond et texte d'un encadré : opaque en carte normale, transparent en full art. */
-function panelStyle(card: CardData, panel: Panel, layout: TopLayout): CSSProperties {
+export function panelStyle(card: CardData, panel: Panel, layout: TopLayout): CSSProperties {
   const f = faction(card.tag);
   const full = layout === "fullart";
   if (panel === "parchemin") {
@@ -120,7 +120,7 @@ function panelStyle(card: CardData, panel: Panel, layout: TopLayout): CSSPropert
 }
 
 /** Fond de la carte normale autour de la fenêtre (assorti aux encadrés). */
-function cardBackground(panel: Panel): string {
+export function cardBackground(panel: Panel): string {
   if (panel === "givre") return "linear-gradient(#7f8a9a, #4d5664)";
   if (panel === "parchemin") return "linear-gradient(#2a2117, #16110b)";
   if (panel === "ardoise") return "linear-gradient(#3a404d, #22262f)";
@@ -128,7 +128,7 @@ function cardBackground(panel: Panel): string {
 }
 
 /** Rectangle de la fenêtre d'illustration (carte normale). */
-function windowBox(style: TopStyle): CSSProperties {
+export function windowBox(style: TopStyle): CSSProperties {
   const frame = style.thin ? FRAME_THIN : FRAME;
   const inset = style.window === "large" ? frame : SIDE;
   const shape: CSSProperties =
@@ -154,7 +154,7 @@ function windowBox(style: TopStyle): CSSProperties {
 }
 
 /** Ce qui donne du relief à la fenêtre : jamais un cadre posé au-dessus de la bordure. */
-function windowRelief(style: TopStyle): CSSProperties | null {
+export function windowRelief(style: TopStyle): CSSProperties | null {
   switch (style.window) {
     case "creusee":
     case "arche":
@@ -228,7 +228,7 @@ function TitleBlock({
   );
 }
 
-function TitleText({ card, snap = false }: { card: CardData; snap?: boolean }) {
+export function TitleText({ card, snap = false }: { card: CardData; snap?: boolean }) {
   return (
     <span
       style={{

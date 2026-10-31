@@ -132,7 +132,7 @@ packages/
   ui/            thèmes et composants de base
 games/
   agents/        Agents Doubles, le jeu d'espions coopératif à deux
-  tcg/           futur jeu de cartes : vote du design des cartes (/cartes)
+  tcg/           jeu de cartes : vote du design (/cartes), cartes et effets (admin /admin/cartes)
   trois/         TROIS, le Wordle à 3 mots par jour
 ```
 
@@ -218,6 +218,16 @@ header, `apps/web/components/SpinOrb.tsx`, qui joue `public/audio/spin2.mp3`, et
 Un bloc `[data-theme="montheme"]` de variables CSS dans `packages/ui/theme.css` (couleurs, dégradés,
 police des titres, décors) et une entrée dans `packages/ui/src/themes.ts`. Le sélecteur du header le
 propose aussitôt.
+
+### Ajouter ou modifier des cartes
+
+Les cartes se gèrent dans **Administration › Cartes** (`/admin/cartes`) : nom, type, famille,
+mana, puissance, rareté, effet (choisi dans le catalogue `games/tcg/src/effects.ts`, puis réglé),
+description et illustration. Pour en créer beaucoup d'un coup, `/admin/cartes/import` prend un
+fichier JSON (format affiché sur la page), et `/admin/cartes/illustrations` plusieurs images d'un
+coup (chaque fichier porte le numéro de sa carte : `12.jpg`). Les cartes générées à partir des
+idées restent hors du dépôt, puisqu'elles reprennent le contenu des membres. Un effet nouveau s'ajoute dans
+`effects.ts` (clé, moment, réglages, texte) et devient disponible pour toutes les cartes.
 
 ---
 
