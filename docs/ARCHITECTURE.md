@@ -461,16 +461,20 @@ membre : ses images ne sont jamais dans le repo ni dans `public/`.
   dans `globals.css` (bloc « Mascotte », coupées si l'utilisateur réduit les animations), à
   l'échelle `--s` ; les paupières (couleur peau) et la couronne y sont placées en px du dessin
   d'origine. Si l'image ne charge pas (401, 404), le composant affiche `fallback`.
-- En bas à droite de l'écran sur toutes les pages de la plateforme (`components/MascotToy.tsx`,
-  posée par `(platform)/layout.tsx`, 180 px comme sous le podium de TROIS, masquée sous 640 px) :
+- Flottante en bas à droite de l'écran sur toutes les pages de la plateforme
+  (`components/MascotToy.tsx`, posée par `(platform)/layout.tsx`, 180 px, masquée sous 640 px) :
   elle respire et cligne des yeux, un clic la fait sauter. On la déplace en la faisant glisser ;
   sa place est retenue dans le navigateur (`localStorage`, clé `mascot-position`). Sans image
   envoyée, le bouton disparaît.
-- Utilisée aussi par les pages d'erreur, la 404, le chargement, la confirmation de la boîte à
-  idées (prop `successIcon` d'`IdeaForm`) et sous le podium de TROIS (prop `belowPodium` de
-  `TroisApp`, qui reçoit la réaction au dernier mot : saut sur un mot trouvé, affaissée sur un
-  perdu) : les packages et les jeux ne la connaissent pas, l'app la leur passe. Jamais sur
-  `/login` ni `/refused`, vues par des non-membres.
+- Place réservée : une page peut poser un `MascotAnchor` (bloc vide à sa taille) avec une humeur ;
+  la mascotte flottante glisse jusqu'à lui, le suit, prend cette humeur et ne se déplace plus à la
+  souris. Quand il disparaît (on quitte la page), elle revient au coin en bas à droite (sa place
+  retenue est oubliée). État partagé dans `components/mascotStage.ts`. Seul usage : sous le podium
+  de TROIS (prop `belowPodium` de `TroisApp`, qui reçoit la réaction au dernier mot : saut sur un
+  mot trouvé, affaissée sur un perdu ; le podium de gauche n'existe qu'au-delà de 1280 px).
+- Utilisée aussi par les pages d'erreur, la 404, le chargement et la confirmation de la boîte à
+  idées (prop `successIcon` d'`IdeaForm`) : les packages et les jeux ne la connaissent pas, l'app
+  la leur passe. Jamais sur `/login` ni `/refused`, vues par des non-membres.
 
 **Réponses des routes.** Les routes JSON privées répondent via `json()` (`apps/web/lib/route.ts`),
 qui pose `cache-control: private, no-store`. `errorResponse` traduit les erreurs connues (401, 403,

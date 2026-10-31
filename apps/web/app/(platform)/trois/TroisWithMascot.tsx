@@ -1,18 +1,20 @@
 "use client";
 
 import { type Me, TroisApp, type TroisReaction } from "@app/trois/ui";
-import { Mascot, type MascotMood } from "@/components/Mascot";
+import type { MascotMood } from "@/components/Mascot";
+import { MascotAnchor } from "@/components/MascotAnchor";
 
 const MOODS: Record<NonNullable<TroisReaction>, MascotMood> = { won: "victoire", lost: "erreur" };
 
-/** TROIS avec la mascotte sous le podium : elle saute sur un mot trouvé, s'affaisse sur un perdu. */
+/**
+ * TROIS avec une place pour la mascotte flottante sous le podium : elle quitte son coin pour s'y
+ * poser, saute sur un mot trouvé et s'affaisse sur un mot perdu.
+ */
 export function TroisWithMascot({ me }: { me: Me }) {
   return (
     <TroisApp
       me={me}
-      belowPodium={(reaction) => (
-        <Mascot height={180} mood={reaction ? MOODS[reaction] : "repos"} />
-      )}
+      belowPodium={(reaction) => <MascotAnchor mood={reaction ? MOODS[reaction] : "repos"} />}
     />
   );
 }
