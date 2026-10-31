@@ -1,9 +1,10 @@
 import { IdeaForm } from "@app/ideas/ui";
 import { Card } from "@app/ui";
 import { HiddenEmerald } from "@app/inventory/ui";
-import { EyeOff, Lightbulb } from "lucide-react";
+import { CircleCheck, EyeOff, Lightbulb } from "lucide-react";
 import type { Metadata } from "next";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { Mascot } from "@/components/Mascot";
 import { getCurrentMember } from "@/lib/session";
 import { sendIdea } from "./actions";
 
@@ -58,7 +59,19 @@ export default async function IdeasPage() {
       </Card>
 
       <Card title="Proposer une idée">
-        <IdeaForm action={sendIdea} />
+        <IdeaForm
+          action={sendIdea}
+          successIcon={
+            <Mascot
+              mood="victoire"
+              height={64}
+              className="shrink-0"
+              fallback={
+                <CircleCheck size={20} className="text-success mt-0.5 shrink-0" aria-hidden />
+              }
+            />
+          }
+        />
       </Card>
     </div>
   );

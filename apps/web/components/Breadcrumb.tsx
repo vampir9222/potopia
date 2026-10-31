@@ -10,6 +10,7 @@ const SECTION_LABELS: Record<string, string> = {
   "admin/cartes/illustrations": "Illustrations",
   "admin/cartes/import": "Import",
   "admin/cartes/nouvelle": "Nouvelle carte",
+  "admin/mascotte": "Mascotte",
   avatar: "Mon avatar",
   credits: "Crédits",
   economy: "Monnaie",

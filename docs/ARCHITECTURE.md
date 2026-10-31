@@ -332,7 +332,10 @@ décors.
   feuille CSS par jeu (`games/*/ui/*.css`), importée dans `apps/web/app/globals.css`.
 
 **Header** (`packages/core/ui/Header.tsx`, boutons passés par `(platform)/layout.tsx`). De gauche à
-droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil.
+droite : la mascotte, Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil.
+
+- Mascotte (`apps/web/components/MascotToy.tsx`, 40 px) : elle respire et cligne des yeux ; un
+  clic la fait sauter une fois. Sans image envoyée, le bouton disparaît (voir « Mascotte »).
 
 - Sonic (`apps/web/components/SonicRun.tsx`, masqué sous 1024 px), Luffy
   (`components/LuffyRun.tsx`, masqué sous 640 px) et la boule (`components/SpinOrb.tsx`) lancent
@@ -440,6 +443,29 @@ affichée serait décalée et le rendu serveur différerait du rendu client (err
 - `not-found.tsx` : page introuvable aux couleurs du thème ; `forbidden.tsx` : 403.
 - `(platform)/loading.tsx` : squelette discret. Limite de Next sans Cache Components : il ne
   s'affiche qu'une fois le layout `(platform)` chargé (session, notifications, solde, activité).
+- La mascotte y apparaît : affaissée sur les erreurs (`ErrorScreen`), perplexe sur la page
+  introuvable, qui rebondit au-dessus du squelette de chargement. Pour un visiteur non connecté
+  (ou sans image envoyée), l'icône habituelle reste à sa place.
+
+**Mascotte** (`apps/web/components/Mascot.tsx`, `lib/mascot.ts`). Son visage est celui d'un
+membre : ses images ne sont jamais dans le repo ni dans `public/`.
+
+- Deux images dans le bucket privé, à clé fixe : `site/mascotte/corps` (512 × 673 px) et
+  `site/mascotte/couronne`, animées séparément. Un admin les remplace sur `/admin/mascotte`
+  (server action `uploadMascotAction` : PNG ou WebP, 900 Ko au plus, signature du fichier
+  vérifiée).
+- Lecture : `GET /api/mascotte/[partie]` (requireMember, `corps` ou `couronne`), 302 vers une URL
+  présignée de 15 min, redirection gardée 10 min par le navigateur (donc une nouvelle image se
+  voit sous 10 min).
+- `<Mascot mood height fallback>` : `repos` (respiration, couronne qui flotte, clignement),
+  `victoire` (saut, couronne qui tourne, halo rose), `chargement` (rebonds), `erreur` (affaissée,
+  couronne de travers, yeux mi-clos), `perdu` (regarde à gauche et à droite). Animations en CSS
+  dans `globals.css` (bloc « Mascotte », coupées si l'utilisateur réduit les animations), à
+  l'échelle `--s` ; les paupières (couleur peau) et la couronne y sont placées en px du dessin
+  d'origine. Si l'image ne charge pas (401, 404), le composant affiche `fallback`.
+- Utilisée par le header, les pages d'erreur, la 404, le chargement, et la confirmation de la
+  boîte à idées (prop `successIcon` d'`IdeaForm`). Jamais sur `/login` ni `/refused`, vues par des
+  non-membres.
 
 **Réponses des routes.** Les routes JSON privées répondent via `json()` (`apps/web/lib/route.ts`),
 qui pose `cache-control: private, no-store`. `errorResponse` traduit les erreurs connues (401, 403,
