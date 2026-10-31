@@ -1,15 +1,16 @@
 import { BRAND } from "@app/config/brand";
-import { Embers, resolveTheme, RgbFans, THEME_COOKIE } from "@app/ui";
+import { Embers, JojoDecor, resolveTheme, RgbFans, THEME_COOKIE } from "@app/ui";
 import type { Metadata } from "next";
-import { Cinzel, Orbitron } from "next/font/google";
+import { Anton, Cinzel, Orbitron } from "next/font/google";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { NextNavigation } from "@/components/NextNavigation";
 import { ToBeContinued } from "@/components/ToBeContinued";
+import { ZaWarudo } from "@/components/ZaWarudo";
 import "./globals.css";
 
 // Polices des titres, exposées aux thèmes (voir packages/ui/theme.css) : Cinzel pour Fantasy,
-// Orbitron pour RGB.
+// Orbitron pour RGB, Anton pour JoJo.
 const display = Cinzel({
   subsets: ["latin"],
   weight: ["600", "700"],
@@ -19,6 +20,11 @@ const gaming = Orbitron({
   subsets: ["latin"],
   weight: ["600", "700"],
   variable: "--font-gaming-face",
+});
+const jojo = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-jojo-face",
 });
 
 export const metadata: Metadata = {
@@ -31,14 +37,21 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // Thème choisi sur cet appareil (cookie posé par ThemeSwitcher), appliqué dès le rendu serveur.
   const theme = resolveTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
-    <html lang="fr" data-theme={theme} className={`${display.variable} ${gaming.variable}`}>
+    <html
+      lang="fr"
+      data-theme={theme}
+      className={`${display.variable} ${gaming.variable} ${jojo.variable}`}
+    >
       <body className="min-h-dvh antialiased">
         <Embers />
         <RgbFans />
+        <JojoDecor />
         {/* liens des packages branchés sur Next : pas de rechargement entre deux pages */}
         <NextNavigation>{children}</NextNavigation>
         {/* défaite dans un jeu : arrêt sur image façon JoJo (toBeContinued() de @app/ui) */}
         <ToBeContinued />
+        {/* passage au thème JoJo : arrêt du temps (zaWarudo() de @app/ui) */}
+        <ZaWarudo />
       </body>
     </html>
   );

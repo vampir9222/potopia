@@ -32,7 +32,7 @@ const LUFFY_GO_MS = 800;
 const LEAP_MS = 520;
 const LEAP_HEIGHT = 22;
 const MUSIC_DELAY_MS = COMBO_CHARGE_MS + 600;
-const MUSIC_FADE_MS = 1500;
+const MUSIC_FADE_MS = 700; // léger fondu d'entrée sur le générique (version recoupée)
 
 /**
  * Combo : la steel ball tourne et on clique sur le fruit. La boule se charge, jaillit de sa case et

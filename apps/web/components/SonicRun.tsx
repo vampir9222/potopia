@@ -41,6 +41,21 @@ const SUPER_RUN_MS = 4500;
 const SUPER_RAMP_MS = 1400;
 // hauteur de vol moyenne, pour laquelle sont placés les traits de vitesse du vol (globals.css)
 const FLY_LIFT = 9;
+// Vent du vol : cinq traits dessinés en SVG. Le bout côté Sonic suit sa hauteur de vol, et chaque
+// point plus à gauche reprend la hauteur qu'il avait un peu plus tôt : l'oscillation se propage
+// vers la gauche en petites vagues.
+const WIND_W = 260;
+const WIND_H = 40;
+const WIND_LAG_MS_PER_PX = 2.4;
+const WIND_STEP_PX = 8;
+const WIND_SWELL = 1.6;
+const WIND_LINES = [
+  { y: 7, width: 2, color: "rgb(255 250 200)", dash: "40 16" },
+  { y: 13, width: 3, color: "rgb(255 215 70)", dash: "60 14" },
+  { y: 19, width: 2, color: "rgb(255 240 160)", dash: "30 16" },
+  { y: 25, width: 3, color: "rgb(255 200 50)", dash: "70 14" },
+  { y: 32, width: 2, color: "rgb(255 245 180)", dash: "36 14" },
+];
 const SUPER_STEP_SLOW = 190;
 // à pleine vitesse, bien plus vite que Sonic (40 ms) : c'est Super Sonic
 const SUPER_STEP_FAST = 24;
@@ -75,6 +90,7 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
   const spriteRef = useRef<HTMLSpanElement>(null);
   const streakRef = useRef<HTMLSpanElement>(null);
   const linesRef = useRef<HTMLSpanElement>(null);
+  const windRef = useRef<SVGSVGElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const superTrack = useRef<LoopTrack | null>(null);
 
@@ -102,28 +118,62 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
     const sprite = spriteRef.current;
     const streak = streakRef.current;
     const lines = linesRef.current;
+    const wind = windRef.current;
     const startTransformed = startTransformedRef.current;
-    if (!sprite || !streak || !lines) return;
+    if (!sprite || !streak || !lines || !wind) return;
+    const windPaths = Array.from(wind.querySelectorAll("path"));
+    // hauteurs de vol récentes, pour que la vague parte de Sonic et file vers la gauche
+    const history: [number, number][] = [];
+    const liftAt = (time: number) => {
+      for (let i = history.length - 1; i >= 0; i--) {
+        const h = history[i];
+        if (h && h[0] <= time) return h[1];
+      }
+      return history[0]?.[1] ?? FLY_LIFT;
+    };
+    const blow = (now: number, lift: number) => {
+      history.push([now, lift]);
+      while (
+        history.length > 2 &&
+        (history[0]?.[0] ?? now) < now - WIND_W * WIND_LAG_MS_PER_PX - 100
+      )
+        history.shift();
+      windPaths.forEach((path, j) => {
+        const base = WIND_LINES[j]?.y ?? 0;
+        let d = "";
+        for (let x = WIND_W; x >= 0; x -= WIND_STEP_PX) {
+          // la vague s'amplifie en s'éloignant de lui, comme un ruban qui claque au vent
+          const far = (WIND_W - x) / WIND_W;
+          const y =
+            base -
+            (liftAt(now - (WIND_W - x) * WIND_LAG_MS_PER_PX) - FLY_LIFT) * (1 + far * WIND_SWELL);
+          d += `${d ? "L" : "M"}${x},${y.toFixed(1)}`;
+        }
+        path.setAttribute("d", d);
+      });
+    };
     // effets de vitesse de Super Sonic (0 à 1) : images rémanentes derrière lui, lignes de vitesse
     // en vol (`fly`), tout passe un cran au-dessus : plus d'images rémanentes, plus loin, plus
     // vite, et des lignes de vitesse plus nombreuses et plus longues
     let level: "" | "run" | "fly" = "";
     // nouvel état (attente comprise) : aucun effet de vitesse ne reste accroché du précédent
     sprite.classList.remove("sonic-ghost", "sonic-ghost-fly");
-    lines.classList.remove("sonic-speedlines-fly");
     lines.style.opacity = "0";
+    wind.style.opacity = "0";
     // `lift` : hauteur de vol de Super Sonic ; les traits montent et descendent avec lui
-    const rush = (k: number, fly = false, lift = FLY_LIFT) => {
-      lines.style.translate = `0 ${fly ? FLY_LIFT - lift : 0}px`;
-      // traits discrets : ils accompagnent le dédoublement sans le cacher
-      lines.style.opacity = String(Math.max(0, Math.min(1, k)) * (fly ? 0.6 : 0.55));
-      lines.style.width = `${Math.round(fly ? 260 : 40 + 80 * k)}px`;
+    const rush = (k: number, fly = false, now = 0, lift = FLY_LIFT) => {
+      // traits discrets : ils accompagnent le dédoublement sans le cacher. En vol, le vent en SVG
+      // (qui ondule) remplace les traits droits de la course.
+      const k01 = Math.max(0, Math.min(1, k));
+      lines.style.opacity = fly ? "0" : String(k01 * 0.55);
+      lines.style.width = `${Math.round(40 + 80 * k)}px`;
+      wind.style.opacity = fly ? String(k01 * 0.6) : "0";
+      if (fly) blow(now, lift);
       const next = fly ? "fly" : k > 0.5 ? "run" : "";
       if (next !== level) {
         level = next;
         sprite.classList.toggle("sonic-ghost", next === "run");
         sprite.classList.toggle("sonic-ghost-fly", next === "fly");
-        lines.classList.toggle("sonic-speedlines-fly", next === "fly");
       }
     };
     let current: SheetName | null = null;
@@ -229,7 +279,7 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
           // en vol : traînée immense, tirets qui défilent à toute allure (toujours dorée, quel que
           // soit le thème)
           trail(600 + 60 * Math.sin(now / 35), "gold", 30);
-          rush(1, true, lift);
+          rush(1, true, now, lift);
         }
       }
       raf = requestAnimationFrame(tick);
@@ -277,6 +327,26 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
         className="sonic-speedlines pointer-events-none absolute opacity-0"
         style={{ right: WIDTH / 2 + 6, top: LINE_Y - 36, height: 28 }}
       />
+      {/* vent du vol de Super Sonic : traits qui ondulent en vagues vers la gauche */}
+      <svg
+        ref={windRef}
+        aria-hidden
+        className="sonic-wind pointer-events-none absolute overflow-visible opacity-0"
+        style={{ right: WIDTH / 2 + 6, top: LINE_Y - 36 - 7 - FLY_LIFT + 2 }}
+        width={WIND_W}
+        height={WIND_H}
+      >
+        {WIND_LINES.map((l, i) => (
+          <path
+            key={i}
+            fill="none"
+            stroke={l.color}
+            strokeWidth={l.width}
+            strokeDasharray={l.dash}
+            strokeLinecap="round"
+          />
+        ))}
+      </svg>
       <button
         type="button"
         onClick={toggle}

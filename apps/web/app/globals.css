@@ -526,32 +526,111 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
   }
 }
 
-/* …et un vent doré : cinq traits, de la hauteur des traits de course (jamais plus bas, un peu
-   plus haut puisqu'il vole), plus longs, qui filent deux fois plus vite. */
-.sonic-speedlines.sonic-speedlines-fly {
-  top: 12px !important;
-  height: 30px !important;
-  background:
-    repeating-linear-gradient(to left, rgb(255 250 200 / 1) 0 40px, transparent 40px 56px) 0 2px /
-      100% 2px no-repeat,
-    repeating-linear-gradient(to left, rgb(255 215 70 / 0.9) 0 60px, transparent 60px 74px) 8px
-      8px / 100% 3px no-repeat,
-    repeating-linear-gradient(to left, rgb(255 240 160 / 0.95) 0 30px, transparent 30px 46px) 2px
-      14px / 100% 2px no-repeat,
-    repeating-linear-gradient(to left, rgb(255 200 50 / 0.85) 0 70px, transparent 70px 84px) 12px
-      20px / 100% 3px no-repeat,
-    repeating-linear-gradient(to left, rgb(255 245 180 / 0.9) 0 36px, transparent 36px 50px) 4px
-      27px / 100% 2px no-repeat;
-  animation: sonic-speedlines-fly 45ms linear infinite;
+/* …et un vent doré : cinq traits en SVG (SonicRun) qui ondulent en vagues vers la gauche, dont
+   les tirets filent très vite, et qui s'effacent en s'éloignant de lui. */
+.sonic-wind {
+  mask-image: linear-gradient(to left, #000 10%, transparent);
+  transition: opacity 0.3s;
 }
 
-@keyframes sonic-speedlines-fly {
+.sonic-wind path {
+  animation: sonic-wind 60ms linear infinite;
+}
+
+@keyframes sonic-wind {
   to {
-    background-position:
-      -56px 2px,
-      -66px 8px,
-      -48px 14px,
-      -72px 20px,
-      -50px 27px;
+    stroke-dashoffset: -56;
   }
+}
+
+/* « ZA WARUDO » (ZaWarudo, thème JoJo) : onde qui inverse les couleurs, puis temps arrêté. */
+.za-wave {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: invert(1) hue-rotate(180deg) saturate(1.6);
+  clip-path: circle(0 at 50% 50%);
+  animation: za-wave 0.95s cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
+}
+
+@keyframes za-wave {
+  55% {
+    clip-path: circle(80vmax at 50% 50%);
+  }
+  100% {
+    clip-path: circle(0 at 50% 50%);
+  }
+}
+
+/* la reprise : l'onde part du bord et se referme sur le centre */
+.za-wave-out {
+  animation: za-wave-out 0.5s ease-in forwards;
+}
+
+@keyframes za-wave-out {
+  0% {
+    clip-path: circle(80vmax at 50% 50%);
+  }
+  100% {
+    clip-path: circle(0 at 50% 50%);
+  }
+}
+
+.za-shout {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+  font-size: clamp(2.5rem, 9vw, 7rem);
+  letter-spacing: 0.08em;
+  color: #f4c430;
+  filter: drop-shadow(4px 4px 0 #050308);
+  animation: za-shout 0.95s ease-out forwards;
+}
+
+@keyframes za-shout {
+  0% {
+    opacity: 0;
+    transform: scale(2.4) skewX(-8deg);
+  }
+  25%,
+  70% {
+    opacity: 1;
+    transform: scale(1) skewX(-8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) skewX(-8deg);
+  }
+}
+
+.za-stopped {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: clamp(2rem, 7vw, 5rem);
+  font-weight: 900;
+  color: rgb(255 255 255 / 0.16);
+  letter-spacing: 0.2em;
+  animation: za-stopped 0.6s ease-out both;
+}
+
+@keyframes za-stopped {
+  from {
+    opacity: 0;
+    letter-spacing: 0.6em;
+  }
+}
+
+/* temps arrêté : tout se fige dans une teinte délavée, vert-gris */
+html.time-stop body > :not(.za-layer) {
+  filter: grayscale(0.85) sepia(0.25) hue-rotate(70deg) brightness(0.8) contrast(1.15);
+  transition: filter 0.2s;
+}
+
+html.time-stop body > :not(.za-layer) *,
+html.time-stop body > :not(.za-layer) *::before,
+html.time-stop body > :not(.za-layer) *::after {
+  animation-play-state: paused !important;
 }
