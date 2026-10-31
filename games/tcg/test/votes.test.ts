@@ -79,9 +79,12 @@ describe("DESIGNS", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("garde les numéros affichés : 39 et 44 sont les deux références", () => {
-    expect(REFERENCES.map(designNumber)).toEqual([39, 44, 48]);
-    expect([...DESIGN_TAB, ...EFFECTS_TAB].every((id) => designNumber(id) > 47)).toBe(true);
+  it("garde les numéros affichés : seul le n°70 est en cours, tout le reste est archivé", () => {
+    expect(DESIGN_TAB.map(designNumber)).toEqual([70]);
+    expect(designNumber("haut-bandeau")).toBe(65);
+    expect(designNumber("haut-fin")).toBe(66);
+    expect(REFERENCES).toEqual([]);
+    expect(EFFECTS_TAB.every((id) => designNumber(id) > 47)).toBe(true);
   });
 });
 

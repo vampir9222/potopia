@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BRAND } from "@app/config/brand";
 import { Card } from "@app/ui";
 import { countIdeas } from "@app/ideas";
-import { Coins, Lightbulb } from "lucide-react";
+import { Coins, Layers, Lightbulb } from "lucide-react";
 import type { Metadata } from "next";
 import { getCurrentAdmin } from "@/lib/session";
 
@@ -20,6 +20,12 @@ const SECTIONS = (ideasCount: number) => [
     title: "Boîte à idées",
     description: `${ideasCount} idée${ideasCount > 1 ? "s" : ""} reçue${ideasCount > 1 ? "s" : ""}.`,
     icon: Lightbulb,
+  },
+  {
+    href: "/admin/cartes",
+    title: "Cartes",
+    description: "Cartes du jeu : créer, modifier, importer.",
+    icon: Layers,
   },
 ];
 

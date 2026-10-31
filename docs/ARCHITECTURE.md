@@ -181,6 +181,12 @@ passe d'une partie à l'autre sans rechargement.
 - `TcgDesignVote` : designId, userId, stars (0 à 5 ; 0 = commentaire sans note ou note retirée),
   comment?, createdAt, updatedAt. Une note par membre et par design (`(design_id, user_id)`
   unique). Les designs eux-mêmes sont dans le code (`games/tcg/src/designs.ts`), pas en base.
+- `TcgSet` : code (unique, `S1`), name, createdAt. Une édition de cartes.
+- `TcgCard` : setId, number (`(set_id, number)` unique), name, rarity (enum `TcgRarity` :
+  common, uncommon, rare, epic, legendary, sr, ssr), type, family?, cost (0 à 6), power, effectKey?,
+  effectParams? (JSON), effectText, flavor?, imageKey?, ideaId? (unique, `ideas.ideas` sans
+  relation), baseCardId? (variante full art → sa carte de base), createdAt, updatedAt. La base ne
+  contient aucune logique d'effet : seulement la clé d'un effet du catalogue et ses réglages.
 
 ### trois et agents
 
@@ -333,7 +339,7 @@ rafraîchit le routeur client sans recharger la page.
 
 **Vote du design des cartes** (`/cartes`, module `games/tcg`).
 
-- Les propositions sont dans `games/tcg/src/designs.ts` (`DESIGNS`, 66 aujourd'hui). Leur numéro
+- Les propositions sont dans `games/tcg/src/designs.ts` (`DESIGNS`, 71 aujourd'hui). Leur numéro
   affiché est leur place dans la liste : on n'ajoute qu'à la fin et on ne renomme jamais un id
   (il est stocké avec chaque note).
 - Une proposition garde le rendu sur lequel on l'a notée et commentée : une nouvelle vague ne
@@ -342,14 +348,24 @@ rafraîchit le routeur client sans recharger la page.
   `tcg-shard`, `tcg-crack`, `tcg-drift`), les vagues suivantes ont la SR qui sort de la carte et la
   SSR lenticulaire.
 - Onglets (`TABS` dans la page) : **Design** (les propositions en cours, `DESIGN_TAB`, montrées
-  sans effet de rareté, plus les trois points de départ 39, 44 et 48, `REFERENCES`). Vague en
-  cours (55 à 66, `ui/v4.tsx`) : titre en haut, et une grille fixe (titre, mana, puissance, ligne
-  de type, texte) identique en carte normale et en full art ; en full art les encadrés sont
-  translucides et floutés. Chaque ligne montre quatre versions : normale puis full art, puissance
-  en bas à droite puis en haut à droite. Les 12 styles (`TOP_STYLES`) varient la fenêtre
-  d'illustration (creusée, fondue, gravée, au niveau de la bordure, d'un bord à l'autre, arche,
-  coins coupés, cadre fin), les encadrés (nuit, givre, parchemin, ardoise) et le titre (barre,
-  plaque gravée, bandeau), **Effets de rareté** (`EFFECTS_TAB`) et **Variantes**, tous deux masqués pour
+  sans effet de rareté, plus des points de départ repliés, `REFERENCES`, vide aujourd'hui). Vague en
+  cours (n°67 à 71, `ui/v5.tsx`, `FinalCard`) : le 65 affiné. Bandeau du titre et encadrés
+  ardoise du 65, cadre fin (7 px) du 66, puissance en bas à droite ; le bandeau est au plan de la
+  bordure et passe dessous, pour épouser le cadre. Dans l'encadré, l'effet en haut et la
+  description en italique plus petite en bas. En pied de carte : numéro, rareté et étoiles
+  (`RARITY_STARS` : 1 pour la légendaire, 2 pour la SR, 3 pour la SSR), précédés du code du set
+  (« S1 07/116 »). Pas de symbole d'édition : la rareté se voit au cadre (`RARITY_FRAME` : argent,
+  vert, bleu, violet (épique), or, nacre, arc-en-ciel), uni et sans lumière venant d'un côté pour une épaisseur égale
+  tout autour, puis aux effets. Bandeau court (n°70) : titre à la hauteur du mana, centré dans la
+  place que le mana laisse ; la planche du n°70 montre aussi les sept raretés. Le n°67 (`final-bandeau`) a le bandeau plein et
+  se montre dans chaque rareté ; les n°68 à 71 (`BAND_DESIGNS`, `BandShape`) essaient d'autres
+  formes de bandeau autour du mana : échancré, mana serti dans un anneau de métal, bandeau court
+  (le mana déborde dessous), sans bandeau. Seul le n°70 (bandeau court), retenu pour l'instant,
+  est dans l'onglet Design ; les autres sont aux Archives. Vague précédente (55 à 66,
+  `ui/v4.tsx`, aux Archives) : titre en haut, grille fixe identique en normale et en full art,
+  quatre versions par ligne (puissance en bas ou en haut) ; les 12 styles (`TOP_STYLES`) varient
+  la fenêtre, les encadrés (nuit, givre, parchemin, ardoise) et le titre (barre, plaque gravée,
+  bandeau). Puis **Effets de rareté** (`EFFECTS_TAB`) et **Variantes**, tous deux masqués pour
   l'instant (`hidden: true`), et **Archives**. Tant qu'un onglet est masqué, ses designs restent
   visibles et notables dans les Archives, dans une carte à part ; repasser `hidden` à false les
   renvoie dans leur onglet.
@@ -366,6 +382,40 @@ rafraîchit le routeur client sans recharger la page.
   `/api/cartes/exemple` (302 vers une URL présignée de 5 min, redirection gardée 4 min).
 - Toutes les cartes affichent leurs informations d'emblée, rien n'apparaît au survol. Polices :
   seules celles de l'onglet Design sont préchargées (`cartes/fonts.ts`).
+
+**Cartes du jeu** (`/admin/cartes`, module `games/tcg`). Structure décidée le 2026-10-30
+(document « Potopia TCG — structure finale ») : rareté fixe portée par la carte, sets, variantes
+full art qui reprennent les stats de leur carte de base. Pour l'instant, seuls les admins lisent
+et modifient les cartes.
+
+- Catalogue d'effets (`games/tcg/src/effects.ts`, `EFFECTS`, 48 effets) : chaque effet a une clé,
+  un moment (à la révélation, permanent, fin de tour, quand elle est détruite), des réglages
+  (nombre borné, famille ou nom de jeton, validés par `paramsSchema`), un modèle de texte
+  (`effectText`) et, souvent, la carte de Marvel Snap qui l'inspire (`snap`, affichée dans
+  l'éditeur : Iron Man, Wong, Sera, Armor, Shang-Chi, Killmonger, Deadpool…). L'admin choisit
+  l'effet d'une carte dans cette liste et règle ses nombres, sans déploiement ; un effet nouveau
+  s'ajoute dans le code.
+- `games/tcg/src/cards.ts` : `listSets`, `ensureSet`, `listCards`, `getCard`, `createCard`
+  (numéro suivant du set, sous verrou), `updateCard`, `createCardImageUpload` (PUT présigné,
+  clé `cards/<uuid>.<ext>`, 5 Mo), `setCardImage` (vérifie l'objet), `importCards`. Toutes
+  prennent l'admin en premier argument et lèvent `ForbiddenError` sinon. Constantes sans
+  dépendance serveur dans `src/card-rules.ts` (importables côté navigateur).
+- Variante (`baseCardId`) : elle reprend mana, puissance, type, famille et effet de sa carte de
+  base ; `updateCard` sur la carte de base les lui recopie, et sur la variante ne change que le
+  nom, la rareté et la description. Pas de variante d'une variante.
+- Import (`/admin/cartes/import`, `importCards`) : fichier JSON `{ set: { code, name }, cards }`.
+  Le set est créé au besoin, les cartes prennent les numéros suivants ; une carte dont l'idée a
+  déjà une carte est ignorée (réimporter ne crée pas de doublon et n'écrase pas les
+  modifications). Tout ou rien, avec la carte fautive dans le message. Les fichiers de cartes
+  générées depuis les idées ne vont jamais dans le dépôt (contenu des membres).
+- Pages : `/admin/cartes` (planche du set, `?set=<code>`), `/admin/cartes/[id]` et
+  `/admin/cartes/nouvelle` (`CardEditor` : formulaire et aperçu en direct, normale ou full art,
+  envoi d'illustration), `/admin/cartes/import`, `/admin/cartes/illustrations` (`CardImagesUpload` :
+  plusieurs images d'un coup, chacune posée sur la carte dont elle porte le numéro, « 12.jpg »). Les cartes s'affichent dans le design retenu
+  (n°70, `GameCard`, ligne de type « {type} — {famille} »).
+- Illustration : `GET /api/admin/cards/[id]/image` (admin, 302 vers une URL présignée de 5 min),
+  celle de la carte ou, à défaut, celle de son idée (`listIdeaIdsWithImage` dit lesquelles en
+  ont une).
 
 ## Avatars et place
 
@@ -526,11 +576,13 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
       (`/wallet`), exports JSON admin.
 - [x] 12. Audit du 2026-10-25 : sécurité (profil, panne Discord), déploiement, pages d'erreur,
       fuseau horaire, limites d'envoi, corrections des jeux.
+- [ ] 13. `games/tcg` : cartes du jeu (sets, cartes, catalogue d'effets, admin `/admin/cartes`,
+      import), puis boosters, collection, decks et parties.
 
 ## Hors périmètre (pour l'instant)
 
-Cartes jouables, boosters, combat, design final. Pas de récompense en monnaie dans TROIS pour
-l'instant.
+Côté cartes : boosters, collection, decks et parties (étape 13, à venir). Pas de récompense en
+monnaie dans TROIS pour l'instant.
 
 ## Environnement de dev
 

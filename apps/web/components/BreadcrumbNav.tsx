@@ -8,11 +8,15 @@ import { Fragment } from "react";
 /** Libellé d'un segment dynamique (identifiant), selon la section qui le précède. */
 const ITEM_LABELS: Record<string, string> = {
   agents: "Mission",
+  cartes: "Carte",
   ideas: "Idée",
 };
 
 type Props = {
-  /** Libellé de chaque segment d'URL (calculé côté serveur par `Breadcrumb`). */
+  /**
+   * Libellé de chaque segment d'URL, ou d'un chemin complet sans « / » initial (calculé côté
+   * serveur par `Breadcrumb`).
+   */
   labels: Record<string, string>;
 };
 
@@ -23,7 +27,12 @@ export function BreadcrumbNav({ labels }: Props) {
     { href: "/", label: "Accueil" },
     ...segments.map((segment, i) => ({
       href: `/${segments.slice(0, i + 1).join("/")}`,
-      label: labels[segment] ?? ITEM_LABELS[segments[i - 1] ?? ""] ?? segment,
+      // Un chemin complet (« admin/cartes ») l'emporte sur le segment seul (« cartes »).
+      label:
+        labels[segments.slice(0, i + 1).join("/")] ??
+        labels[segment] ??
+        ITEM_LABELS[segments[i - 1] ?? ""] ??
+        segment,
     })),
   ];
   const parent = crumbs.at(-2);
