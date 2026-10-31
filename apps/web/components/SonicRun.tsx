@@ -103,14 +103,22 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
     const startTransformed = startTransformedRef.current;
     if (!sprite || !streak || !lines) return;
     // effets de vitesse de Super Sonic (0 à 1) : images rémanentes derrière lui, lignes de vitesse
-    let ghost = false;
-    const rush = (k: number) => {
+    // en vol (`fly`), tout passe un cran au-dessus : plus d'images rémanentes, plus loin, plus
+    // vite, et des lignes de vitesse plus nombreuses et plus longues
+    let level: "" | "run" | "fly" = "";
+    // nouvel état (attente comprise) : aucun effet de vitesse ne reste accroché du précédent
+    sprite.classList.remove("sonic-ghost", "sonic-ghost-fly");
+    lines.classList.remove("sonic-speedlines-fly");
+    lines.style.opacity = "0";
+    const rush = (k: number, fly = false) => {
       lines.style.opacity = String(Math.max(0, Math.min(1, k)));
-      lines.style.width = `${Math.round(40 + 80 * k)}px`;
-      const on = k > 0.5;
-      if (on !== ghost) {
-        ghost = on;
-        sprite.classList.toggle("sonic-ghost", on);
+      lines.style.width = `${Math.round(fly ? 260 : 40 + 80 * k)}px`;
+      const next = fly ? "fly" : k > 0.5 ? "run" : "";
+      if (next !== level) {
+        level = next;
+        sprite.classList.toggle("sonic-ghost", next === "run");
+        sprite.classList.toggle("sonic-ghost-fly", next === "fly");
+        lines.classList.toggle("sonic-speedlines-fly", next === "fly");
       }
     };
     let current: SheetName | null = null;
@@ -216,7 +224,7 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
           // en vol : traînée immense, tirets qui défilent à toute allure (toujours dorée, quel que
           // soit le thème)
           trail(600 + 60 * Math.sin(now / 35), "gold", 30);
-          rush(1);
+          rush(1, true);
         }
       }
       raf = requestAnimationFrame(tick);

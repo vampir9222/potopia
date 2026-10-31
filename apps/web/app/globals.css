@@ -505,3 +505,55 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
       -24px 23px;
   }
 }
+
+/* Super Sonic en vol : un cran au-dessus de la course. Quatre images rémanentes, très loin
+   derrière, qui tremblent très vite… */
+.sonic-super.sonic-ghost-fly {
+  animation: sonic-ghost-fly 0.06s steps(2) infinite;
+}
+
+@keyframes sonic-ghost-fly {
+  from {
+    filter: drop-shadow(0 0 10px rgb(255 240 140 / 1)) drop-shadow(-16px 0 0 rgb(255 225 80 / 0.6))
+      drop-shadow(-32px 0 0 rgb(255 210 60 / 0.4)) drop-shadow(-50px 0 0 rgb(255 200 40 / 0.22))
+      drop-shadow(-70px 0 1px rgb(255 190 30 / 0.12));
+  }
+  to {
+    filter: drop-shadow(0 0 14px rgb(255 250 190 / 1))
+      drop-shadow(-22px 1px 0 rgb(255 225 80 / 0.55))
+      drop-shadow(-42px -1px 0 rgb(255 210 60 / 0.35)) drop-shadow(-64px 0 0 rgb(255 200 40 / 0.2))
+      drop-shadow(-88px 0 1px rgb(255 190 30 / 0.1));
+  }
+}
+
+/* …et un vent doré : six traits, plus longs, qui filent deux fois plus vite. */
+.sonic-speedlines.sonic-speedlines-fly {
+  top: 12px !important;
+  height: 40px !important;
+  background:
+    repeating-linear-gradient(to left, rgb(255 250 200 / 1) 0 40px, transparent 40px 56px) 0 2px /
+      100% 2px no-repeat,
+    repeating-linear-gradient(to left, rgb(255 215 70 / 0.9) 0 60px, transparent 60px 74px) 8px
+      9px / 100% 3px no-repeat,
+    repeating-linear-gradient(to left, rgb(255 240 160 / 0.95) 0 30px, transparent 30px 46px) 2px
+      17px / 100% 2px no-repeat,
+    repeating-linear-gradient(to left, rgb(255 200 50 / 0.85) 0 70px, transparent 70px 84px) 12px
+      24px / 100% 3px no-repeat,
+    repeating-linear-gradient(to left, rgb(255 245 180 / 0.9) 0 36px, transparent 36px 50px) 4px
+      31px / 100% 2px no-repeat,
+    repeating-linear-gradient(to left, rgb(255 220 90 / 0.8) 0 50px, transparent 50px 66px) 10px
+      37px / 100% 2px no-repeat;
+  animation: sonic-speedlines-fly 45ms linear infinite;
+}
+
+@keyframes sonic-speedlines-fly {
+  to {
+    background-position:
+      -56px 2px,
+      -66px 9px,
+      -48px 17px,
+      -72px 24px,
+      -50px 31px,
+      -60px 37px;
+  }
+}
