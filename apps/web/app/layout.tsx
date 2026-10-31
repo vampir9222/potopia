@@ -35,7 +35,7 @@ const onePiece = Pirata_One({
 
 export const metadata: Metadata = {
   title: { default: BRAND.name, template: `%s · ${BRAND.name}` },
-  icons: { icon: { url: BRAND.logo, type: "image/svg+xml" } },
+  icons: { icon: { url: BRAND.favicon, type: "image/png" } },
   robots: { index: false, follow: false },
 };
 
