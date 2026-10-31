@@ -126,7 +126,7 @@ export default async function AdminCardsPage({
         </Card>
       ) : (
         <MoveCardsForm targets={targets}>
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-4">
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(400px,100%),1fr))] gap-4">
             {cards.map((card) => (
               <li
                 key={card.id}
