@@ -10,7 +10,7 @@ const RUN_FRAMES = 24;
 const RUN_SIZE = 150 * 0.38;
 const RUN_GROUND = 142 * 0.38;
 // La steel ball : la planche de la boule, frame de repos, roulée par rotation CSS.
-const BALL = 48;
+const BALL = 46; // même taille que dans sa case (SpinOrb)
 const BALL_FRAMES = 48;
 const BALL_REST = 8;
 const LINE_Y = 55;

@@ -7,6 +7,7 @@ import {
 } from "@app/inventory/ui";
 import { cx, effectiveVolume, onVolumeChange } from "@app/ui";
 import { useEffect, useRef, useState } from "react";
+import { LoopTrack } from "./loopTrack";
 
 /** Planche horizontale d'une animation : `frames` cases de `w` × `h` px (pixel art à l'échelle 1). */
 type Sheet = { src: string; frames: number; w: number; h: number };
@@ -24,7 +25,11 @@ const SHEETS = {
 type SheetName = keyof typeof SHEETS;
 
 const MUSIC = "/audio/sonic.mp3";
+// Super Sonic : le morceau d'origine boucle tout seul (thème de 19,69 s qui se répète dès le
+// début, puis un fondu de sortie vers 64 s). On boucle sur trois tours exacts, sans fondu ni blanc.
 const SUPER_MUSIC = "/audio/super-sonic.mp3";
+const SUPER_LOOP_START = 0.501;
+const SUPER_LOOP_END = SUPER_LOOP_START + 3 * 19.6906;
 const WIDTH = 48;
 // Le liseré du header occupe sa dernière ligne de pixels (header h-14 = 56 px) : les pieds dessus.
 const LINE_Y = 55;
@@ -67,14 +72,23 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
   const idleSuper = mode === "idle" && superIdle;
   const spriteRef = useRef<HTMLSpanElement>(null);
   const streakRef = useRef<HTMLSpanElement>(null);
+  const linesRef = useRef<HTMLSpanElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const superTrack = useRef<LoopTrack | null>(null);
 
   // La musique s'arrête quand on quitte la page, et suit le volume global du header.
-  useEffect(() => () => audioRef.current?.pause(), []);
+  useEffect(
+    () => () => {
+      audioRef.current?.pause();
+      superTrack.current?.stop();
+    },
+    [],
+  );
   useEffect(
     () =>
       onVolumeChange(() => {
         if (audioRef.current) audioRef.current.volume = effectiveVolume();
+        superTrack.current?.setVolume(effectiveVolume());
       }),
     [],
   );
@@ -85,8 +99,20 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
   useEffect(() => {
     const sprite = spriteRef.current;
     const streak = streakRef.current;
+    const lines = linesRef.current;
     const startTransformed = startTransformedRef.current;
-    if (!sprite || !streak) return;
+    if (!sprite || !streak || !lines) return;
+    // effets de vitesse de Super Sonic (0 à 1) : images rémanentes derrière lui, lignes de vitesse
+    let ghost = false;
+    const rush = (k: number) => {
+      lines.style.opacity = String(Math.max(0, Math.min(1, k)));
+      lines.style.width = `${Math.round(40 + 80 * k)}px`;
+      const on = k > 0.5;
+      if (on !== ghost) {
+        ghost = on;
+        sprite.classList.toggle("sonic-ghost", on);
+      }
+    };
     let current: SheetName | null = null;
     const show = (name: SheetName, frame: number, lift = 0) => {
       const s = SHEETS[name];
@@ -129,11 +155,13 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
       if (idleSuper) {
         show("ssIdle", Math.floor(t / 140), SUPER_IDLE_LIFT + 2 * Math.sin(now / 520));
         trail(0, "gold");
+        rush(0);
       } else if (mode === "idle") {
         // il attend : une longue pause, puis trois petits mouvements (le gif d'origine allait trop vite)
         const cycle = t % 2650;
         show("idle", cycle < 2200 ? 0 : 1 + Math.floor((cycle - 2200) / 150));
         trail(0, "accent");
+        rush(0);
       } else if (mode === "running") {
         if (now > nextBoost) {
           // sprint bien long : 2,6 à 4,2 s
@@ -148,9 +176,11 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
           lastStep = now;
         }
         show(name, frame);
+        // longueurs à l'échelle du vol de Super Sonic (le plus long, 600 px)
         if (name === "walk") trail(0, "accent");
-        else if (name === "run") trail(50, "accent", 220);
-        else trail(130 + 20 * Math.sin(now / 60), "accent", 120);
+        else if (name === "run") trail(90, "accent", 220);
+        else trail(210 + 25 * Math.sin(now / 60), "accent", 120);
+        rush(0);
       } else {
         // déjà transformé : il repart directement en courant
         const transTotal = startTransformed ? 0 : TRANS_MS.reduce((a, b) => a + b, 0);
@@ -165,6 +195,7 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
             acc += TRANS_MS[i++] ?? 0;
           show("trans", i);
           trail(0, "gold");
+          rush(0);
         } else if (t < transTotal + SUPER_RUN_MS) {
           const ramp = Math.min(1, (t - transTotal) / SUPER_RAMP_MS);
           const eased = ramp * ramp * (3 - 2 * ramp);
@@ -175,7 +206,8 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
           }
           show("ssRun", frame);
           // les tirets accélèrent avec lui (de 300 ms à 70 ms par tiret)
-          trail(eased * (170 + 25 * Math.sin(now / 40)), "gold", 300 - 230 * eased);
+          trail(eased * (320 + 30 * Math.sin(now / 40)), "gold", 300 - 230 * eased);
+          rush(eased * 0.8);
         } else {
           // il décolle, puis flotte au-dessus du liseré
           const flight = t - transTotal - SUPER_RUN_MS;
@@ -183,7 +215,8 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
           show("ssFly", Math.floor(t / 70), lift);
           // en vol : traînée immense, tirets qui défilent à toute allure (toujours dorée, quel que
           // soit le thème)
-          trail(300 + 40 * Math.sin(now / 35), "gold", 40);
+          trail(600 + 60 * Math.sin(now / 35), "gold", 30);
+          rush(1);
         }
       }
       raf = requestAnimationFrame(tick);
@@ -194,20 +227,19 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
 
   function toggle() {
     audioRef.current?.pause();
+    superTrack.current?.stop();
     if (mode !== "idle") {
       setMode("idle");
       return;
     }
     const next: Mode = superSonic ? "super" : "running";
     startTransformedRef.current = transformed;
-    const src = next === "super" ? SUPER_MUSIC : MUSIC;
-    if (!audioRef.current?.src.endsWith(src)) {
-      const audio = new Audio(src);
-      audio.loop = true;
-      audioRef.current = audio;
-    }
-    const audio = audioRef.current;
-    if (audio) {
+    if (next === "super") {
+      superTrack.current ??= new LoopTrack(SUPER_MUSIC, SUPER_LOOP_START, SUPER_LOOP_END);
+      superTrack.current.play(effectiveVolume()).catch(() => {});
+    } else {
+      audioRef.current ??= Object.assign(new Audio(MUSIC), { loop: true });
+      const audio = audioRef.current;
       audio.volume = effectiveVolume();
       audio.currentTime = 0;
       audio.play().catch(() => {});
@@ -224,6 +256,13 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
         aria-hidden
         className="sonic-streak pointer-events-none absolute h-0.5 opacity-0 transition-opacity"
         style={{ right: WIDTH / 2, top: LINE_Y - 1 }}
+      />
+      {/* lignes de vitesse dorées derrière Super Sonic */}
+      <span
+        ref={linesRef}
+        aria-hidden
+        className="sonic-speedlines pointer-events-none absolute opacity-0"
+        style={{ right: WIDTH / 2 + 6, top: LINE_Y - 36, height: 28 }}
       />
       <button
         type="button"

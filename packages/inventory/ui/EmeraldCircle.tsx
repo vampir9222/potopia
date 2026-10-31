@@ -20,9 +20,9 @@ const LAYOUT: Record<EmeraldColor, { x: number; y: number; wave: number }> = {
   cyan: { x: 20, y: 68, wave: 5 },
   red: { x: 20, y: 32, wave: 6 },
 };
-// une pierre après l'autre, vite : chacune démarre 120 ms après la précédente
-const WAVE_STEP_MS = 120;
-const STONE_MS = 650;
+// une vague serrée : chaque pierre démarre 45 ms après la précédente, elles se chevauchent
+const WAVE_STEP_MS = 45;
+const STONE_MS = 500;
 const WAVE_MS = WAVE_STEP_MS * 6 + STONE_MS;
 
 /**

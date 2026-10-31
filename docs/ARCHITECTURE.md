@@ -307,10 +307,12 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
   et de fin coupés, pour boucler sans trou) : il marche, accélère, court, pique des sprints de 2,6
   à 4,2 s. Traînée en tirets sur le liseré, à la couleur du thème, dont les tirets défilent à sa
   vitesse. Les 7 Émeraudes du Chaos trouvées et leur pouvoir libéré (`superSonic`, voir
-  Inventaire), le clic le transforme en Super Sonic (`public/audio/super-sonic.mp3`) :
-  transformation (~1,7 s), départ en trottinant puis sprint bien plus rapide que Sonic (4,5 s en
-  tout), puis il s'envole avec une traînée immense qui file à toute allure ; sa traînée est
-  toujours dorée, quel que soit le thème. Une fois transformé, il le reste (mémorisé sur
+  Inventaire), le clic le transforme en Super Sonic : transformation (~1,7 s), départ en
+  trottinant puis sprint bien plus rapide que Sonic (4,5 s en tout), puis il s'envole. Traînée
+  toujours dorée quel que soit le thème, de plus en plus longue (vol : ~600 px, le double du
+  sprint), avec images rémanentes et lignes de vitesse quand il fonce. Sa musique
+  (`public/audio/super-sonic.mp3`, morceau d'origine) boucle sans blanc ni fondu grâce à
+  `components/loopTrack.ts` (Web Audio, trois tours exacts du thème de 19,69 s). Une fois transformé, il le reste (mémorisé sur
   l'appareil) : son attente devient celle de Super Sonic (`sonic-ss-idle.png`), en lévitation
   au-dessus du liseré, et les clics suivants sautent la transformation.
 - Combo Luffy + steel ball (`components/LuffyCombo.tsx`, état partagé dans

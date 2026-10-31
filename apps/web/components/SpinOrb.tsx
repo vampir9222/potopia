@@ -9,7 +9,9 @@ const FRAMES = 48;
 const FRAME_PX = 32;
 const WIND_FRAMES = 8;
 const WIND_PX = 48;
-const SCALE = 1.5;
+// 46 px (au lieu de 48) : un chouïa plus petite, en restant sur des pixels entiers (planches
+// sans débordement d'une image sur l'autre)
+const SCALE = 46 / 32;
 const SIZE = FRAME_PX * SCALE;
 const WIND_SIZE = WIND_PX * SCALE;
 const REST_FRAME = 8; // à l'arrêt : un hexagone de trois quarts
