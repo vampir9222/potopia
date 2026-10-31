@@ -11,7 +11,9 @@ export {
   headObject,
   MAX_EXPIRES_IN,
   presignGet,
+  presignGetStable,
   presignPut,
   putObject,
+  STABLE_WINDOW,
   type ObjectInfo,
 } from "./objects";

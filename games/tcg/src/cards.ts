@@ -506,3 +506,80 @@ export async function importCards(
     return { created: fresh.length, skipped: parsed.length - fresh.length };
   }, opts);
 }
+
+/* ── Mise à jour en masse (coût, puissance, effet) ── */
+
+const updatesInput = z.object({
+  updates: z
+    .array(z.looseObject({ ideaId: z.string().min(1), name: z.string().optional() }))
+    .min(1, "Aucune carte à mettre à jour.")
+    .max(500, "500 cartes maximum par mise à jour."),
+});
+
+type CardUpdate = { ideaId: string; name?: string } & Partial<
+  Pick<CardInput, "cost" | "power" | "effectKey" | "effectParams" | "effectText">
+>;
+
+export type CardUpdates = { updates: CardUpdate[] };
+
+/**
+ * Change le coût, la puissance et l'effet de cartes existantes, retrouvées par leur idée (et par leur
+ * nom quand l'idée a plusieurs cartes). Le reste est gardé : nom, illustration, cadrage, set et
+ * numéro. Un nouvel effet sans texte prend le texte proposé par le catalogue. Les variantes suivent
+ * leur carte de base. Tout ou rien.
+ */
+export async function updateCards(
+  admin: Admin,
+  input: CardUpdates,
+  opts?: { tx?: DbTx },
+): Promise<{ updated: number }> {
+  assertAdmin(admin);
+  const updates = updatesInput.parse(input).updates as CardUpdate[];
+  return withTx(async (tx) => {
+    const rows = await tx.tcgCard.findMany({
+      where: { ideaId: { in: updates.map((u) => u.ideaId) }, baseCardId: null },
+      include: withSet,
+    });
+    for (const [i, update] of updates.entries()) {
+      const label = `Carte ${i + 1} (${update.name ?? update.ideaId})`;
+      const ofIdea = rows.filter((r) => r.ideaId === update.ideaId);
+      // Plusieurs cartes pour l'idée : le nom départage.
+      const matches =
+        ofIdea.length > 1 && update.name !== undefined
+          ? ofIdea.filter((r) => r.name === update.name)
+          : ofIdea;
+      const [row] = matches;
+      if (!row || matches.length > 1) {
+        throw new CardInputError(
+          `${label} : ${row ? "plusieurs cartes possibles, précise son nom" : "aucune carte pour cette idée"}.`,
+        );
+      }
+      const card = toCard(row);
+      const newEffect = update.effectKey !== undefined;
+      try {
+        await updateCard(
+          admin,
+          card.id,
+          {
+            name: card.name,
+            rarity: card.rarity,
+            type: card.type,
+            family: card.family,
+            flavor: card.flavor,
+            imageFrame: card.imageFrame,
+            cost: update.cost ?? card.cost,
+            power: update.power ?? card.power,
+            effectKey: newEffect ? update.effectKey : card.effectKey,
+            effectParams: newEffect ? update.effectParams : card.effectParams,
+            effectText: update.effectText ?? (newEffect ? null : card.effectText),
+          },
+          { tx },
+        );
+      } catch (error) {
+        if (!(error instanceof z.ZodError)) throw error;
+        throw new CardInputError(`${label} : ${error.issues[0]?.message}`);
+      }
+    }
+    return { updated: updates.length };
+  }, opts);
+}

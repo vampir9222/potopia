@@ -1,3 +1,4 @@
+import { getUser } from "@app/core";
 import { getIdea } from "@app/ideas";
 import { CARD_LIMITS, CARD_RARITIES, listCards, listSets } from "@app/tcg";
 import { CardEditor, type CardFields } from "@app/tcg/ui";
@@ -38,6 +39,7 @@ export default async function NewCardPage({
     idee ? getIdea(admin, idee) : null,
   ]);
   if (idee && !idea) notFound();
+  const author = idea ? await getUser(idea.authorId) : null;
   const ideaCards = idea ? cards.filter((c) => c.ideaId === idea.id) : [];
   const setSizes = Object.fromEntries(
     sets.map((s) => [s.id, cards.filter((c) => c.setId === s.id).length]),
@@ -85,6 +87,7 @@ export default async function NewCardPage({
           sets={sets}
           families={familiesOf(cards)}
           imageUrl={idea?.imageKey ? `/api/admin/ideas/${idea.id}/image` : null}
+          author={author?.name}
           setSizes={setSizes}
           defaultSetId={sets.find((s) => s.code === code)?.id ?? null}
           fromIdea={

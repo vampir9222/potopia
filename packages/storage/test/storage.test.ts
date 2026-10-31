@@ -6,6 +6,7 @@ import {
   getStorage,
   headObject,
   presignGet,
+  presignGetStable,
   presignPut,
   putObject,
 } from "../src/index";
@@ -42,6 +43,18 @@ describe("URLs présignées (R2)", () => {
     expect(url.searchParams.get("X-Amz-Expires")).toBe("300");
   });
 
+  it("GET stable : même URL pendant 5 min, valable 15 min, mise en cache autorisée", async () => {
+    const t0 = Date.UTC(2026, 9, 31, 12, 0, 0);
+    const a = await presignGetStable("cards/abc.jpg", r2, t0 + 10_000);
+    expect(await presignGetStable("cards/abc.jpg", r2, t0 + 290_000)).toBe(a);
+    expect(await presignGetStable("cards/abc.jpg", r2, t0 + 310_000)).not.toBe(a);
+    const url = new URL(a);
+    expect(url.searchParams.get("X-Amz-Date")).toBe("20261031T120000Z");
+    expect(url.searchParams.get("X-Amz-Expires")).toBe("900");
+    expect(url.searchParams.get("response-cache-control")).toBe("private, max-age=600");
+    await expect(presignGetStable("../secret", r2)).rejects.toThrow();
+  });
+
   it("refuse une expiration longue et les clés douteuses", async () => {
     await expect(presignGet({ key: "a.png", expiresIn: 3600 }, r2)).rejects.toThrow();
     for (const key of ["../secret", "/abs.png", "a//b.png", "a/../b.png", "a b.png", ""]) {
@@ -66,6 +79,9 @@ describe("stockage local (docker-compose)", () => {
     expect(await headObject(key)).toEqual({ contentType: "image/png", contentLength: body.length });
     const get = await fetch(await presignGet({ key }));
     expect(new Uint8Array(await get.arrayBuffer())).toEqual(body);
+    const stable = await fetch(await presignGetStable(key));
+    expect(stable.headers.get("cache-control")).toBe("private, max-age=600");
+    expect(new Uint8Array(await stable.arrayBuffer())).toEqual(body);
   });
 
   it("refuse un PUT dont le type ne correspond pas à la signature", async () => {

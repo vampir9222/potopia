@@ -11,7 +11,8 @@ import {
   getShowcaseImageUrl,
   SHOWCASE_IDEA_ID,
   InvalidImageError,
-  listIdeaIdsWithImage,
+  getIdeaAuthorIds,
+  listIdeaImageUrls,
   listIdeas,
   purgeStaleUploads,
   STALE_UPLOAD_MAX_AGE_MS,
@@ -124,15 +125,26 @@ describe("images", () => {
     expect(new Uint8Array(await res.arrayBuffer())).toEqual(png);
   });
 
-  it("dit quelles idées ont une image (admin seulement)", async () => {
+  it("donne l'URL de l'image des idées qui en ont une (admin seulement)", async () => {
     await submitIdea(MEMBER.id, { ...idea(1), imageKey: await uploadImage(MEMBER.id) });
     await submitIdea(MEMBER.id, idea(2));
     const { items } = await listIdeas(ADMIN);
     const withImage = items.find((i) => i.imageKey)?.id ?? "";
     const ids = items.map((i) => i.id);
-    expect(await listIdeaIdsWithImage(ADMIN, [...ids, "inconnue"])).toEqual([withImage]);
-    expect(await listIdeaIdsWithImage(ADMIN, [])).toEqual([]);
-    await expect(listIdeaIdsWithImage(MEMBER, ids)).rejects.toBeInstanceOf(ForbiddenError);
+    const urls = await listIdeaImageUrls(ADMIN, [...ids, "inconnue"]);
+    expect([...urls.keys()]).toEqual([withImage]);
+    expect((await fetch(urls.get(withImage) ?? "")).status).toBe(200);
+    expect((await listIdeaImageUrls(ADMIN, [])).size).toBe(0);
+    await expect(listIdeaImageUrls(MEMBER, ids)).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("donne l'auteur de chaque idée (admin seulement)", async () => {
+    await submitIdea(MEMBER.id, idea(1));
+    const [stored] = (await listIdeas(ADMIN)).items;
+    const id = stored?.id ?? "";
+    expect(await getIdeaAuthorIds(ADMIN, [id, "inconnue"])).toEqual(new Map([[id, MEMBER.id]]));
+    expect((await getIdeaAuthorIds(ADMIN, [])).size).toBe(0);
+    await expect(getIdeaAuthorIds(MEMBER, [id])).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("refuse une clé inventée par le client", async () => {

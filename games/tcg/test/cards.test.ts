@@ -10,12 +10,14 @@ import {
   EFFECTS,
   effectText,
   ensureSet,
+  getCard,
   importCards,
   listCards,
   moveCards,
   paramsSchema,
   setCardImage,
   updateCard,
+  updateCards,
 } from "../src/index";
 
 const ADMIN = { discordId: "100000000000000001" };
@@ -38,20 +40,21 @@ beforeEach(async () => {
 });
 
 describe("catalogue d'effets", () => {
-  it("a des clés uniques et un texte pour les réglages par défaut", () => {
+  it("a des clés uniques, une carte Snap et un texte pour les réglages par défaut", () => {
     const keys = EFFECTS.map((e) => e.key);
     expect(new Set(keys).size).toBe(keys.length);
     for (const effect of EFFECTS) {
+      expect(effect.snap).not.toBe("");
       expect(effectText(effect.key, { family: "Test", name: "un jeton" })).toMatch(/\.$/);
     }
   });
 
   it("borne les réglages", () => {
-    const effect = EFFECTS.find((e) => e.key === "reveal_draw");
+    const effect = EFFECTS.find((e) => e.key === "reveal_buff_two_allies");
     if (!effect) throw new Error("effet manquant");
-    expect(paramsSchema(effect).parse({ count: "2" })).toEqual({ count: 2 });
-    expect(() => paramsSchema(effect).parse({ count: 9 })).toThrow(ZodError);
-    expect(() => paramsSchema(effect).parse({ count: 1, autre: 2 })).toThrow(ZodError);
+    expect(paramsSchema(effect).parse({ amount: "3", count: 2 })).toEqual({ amount: 3, count: 2 });
+    expect(() => paramsSchema(effect).parse({ amount: 3, count: 9 })).toThrow(ZodError);
+    expect(() => paramsSchema(effect).parse({ amount: 3, count: 1, autre: 2 })).toThrow(ZodError);
   });
 });
 
@@ -66,12 +69,14 @@ describe("createCard", () => {
       ...BASE,
       setId,
       name: "Avec effet",
-      effectKey: "reveal_debuff_strongest_enemy",
+      effectKey: "reveal_debuff_weakest_enemy_silence",
       effectParams: { amount: 2 },
     });
     expect([first.number, second.number]).toEqual([1, 2]);
     expect(first.effectText).toBe("");
-    expect(second.effectText).toBe("À la révélation : −2 à la carte adverse la plus forte ici.");
+    expect(second.effectText).toBe(
+      "Révélation : −2 à la carte adverse la plus faible ici, et retire son texte.",
+    );
     expect(second.setCode).toBe("S1");
   });
 
@@ -102,7 +107,12 @@ describe("createCard", () => {
       ZodError,
     );
     await expect(
-      createCard(ADMIN, { ...BASE, setId, effectKey: "reveal_draw", effectParams: { count: 0 } }),
+      createCard(ADMIN, {
+        ...BASE,
+        setId,
+        effectKey: "reveal_buff_hand",
+        effectParams: { amount: 0 },
+      }),
     ).rejects.toThrow(ZodError);
   });
 });
@@ -164,7 +174,6 @@ describe("importCards", () => {
         name: "Idée B",
         ideaId: "idea-b",
         effectKey: "reveal_draw",
-        effectParams: { count: 1 },
       },
     ],
   };
@@ -179,15 +188,78 @@ describe("importCards", () => {
       [2, "Idée A"],
       [3, "Idée B"],
     ]);
-    expect(cards[2]?.effectText).toBe("À la révélation : pioche 1 carte.");
+    expect(cards[2]?.effectText).toBe("Révélation : chaque joueur pioche une carte.");
   });
 
   it("tout ou rien, avec la carte fautive dans le message", async () => {
     const bad = { ...file, cards: [...file.cards, { ...BASE, name: "Trop chère", cost: 9 }] };
     await expect(importCards(ADMIN, bad)).rejects.toThrow(
-      "Carte 3 (Trop chère) : Mana : 6 maximum.",
+      "Carte 3 (Trop chère) : Mana : 8 maximum.",
     );
     expect(await db.tcgCard.count()).toBe(0);
+  });
+});
+
+describe("updateCards", () => {
+  it("change coût, puissance et effet, retrouve la carte par son idée, garde le reste", async () => {
+    await importCards(ADMIN, {
+      set: { code: "S1", name: "Set de test" },
+      cards: [{ ...BASE, name: "Idée A", ideaId: "idea-a", flavor: "Garde-moi." }],
+    });
+    const [base] = await listCards(ADMIN, { setId });
+    await createCard(ADMIN, { ...BASE, setId, name: "Idée A (full art)", baseCardId: base?.id });
+    const done = await updateCards(ADMIN, {
+      updates: [
+        {
+          ideaId: "idea-a",
+          cost: 6,
+          power: 10,
+          effectKey: "reveal_move_allies_left",
+          effectText: "Révélation : ÇA TOURNE !",
+        },
+      ],
+    });
+    expect(done).toEqual({ updated: 1 });
+    const [card, variant] = await listCards(ADMIN, { setId });
+    expect(card).toMatchObject({
+      name: "Idée A",
+      flavor: "Garde-moi.",
+      number: 1,
+      cost: 6,
+      power: 10,
+      effectKey: "reveal_move_allies_left",
+      effectText: "Révélation : ÇA TOURNE !",
+    });
+    expect(variant).toMatchObject({ cost: 6, power: 10, effectKey: "reveal_move_allies_left" });
+
+    // Nouvel effet sans texte : le texte proposé par le catalogue.
+    await updateCards(ADMIN, { updates: [{ ideaId: "idea-a", effectKey: "reveal_draw" }] });
+    expect((await getCard(ADMIN, card?.id ?? ""))?.effectText).toBe(
+      "Révélation : chaque joueur pioche une carte.",
+    );
+  });
+
+  it("départage par le nom, tout ou rien, admins seulement", async () => {
+    await createCard(ADMIN, { ...BASE, setId, name: "Un", ideaId: "idea-x" });
+    await createCard(ADMIN, { ...BASE, setId, name: "Deux", ideaId: "idea-x" });
+    await expect(updateCards(ADMIN, { updates: [{ ideaId: "idea-x", cost: 1 }] })).rejects.toThrow(
+      "Carte 1 (idea-x) : plusieurs cartes possibles, précise son nom.",
+    );
+    await expect(
+      updateCards(ADMIN, {
+        updates: [
+          { ideaId: "idea-x", name: "Deux", cost: 1 },
+          { ideaId: "idea-y", name: "Absente", cost: 1 },
+        ],
+      }),
+    ).rejects.toThrow("Carte 2 (Absente) : aucune carte pour cette idée.");
+    await expect(
+      updateCards(ADMIN, { updates: [{ ideaId: "idea-x", name: "Un", effectKey: "inconnu" }] }),
+    ).rejects.toThrow("Carte 1 (Un) : Effet inconnu.");
+    expect((await listCards(ADMIN, { setId })).map((c) => c.cost)).toEqual([2, 2]);
+    await expect(
+      updateCards(MEMBER, { updates: [{ ideaId: "idea-x", name: "Un", cost: 1 }] }),
+    ).rejects.toThrow("Réservé aux admins.");
   });
 });
 
