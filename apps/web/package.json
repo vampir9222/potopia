@@ -21,6 +21,7 @@
     "@app/db": "workspace:*",
     "@app/economy": "workspace:*",
     "@app/ideas": "workspace:*",
+    "@app/inventory": "workspace:*",
     "@app/storage": "workspace:*",
     "@app/tcg": "workspace:*",
     "@app/trois": "workspace:*",

@@ -324,6 +324,16 @@ export const EFFECTS = [
     snap: "Nightcrawler",
   },
   {
+    // Comme dans Snap : ses propres cartes seulement, et sans faire le tour (celles du lieu de
+    // gauche restent, comme celles qui n'ont pas de place).
+    key: "reveal_move_allies_left",
+    label: "Déplace tes autres cartes d'un lieu vers la gauche",
+    trigger: "reveal",
+    params: [],
+    text: () => "À la révélation : déplace tes autres cartes d'un lieu vers la gauche.",
+    snap: "Heimdall",
+  },
+  {
     key: "reveal_destroy_enemies_power_at_least",
     label: "Détruit les cartes adverses ici d'une puissance minimale",
     trigger: "reveal",

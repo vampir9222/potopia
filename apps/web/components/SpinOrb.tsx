@@ -1,13 +1,17 @@
 "use client";
 
-import { cx, effectiveVolume, onVolumeChange } from "@app/ui";
+import { cx, effectiveVolume, onVolumeChange, timeNow } from "@app/ui";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { Square } from "lucide-react";
+import { COMBO_CHARGE_MS, fadeAudio, onComboChange, setStage, useHeaderStage } from "./headerStage";
 
 const FRAMES = 48;
 const FRAME_PX = 32;
 const WIND_FRAMES = 8;
 const WIND_PX = 48;
-const SCALE = 1.5;
+// 46 px (au lieu de 48) : un chouïa plus petite, en restant sur des pixels entiers (planches
+// sans débordement d'une image sur l'autre)
+const SCALE = 46 / 32;
 const SIZE = FRAME_PX * SCALE;
 const WIND_SIZE = WIND_PX * SCALE;
 const REST_FRAME = 8; // à l'arrêt : un hexagone de trois quarts
@@ -20,6 +24,20 @@ const BOOST_MIN = 9;
 const BOOST_MAX = 15;
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+
+// Au repos, régulièrement (toutes les 3 s environ), la boule rebondit sur place : elle descend
+// toucher le liseré, s'écrase, rebondit (sans sortir de l'écran), retouche et se pose ; au
+// contact, un éclat d'étincelles dorées et un reflet qui balaie la boule.
+const IDLE_MIN_MS = 2800;
+const IDLE_MAX_MS = 3400;
+const HOP_MS = 1100;
+// éclats au contact du liseré : direction (px) de chaque étincelle
+const HOP_SPARKS = [
+  { x: -16, y: -6 },
+  { x: -9, y: -13 },
+  { x: 9, y: -13 },
+  { x: 16, y: -6 },
+];
 
 function sheet(src: string, frames: number, px: number, frame = 0): CSSProperties {
   return {
@@ -44,6 +62,55 @@ export function SpinOrb() {
   const blur1Ref = useRef<HTMLSpanElement>(null);
   const blur2Ref = useRef<HTMLSpanElement>(null);
   const windRef = useRef<HTMLSpanElement>(null);
+  // combo avec Luffy : la boule quitte sa place pour rouler sur le liseré (LuffyCombo)
+  const { combo } = useHeaderStage();
+
+  // Luffy l'emmène : elle se charge dans sa case pendant que sa musique s'éteint, puis part
+  // rouler ; sa case montre alors un bouton stop pour annuler le combo.
+  const [comboStage, setComboStage] = useState<"off" | "charging" | "away">("off");
+  const [hopping, setHopping] = useState(false);
+  useEffect(
+    () =>
+      onComboChange((on) => {
+        if (!on) {
+          setComboStage("off");
+          return;
+        }
+        setComboStage("charging");
+        fadeAudio(audioRef.current, 0, COMBO_CHARGE_MS);
+        window.setTimeout(() => {
+          setPlaying(false);
+          setComboStage((s) => (s === "charging" ? "away" : s));
+        }, COMBO_CHARGE_MS);
+      }),
+    [],
+  );
+
+  // Au repos (ni musique, ni combo) : un rebond sur place, régulièrement.
+  useEffect(() => {
+    if (playing || combo) return;
+    let timer = 0;
+    const next = () => {
+      timer = window.setTimeout(
+        () => {
+          setHopping(true);
+          timer = window.setTimeout(() => {
+            setHopping(false);
+            next();
+          }, HOP_MS);
+        },
+        IDLE_MIN_MS + Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS),
+      );
+    };
+    next();
+    return () => {
+      window.clearTimeout(timer);
+      setHopping(false);
+    };
+  }, [playing, combo]);
+
+  // Les combos du header ont besoin de savoir si elle tourne.
+  useEffect(() => setStage({ orbPlaying: playing }), [playing]);
 
   // La musique s'arrête quand on quitte la page.
   useEffect(() => () => audioRef.current?.pause(), []);
@@ -63,7 +130,7 @@ export function SpinOrb() {
     const [, blur1, blur2] = layers;
     const wind = windRef.current;
     let raf = 0;
-    let last = performance.now();
+    let last = timeNow();
     let boost = 6; // démarrage lancé
     let target = 0;
     let holdUntil = 0;
@@ -71,7 +138,9 @@ export function SpinOrb() {
     let windPhase = 0;
     let wasFast = false;
 
-    const tick = (now: number) => {
+    // horloge commune : figée pendant un arrêt du temps (ZA WARUDO)
+    const tick = () => {
+      const now = timeNow();
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
 
@@ -120,6 +189,11 @@ export function SpinOrb() {
   }, [playing]);
 
   function toggle() {
+    // pendant le combo, un clic sur sa case la ramène
+    if (combo) {
+      setStage({ combo: false });
+      return;
+    }
     if (!audioRef.current) {
       const audio = new Audio(MUSIC);
       audio.loop = true;
@@ -131,6 +205,8 @@ export function SpinOrb() {
       audio.pause();
       setPlaying(false);
     } else {
+      // le combo l'a peut-être éteinte en fondu (volume à 0) : on le remet
+      audio.volume = effectiveVolume();
       audio.play().catch(() => setPlaying(false));
       setPlaying(true);
     }
@@ -140,14 +216,32 @@ export function SpinOrb() {
     <button
       type="button"
       onClick={toggle}
-      aria-label={playing ? "Mettre la musique en pause" : "Lancer la musique"}
-      aria-pressed={playing}
-      title={playing ? "Pause" : "Musique"}
-      className="hover:bg-surface rounded-md p-1 transition-transform hover:scale-110"
+      aria-label={
+        combo ? "Arrêter le combo" : playing ? "Mettre la musique en pause" : "Lancer la musique"
+      }
+      aria-pressed={playing || combo}
+      title={combo ? "Arrêter le combo" : playing ? "Pause" : "Musique"}
+      className="hover:bg-surface relative rounded-md p-1 transition-transform hover:scale-110"
     >
+      {comboStage === "away" && (
+        <span
+          aria-hidden
+          className="combo-stop border-accent/70 bg-surface text-accent absolute inset-1.5 grid place-items-center rounded-full border-2"
+        >
+          <Square size={14} fill="currentColor" />
+        </span>
+      )}
       <span
         aria-hidden
-        className={cx("relative block", playing && "orb-glow", fast && "orb-fast")}
+        data-spin-orb
+        className={cx(
+          "relative block transition-opacity duration-500",
+          playing && "orb-glow",
+          fast && "orb-fast",
+          comboStage === "charging" && "orb-charge",
+          !playing && hopping && "orb-hop",
+          comboStage === "away" && "opacity-0",
+        )}
         style={{ width: SIZE, height: SIZE }}
       >
         <span
@@ -165,6 +259,26 @@ export function SpinOrb() {
           className="absolute inset-0 opacity-0"
           style={sheet("/orb/orb-blur-2.png", FRAMES, SIZE, REST_FRAME)}
         />
+        {!playing && hopping && (
+          <>
+            {/* reflet qui balaie la boule au contact */}
+            <span className="orb-glint absolute inset-0 rounded-full" />
+            {HOP_SPARKS.map((spark, i) => (
+              <span
+                key={i}
+                className="orb-spark absolute block"
+                style={
+                  {
+                    left: SIZE / 2 - 3,
+                    bottom: -3,
+                    "--spark-x": `${spark.x}px`,
+                    "--spark-y": `${spark.y}px`,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </>
+        )}
         <span
           ref={windRef}
           className="pointer-events-none absolute opacity-0"

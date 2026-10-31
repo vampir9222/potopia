@@ -79,6 +79,12 @@ Les mots changent à minuit, heure de Paris. Pour qu'une partie en cours ne soit
   du portail.
 - 🤫 Un mode secret se déclenche en tapant un mot caché. Purement visuel et sonore : rien n'est
   envoyé au serveur.
+- **Dernière chance** (6e essai d'un mot, mode test compris) : des « ゴゴゴゴ » façon JoJo surgissent
+  de chaque côté de la grille et ondulent (`ui/Menacing.tsx`, image `public/jojo/menacing.png` de
+  l'app), la ligne en cours pulse en violet.
+- **Mot raté** (mode test compris) : arrêt sur image « To Be Continued » (`toBeContinued()` de `@app/ui`,
+  voir ARCHITECTURE).
+- Les images de ces effets sont chargées dès l'ouverture du jeu (`preloadImages` de `@app/ui`).
 
 ## Mots
 

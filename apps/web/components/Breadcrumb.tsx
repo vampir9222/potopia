@@ -13,6 +13,7 @@ const SECTION_LABELS: Record<string, string> = {
   avatar: "Mon avatar",
   credits: "Crédits",
   economy: "Monnaie",
+  inventaire: "Mon inventaire",
   wallet: "Ma monnaie",
 };
 

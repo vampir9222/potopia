@@ -1,5 +1,6 @@
 "use client";
 
+import { preloadImages, toBeContinued } from "@app/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   dayStarted,
@@ -14,6 +15,7 @@ import {
 } from "../src/game";
 import { api } from "./api";
 import { feedSecret } from "./Boobzilla";
+import { Menacing, MENACING_SRC } from "./Menacing";
 import { confetti } from "./confetti";
 import type { Stats } from "./Profile";
 import { sfx } from "./sound";
@@ -103,6 +105,9 @@ export function Game({
   // créneau dans lequel on tape : le mot rejoué en mode test, sinon le mot en cours
   const active = practice ? view : current;
   const playable = !busy && !revealing && view === active && word.status === "playing";
+  // dernier essai du mot en cours, ou du mot rejoué en mode test : ゴゴゴゴ
+  const lastChance =
+    view === active && word.status === "playing" && word.tries === day.maxTries - 1;
 
   const flash = useCallback((msg: string, ms = 1600) => {
     setToast(msg);
@@ -163,6 +168,7 @@ export function Game({
           if (w.status === "lost") {
             sfx.lose();
             flash(`C'était « ${w.answer?.toUpperCase()} »`, 2500);
+            toBeContinued();
           }
         }, REVEAL_MS);
         return;
@@ -192,6 +198,7 @@ export function Game({
         if (w.status === "lost") {
           sfx.lose();
           flash(`C'était « ${w.answer?.toUpperCase()} »`, 2500);
+          toBeContinued();
         }
         if (w.status !== "playing" && r.slot < r.day.words.length - 1)
           setTimeout(() => setView(r.slot + 1), 1200);
@@ -247,6 +254,9 @@ export function Game({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [press]);
+
+  // « ゴゴゴゴ » chargé d'avance : au dernier essai, il surgit sans attendre l'image
+  useEffect(() => void preloadImages([MENACING_SRC]), []);
 
   // le mot secret ne doit pas rester dans la grille
   useEffect(() => {
@@ -366,8 +376,9 @@ export function Game({
         )
       )}
 
-      {/* grille */}
-      <div className="grid gap-1.5">
+      {/* grille ; au dernier essai d'un mot, ambiance menaçante façon JoJo */}
+      <div className="relative grid gap-1.5">
+        {lastChance && <Menacing />}
         {Array.from({ length: day.maxTries }, (_, r) => {
           const guess = word.guesses?.[r];
           const typing = !guess && r === word.tries && view === active ? input : "";
@@ -376,7 +387,7 @@ export function Game({
           return (
             <div
               key={r}
-              className={`grid grid-cols-5 gap-1.5 ${shake && view === active && r === word.tries ? "animate-shake" : ""}`}
+              className={`grid grid-cols-5 gap-1.5 ${shake && view === active && r === word.tries ? "animate-shake" : ""} ${lastChance && r === word.tries ? "trois-last-row" : ""}`}
             >
               {Array.from({ length: WORD_LEN }, (_, i) => {
                 const letter = guess?.[i] ?? typing[i] ?? "";

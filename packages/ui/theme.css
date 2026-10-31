@@ -41,6 +41,7 @@
   --embers: block;
   --ambient: 1;
   --fans: none;
+  --jojo: none;
 }
 
 /* Classique (par défaut, voir DEFAULT_THEME) : bleu nuit et sobre, sans décors. */
@@ -130,6 +131,38 @@
     --rgb-hue: 360;
     --rgb-angle: 360deg;
   }
+}
+
+/*
+ * JoJo (Stardust Crusaders) : nuit indigo, or et violet de Star Platinum, cadres encrés façon
+ * case de manga, titres en Anton avec ombre noire, étoiles Joestar aux coins des cartes. Décor
+ * (composant JojoDecor) : trame, rayons, portraits de Jotaro / Star Platinum et DIO / The World,
+ * « ゴゴゴ » qui montent, Jotaro qui prend la pose. Choisir ce thème déclenche « ZA WARUDO ».
+ */
+[data-theme="jojo"] {
+  --bg: #0c0a1c;
+  --surface: #161230;
+  --surface-hover: #211a45;
+  --border: #33295e;
+  --text: #f6efdc;
+  --muted: #aaa0d2;
+  --accent: #f4c430;
+  --accent-hover: #ffd75e;
+  --on-accent: #1a1203;
+  --arcane: #7a4cff;
+  --danger: #ff4d6d;
+  --success: #4fd68d;
+
+  --radius: 0.3rem;
+  --font-display: var(--font-jojo-face, "Anton"), Impact, sans-serif;
+
+  --accent-gradient: linear-gradient(135deg, #fff3b0 0%, #f4c430 42%, #c78cff 100%);
+  --frame: #f4c430;
+  --ornaments: block;
+  --embers: none;
+  --ambient: 0.85;
+  --fans: none;
+  --jojo: block;
 }
 
 @theme inline {
@@ -242,6 +275,66 @@
       0 10px 30px -18px rgb(0 0 0 / 0.9);
   }
 
+  /* JoJo : case de manga. Trait d'encre noir, liseré doré, ombre portée nette, fond légèrement
+     translucide (le décor se devine derrière) et trame discrète. */
+  [data-theme="jojo"] .theme-frame {
+    border: 2px solid #050308;
+    background:
+      radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 1.6px) 0 0 / 6px
+        6px,
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--surface) 88%, var(--arcane)) 0%,
+        color-mix(in oklab, var(--surface) 88%, transparent) 35%
+      );
+    backdrop-filter: blur(6px);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--accent) 55%, transparent),
+      5px 5px 0 #050308,
+      0 0 28px -14px var(--arcane);
+  }
+  /* étoiles Joestar à la place des losanges */
+  [data-theme="jojo"] .theme-frame::before,
+  [data-theme="jojo"] .theme-frame::after {
+    width: 13px;
+    height: 13px;
+    transform: none;
+    clip-path: polygon(
+      50% 0,
+      61% 35%,
+      98% 35%,
+      68% 57%,
+      79% 91%,
+      50% 70%,
+      21% 91%,
+      32% 57%,
+      2% 35%,
+      39% 35%
+    );
+    filter: drop-shadow(0 0 4px var(--accent));
+  }
+  [data-theme="jojo"] .theme-frame::before {
+    top: -7px;
+  }
+  [data-theme="jojo"] .theme-frame::after {
+    bottom: -7px;
+  }
+  /* titres : Anton, ombre d'encre décalée */
+  [data-theme="jojo"] .font-display {
+    letter-spacing: 0.06em;
+    filter: drop-shadow(1.5px 1.5px 0 #050308);
+  }
+  /* petits textes (noms des tuiles, titres de cartes) : Anton y devient illisible, on garde une
+     police pleine, en capitales grasses, sans ombre */
+  [data-theme="jojo"] :is(.font-display.text-xs, .font-display.text-sm) {
+    /* !important : la classe font-display de Tailwind (couche utilities) passerait devant */
+    font-family: var(--font-body) !important;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    filter: none;
+  }
+
   /* Texte en dégradé d'or (logo, titres importants). */
   .text-gradient {
     background: var(--accent-gradient);
@@ -324,6 +417,105 @@
   /* bulles qui montent dans le réservoir */
   .rgb-rise {
     animation: bubble-rise 4s ease-in infinite;
+  }
+
+  /* Décor du thème JoJo (composant JojoDecor), affiché seulement par ce thème. */
+  .jojo-decor {
+    display: var(--jojo);
+  }
+  /* rayons dorés et violets qui partent du coin de DIO et tournent très lentement */
+  .jojo-rays {
+    position: absolute;
+    inset: -60%;
+    background: repeating-conic-gradient(
+      from 0deg at 78% 22%,
+      color-mix(in oklab, var(--accent) 7%, transparent) 0deg 4deg,
+      transparent 4deg 12deg,
+      color-mix(in oklab, var(--arcane) 8%, transparent) 12deg 15deg,
+      transparent 15deg 24deg
+    );
+    animation: spin 240s linear infinite;
+    transform-origin: 78% 22%;
+  }
+  /* trame de manga, plus dense vers les bords */
+  .jojo-tone {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgb(255 255 255 / 0.07) 1px, transparent 1.7px) 0 0 / 7px
+      7px;
+    mask-image: radial-gradient(ellipse at center, transparent 30%, #000 85%);
+  }
+  .jojo-portrait {
+    position: absolute;
+    width: min(42vw, 480px);
+    aspect-ratio: 1;
+    background-size: cover;
+    image-rendering: pixelated;
+    opacity: 0.22;
+    filter: saturate(1.2) contrast(1.05);
+  }
+  .jojo-portrait-jotaro {
+    left: -2vw;
+    bottom: -4vh;
+    mask-image: radial-gradient(circle at 35% 65%, #000 35%, transparent 72%);
+  }
+  .jojo-portrait-sp {
+    left: 16vw;
+    bottom: 6vh;
+    opacity: 0.14;
+    mask-image: radial-gradient(circle at 45% 55%, #000 25%, transparent 68%);
+  }
+  .jojo-portrait-dio {
+    right: -2vw;
+    top: 4vh;
+    mask-image: radial-gradient(circle at 65% 40%, #000 35%, transparent 72%);
+  }
+  .jojo-portrait-tw {
+    right: 16vw;
+    top: -6vh;
+    opacity: 0.14;
+    mask-image: radial-gradient(circle at 55% 45%, #000 25%, transparent 68%);
+  }
+  /* « ゴゴゴ » qui montent lentement en se balançant */
+  .jojo-menace {
+    position: absolute;
+    bottom: -140px;
+    aspect-ratio: 89 / 160;
+    background: url(/jojo/menacing.png) center / contain no-repeat;
+    opacity: 0;
+    animation: jojo-menace linear infinite;
+  }
+  /* étoiles Joestar qui scintillent */
+  .jojo-star {
+    position: absolute;
+    background: var(--accent-gradient);
+    clip-path: polygon(
+      50% 0,
+      61% 35%,
+      98% 35%,
+      68% 57%,
+      79% 91%,
+      50% 70%,
+      21% 91%,
+      32% 57%,
+      2% 35%,
+      39% 35%
+    );
+    opacity: 0;
+    animation: jojo-star ease-in-out infinite;
+  }
+  /* Jotaro prend la pose (« yare yare daze ») dans le coin : 30 images de 72 × 113 */
+  .jojo-pose {
+    position: absolute;
+    right: 2vw;
+    bottom: 0;
+    width: 108px;
+    height: 170px;
+    background: url(/jojo/jotaro-pose.png) 0 0 / 3240px 170px no-repeat;
+    image-rendering: pixelated;
+    opacity: 0.55;
+    filter: drop-shadow(0 0 10px color-mix(in oklab, var(--arcane) 70%, transparent));
+    animation: jojo-pose 3.6s steps(30) infinite;
   }
 
   .ember {
@@ -429,6 +621,39 @@
     box-shadow: 0 0 0 5px color-mix(in oklab, var(--accent) 0%, transparent);
   }
 }
+@keyframes jojo-menace {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(var(--menace-tilt, 0deg));
+  }
+  12% {
+    opacity: 0.22;
+  }
+  85% {
+    opacity: 0.18;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--menace-sway, 40px), -115vh, 0)
+      rotate(calc(var(--menace-tilt, 0deg) * -1));
+  }
+}
+@keyframes jojo-star {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1) rotate(36deg);
+  }
+}
+@keyframes jojo-pose {
+  to {
+    background-position: -3240px 0;
+  }
+}
 @keyframes ember-rise {
   0% {
     opacity: 0;
@@ -453,7 +678,9 @@
     transition-duration: 0.01ms !important;
   }
   .ember,
-  .rgb-fans {
+  .rgb-fans,
+  .jojo-menace,
+  .jojo-star {
     display: none;
   }
 }
