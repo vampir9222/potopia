@@ -1,6 +1,6 @@
 "use client";
 
-import { cx, effectiveVolume, onVolumeChange, timeNow } from "@app/ui";
+import { cx, effectiveVolume, imagesReady, onVolumeChange, preloadImages, timeNow } from "@app/ui";
 import {
   type AnimationEvent,
   type CSSProperties,
@@ -14,6 +14,13 @@ import { COMBO_LEAVE_MS, onComboChange, setStage, useHeaderStage } from "./heade
 import { LuffyCombo } from "./LuffyCombo";
 import { LUFFY_GROUND } from "./luffyGround";
 
+// planches du fruit, de Luffy et du combo (Luffy qui court, la boule qui le poursuit)
+const IMAGES = [
+  "/luffy/devil-fruit.png",
+  "/luffy/luffy-sheet.png",
+  "/luffy/luffy-run-sheet.png",
+  "/orb/orb-sheet.png",
+];
 const FRAMES = 25;
 const FRAME_MS = 50; // 20 images/s, comme le gif d'origine
 const SRC_PX = 150; // taille d'une frame du gif
@@ -149,6 +156,8 @@ export function LuffyRun() {
   const running = phase === "waking" || phase === "playing";
 
   // La musique s'arrête quand on quitte la page.
+  // Toutes les planches sont chargées dès l'affichage : le fruit devient Luffy sans blanc.
+  useEffect(() => void preloadImages(IMAGES), []);
   useEffect(() => () => audioRef.current?.pause(), []);
 
   // Elle suit le volume global du header, même pendant la lecture.
@@ -247,6 +256,11 @@ export function LuffyRun() {
     // combo en cours : un clic sur le fruit l'arrête
     if (combo) {
       setStage({ combo: false });
+      return;
+    }
+    // clic très tôt, planches pas encore là : il part dès qu'elles le sont (sinon il disparaîtrait)
+    if (!running && !imagesReady(IMAGES)) {
+      void preloadImages(IMAGES).then(toggle);
       return;
     }
     // la steel ball tourne et Luffy dort : combo, il sort du fruit pour lui courir après

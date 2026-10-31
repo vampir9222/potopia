@@ -9,6 +9,9 @@ const SPOTS = [
   { side: "right", top: "58%", height: 94, delay: 0.5, rotate: -5 },
 ] as const;
 
+/** L'image (la même que la classe de fond ci-dessous). */
+export const MENACING_SRC = "/jojo/menacing.png";
+
 // Proportions de l'image (public/jojo/menacing.png).
 const RATIO = 89 / 160;
 

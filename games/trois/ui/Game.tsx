@@ -1,6 +1,6 @@
 "use client";
 
-import { toBeContinued } from "@app/ui";
+import { preloadImages, toBeContinued } from "@app/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   dayStarted,
@@ -15,7 +15,7 @@ import {
 } from "../src/game";
 import { api } from "./api";
 import { feedSecret } from "./Boobzilla";
-import { Menacing } from "./Menacing";
+import { Menacing, MENACING_SRC } from "./Menacing";
 import { confetti } from "./confetti";
 import type { Stats } from "./Profile";
 import { sfx } from "./sound";
@@ -105,9 +105,9 @@ export function Game({
   // créneau dans lequel on tape : le mot rejoué en mode test, sinon le mot en cours
   const active = practice ? view : current;
   const playable = !busy && !revealing && view === active && word.status === "playing";
-  // dernier essai du mot en cours (pas en mode test) : ゴゴゴゴ
+  // dernier essai du mot en cours, ou du mot rejoué en mode test : ゴゴゴゴ
   const lastChance =
-    !practice && view === current && real.status === "playing" && real.tries === day.maxTries - 1;
+    view === active && word.status === "playing" && word.tries === day.maxTries - 1;
 
   const flash = useCallback((msg: string, ms = 1600) => {
     setToast(msg);
@@ -168,6 +168,7 @@ export function Game({
           if (w.status === "lost") {
             sfx.lose();
             flash(`C'était « ${w.answer?.toUpperCase()} »`, 2500);
+            toBeContinued();
           }
         }, REVEAL_MS);
         return;
@@ -253,6 +254,9 @@ export function Game({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [press]);
+
+  // « ゴゴゴゴ » chargé d'avance : au dernier essai, il surgit sans attendre l'image
+  useEffect(() => void preloadImages([MENACING_SRC]), []);
 
   // le mot secret ne doit pas rester dans la grille
   useEffect(() => {

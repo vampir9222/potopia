@@ -62,8 +62,8 @@ export function EmeraldsProvider({
             color,
             text:
               emeralds === EMERALDS.length
-                ? "Les 7 Émeraudes du Chaos sont réunies !"
-                : `Émeraude du Chaos trouvée ! (${emeralds}/${EMERALDS.length})`,
+                ? "Les 7 Chaos Emeralds sont réunies !"
+                : `Chaos Emerald trouvée ! (${emeralds}/${EMERALDS.length})`,
           });
         })
         .catch(() =>

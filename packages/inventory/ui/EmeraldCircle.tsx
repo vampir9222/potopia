@@ -1,9 +1,9 @@
 "use client";
 
 import { Button, cx } from "@app/ui";
-import { useState, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { EMERALDS, emeraldSrc, hasAllEmeralds, type EmeraldColor } from "../src/catalog";
-import { playClip, SOUNDS } from "./sounds";
+import { playClip, playTink, SOUNDS } from "./sounds";
 import { setEmeraldsDisabled, useEmeraldsDisabled } from "./superSonic";
 
 /**
@@ -25,6 +25,75 @@ const WAVE_STEP_MS = 45;
 const STONE_MS = 500;
 const WAVE_MS = WAVE_STEP_MS * 6 + STONE_MS;
 
+// couleur des éclats qui jaillissent d'une pierre quand on tape dessus
+const SPARK_COLORS: Record<EmeraldColor, string> = {
+  blue: "#5aa8ff",
+  yellow: "#ffe14a",
+  white: "#f4f4ff",
+  green: "#4fe07a",
+  purple: "#c47bff",
+  cyan: "#5ff0f0",
+  red: "#ff5a5a",
+};
+const rand = (min: number, max: number) => min + Math.random() * (max - min);
+
+/**
+ * Un coup sur une pierre trouvée : elle sursaute en penchant d'un côté, s'illumine et lâche
+ * quelques éclats de sa couleur. Sens, angle, hauteur, durée, nombre et trajectoire des éclats sont
+ * tirés au hasard à chaque coup : deux coups se ressemblent sans jamais être identiques.
+ */
+function tap(stone: HTMLElement, layer: HTMLElement, color: EmeraldColor) {
+  for (const a of stone.getAnimations()) if (a.id === "tap") a.cancel();
+  const tilt = (Math.random() < 0.5 ? -1 : 1) * rand(5, 14);
+  const pop = rand(1.08, 1.2);
+  const lift = rand(2, 7);
+  const duration = rand(360, 480);
+  stone.animate(
+    [
+      { transform: "none" },
+      { transform: `translateY(${-lift}px) rotate(${tilt}deg) scale(${pop})`, offset: 0.28 },
+      { transform: `rotate(${-tilt * 0.35}deg) scale(${2 - pop})`, offset: 0.62 },
+      { transform: "none" },
+    ],
+    { duration, easing: "ease-out", id: "tap" },
+  );
+  // éclat blanc qui retombe sur la brillance de la pierre (mêmes fonctions de filtre que le CSS)
+  stone.animate(
+    [
+      {
+        filter: `grayscale(0) brightness(${rand(1.5, 2)}) drop-shadow(0 0 12px rgb(255 255 255 / 0.9))`,
+      },
+    ],
+    { duration: duration * 0.8, easing: "ease-out", id: "tap" },
+  );
+  const count = 3 + Math.floor(Math.random() * 4);
+  const start = rand(0, Math.PI * 2);
+  for (let i = 0; i < count; i++) {
+    const spark = document.createElement("span");
+    spark.className = "emerald-tap-spark";
+    spark.style.left = stone.style.left;
+    spark.style.top = stone.style.top;
+    spark.style.background = SPARK_COLORS[color];
+    layer.append(spark);
+    const angle = start + (i / count) * Math.PI * 2 + rand(-0.4, 0.4);
+    const dist = rand(18, 34);
+    const size = rand(0.6, 1.2);
+    spark
+      .animate(
+        [
+          { transform: `translate(-50%, -50%) rotate(45deg) scale(${size})`, opacity: 1 },
+          {
+            transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) rotate(45deg) scale(0)`,
+            opacity: 0.6,
+          },
+        ],
+        { duration: rand(380, 560), easing: "cubic-bezier(0.2, 0.7, 0.3, 1)" },
+      )
+      .finished.finally(() => spark.remove());
+  }
+  playTink();
+}
+
 /**
  * Les 7 Émeraudes du Chaos de l'inventaire : en noir tant qu'elles ne sont pas trouvées. Réunies,
  * leur pouvoir (Super Sonic) peut être scellé : elles s'éteignent une à une et Sonic redevient
@@ -35,6 +104,7 @@ export function EmeraldCircle({ items }: { items: readonly string[] }) {
   const sealed = useEmeraldsDisabled();
   const complete = hasAllEmeralds(items);
   const [wave, setWave] = useState<"seal" | "unseal" | null>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
 
   const toggle = () => {
     const next = !sealed;
@@ -47,7 +117,7 @@ export function EmeraldCircle({ items }: { items: readonly string[] }) {
 
   return (
     <>
-      <div className="relative mx-auto aspect-[9/10] w-full max-w-72 select-none">
+      <div ref={layerRef} className="relative mx-auto aspect-[9/10] w-full max-w-72 select-none">
         {EMERALDS.map((e) => {
           const owned = items.includes(e.id);
           const { x, y, wave: order } = LAYOUT[e.color];
@@ -58,12 +128,21 @@ export function EmeraldCircle({ items }: { items: readonly string[] }) {
             <img
               key={e.id}
               src={emeraldSrc(e.color)}
-              alt={owned ? e.name : "Émeraude pas encore trouvée"}
+              alt={owned ? e.name : "Chaos Emerald pas encore trouvée"}
               width={63}
               height={63}
               draggable={false}
+              onClick={
+                owned
+                  ? (ev) => {
+                      if (!wave && layerRef.current)
+                        tap(ev.currentTarget, layerRef.current, e.color);
+                    }
+                  : undefined
+              }
               className={cx(
                 "emerald-slot absolute w-[22%] -translate-1/2",
+                owned && "cursor-pointer",
                 !owned ? "emerald-locked" : complete && sealed ? "emerald-sealed" : "emerald-owned",
                 owned && wave === "unseal" && "emerald-awaken",
                 owned && wave === "seal" && "emerald-fade",
