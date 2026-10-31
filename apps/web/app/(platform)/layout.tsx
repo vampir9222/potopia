@@ -15,6 +15,7 @@ import {
   sendTestNotification,
 } from "@/app/actions/notifications";
 import { LuffyRun } from "@/components/LuffyRun";
+import { MascotToy } from "@/components/MascotToy";
 import { MobileMenu } from "@/components/MobileMenu";
 import { SideNav } from "@/components/SideNav";
 import { SonicRun } from "@/components/SonicRun";
@@ -86,6 +87,7 @@ export default async function PlatformLayout({ children }: { children: ReactNode
         </aside>
         <main className="page-stagger min-w-0 flex-1">{children}</main>
       </div>
+      <MascotToy />
     </EmeraldsProvider>
   );
 }
