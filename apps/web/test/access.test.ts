@@ -85,6 +85,7 @@ const troisLeaderboardRoute = await import("@/app/api/trois/leaderboard/route");
 const { default: TroisPage } = await import("@/app/(platform)/trois/page");
 const { default: WalletPage } = await import("@/app/(platform)/wallet/page");
 const { default: InventoryPage } = await import("@/app/(platform)/inventaire/page");
+const { default: SettingsPage } = await import("@/app/(platform)/parametres/page");
 const { collectEmerald } = await import("@/app/actions/inventory");
 const { default: AvatarPage } = await import("@/app/(platform)/avatar/page");
 const { default: CreditsPage } = await import("@/app/(platform)/credits/page");
@@ -214,6 +215,7 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "cartes/page": () => CardsVotePage({ searchParams: Promise.resolve({ onglet: "archives" }) }),
   "wallet/page": () => WalletPage({ searchParams: Promise.resolve({}) }),
   "inventaire/page": () => InventoryPage(),
+  "parametres/page": () => SettingsPage(),
   "avatar/page": () => AvatarPage(),
   "credits/page": () => CreditsPage(),
 };

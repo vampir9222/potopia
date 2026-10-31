@@ -186,7 +186,8 @@
   --danger: #ff5c4d;
   --success: #4fd6a0;
 
-  --radius: 0.55rem;
+  /* presque carré : la corde (border-image) ne suit pas les arrondis */
+  --radius: 0.2rem;
   --font-display: var(--font-onepiece-face, "Pirata One"), Georgia, serif;
 
   --accent-gradient: linear-gradient(135deg, #fff2bd 0%, #f6c544 45%, #e63a2e 100%);
@@ -368,19 +369,25 @@
     filter: none;
   }
 
-  /* One Piece : bordure de corde tressée (torons clairs et foncés en biais), nuit marine dedans,
-     roses des vents dorées aux coins. */
+  /* One Piece : bordure de corde tressée (torons clairs et foncés en biais, en border-image pour
+     que l'intérieur puisse rester translucide), nuit marine translucide dedans (on devine les
+     avis de recherche et l'équipage derrière), roses des vents dorées aux coins. */
   [data-theme="onepiece"] .theme-frame {
-    border: 3px solid transparent;
-    background:
-      linear-gradient(
-          180deg,
-          color-mix(in oklab, var(--surface) 86%, var(--accent)) 0%,
-          var(--surface) 40%
-        )
-        padding-box,
-      repeating-linear-gradient(-55deg, #e6c88e 0 2.5px, #a8814a 2.5px 4.5px, #6b4e27 4.5px 6px)
-        border-box;
+    border: 3px solid;
+    border-image: repeating-linear-gradient(
+        -55deg,
+        #e6c88e 0 2.5px,
+        #a8814a 2.5px 4.5px,
+        #6b4e27 4.5px 6px
+      )
+      3;
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, color-mix(in oklab, var(--surface) 86%, var(--accent)) 82%, transparent)
+        0%,
+      color-mix(in oklab, var(--surface) 76%, transparent) 40%
+    );
+    backdrop-filter: blur(6px);
     box-shadow:
       inset 0 0 0 1px rgb(0 0 0 / 0.55),
       0 12px 28px -16px rgb(0 0 0 / 0.95),
@@ -657,34 +664,55 @@
     opacity: 0.2;
     animation: op-twinkle ease-in-out infinite;
   }
-  /* navire : silhouette sur l'horizon, il traverse en plusieurs minutes et tangue */
-  .op-ship-track {
+  /* l'équipage, dans deux coins, un membre après l'autre (fondu enchaîné), à peine visible */
+  .op-crew {
     position: absolute;
-    left: 0;
-    top: calc(76% - 49px);
-    width: 110px;
-    height: 55px;
-    /* déjà en route au chargement de la page */
-    animation: op-sail 280s linear -100s infinite;
+    bottom: 6vh;
+    width: min(34vw, 380px);
+    height: min(52vh, 460px);
   }
-  .op-ship {
-    width: 100%;
-    height: 100%;
-    opacity: 0.6;
-    transform-origin: 50% 90%;
-    animation: op-bob 5s ease-in-out infinite;
+  .op-crew-left {
+    left: -1vw;
   }
-  .op-ship-body,
-  .op-ship-flag {
-    fill: #02070d;
+  .op-crew-right {
+    right: -1vw;
   }
-  .op-ship-hull {
-    fill: none;
-    stroke: #02070d;
-    stroke-width: 3;
+  .op-crew-member {
+    position: absolute;
+    inset: 0;
+    background: center bottom / contain no-repeat;
+    opacity: 0;
+    filter: saturate(0.9) brightness(0.9);
+    mask-image: linear-gradient(to top, transparent 0%, #000 30%, #000 75%, transparent 100%);
+    animation: op-crew linear infinite;
   }
-  .op-ship-sail {
-    fill: #29506b;
+  .op-crew-right .op-crew-member {
+    /* face au coin opposé */
+    transform: scaleX(-1);
+  }
+  /* avis de recherche épinglés (punaise rouge), qui se balancent un peu */
+  .op-poster {
+    position: absolute;
+    width: clamp(78px, 7.5vw, 116px);
+    aspect-ratio: 200 / 290;
+    background: center / cover no-repeat;
+    opacity: 0.5;
+    box-shadow: 0 10px 18px -6px rgb(0 0 0 / 0.85);
+    transform-origin: 50% 3px;
+    rotate: var(--poster-tilt, 0deg);
+    animation: op-poster ease-in-out infinite;
+  }
+  .op-poster::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ff8a7a, #b3241a);
+    box-shadow: 0 2px 3px rgb(0 0 0 / 0.5);
   }
   /* mouettes : elles traversent le ciel en battant des ailes */
   .op-gull {
@@ -731,66 +759,21 @@
     background: url(/onepiece/jolly-roger.svg) 0 0 / 150px 100px no-repeat;
     animation: op-flag 2.2s ease-in-out infinite;
   }
-  /* avis de recherche de Luffy, épinglé, qui se balance un peu */
-  .op-wanted {
+  /* chapeau de paille emporté par le vent : traverse le ciel de temps en temps en tournoyant */
+  .op-hat-track {
     position: absolute;
-    left: 2.5vw;
-    bottom: 19vh;
-    width: 132px;
-    padding: 8px 9px 7px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    color: #3b2510;
-    text-align: center;
-    font-family: var(--font-onepiece-face, Georgia), Georgia, serif;
-    background: radial-gradient(circle at 30% 20%, #f3e2b6, #dcc28a 70%, #c4a467);
-    box-shadow:
-      0 10px 22px -6px rgb(0 0 0 / 0.8),
-      inset 0 0 18px rgb(110 70 20 / 0.45);
-    opacity: 0.5;
-    transform-origin: 50% 0;
-    animation: op-sway 7s ease-in-out infinite;
+    left: 0;
+    top: 18vh;
+    width: 70px;
+    height: 31px;
+    animation: op-hat-fly 38s linear infinite;
   }
-  /* la punaise */
-  .op-wanted::before {
-    content: "";
-    position: absolute;
-    top: -4px;
-    left: 50%;
-    width: 9px;
-    height: 9px;
-    margin-left: -4.5px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #ff8a7a, #b3241a);
-    box-shadow: 0 2px 3px rgb(0 0 0 / 0.5);
-  }
-  .op-wanted-title {
-    font-size: 30px;
-    line-height: 1;
-    letter-spacing: 0.04em;
-  }
-  .op-wanted-photo {
-    width: 114px;
-    height: 114px;
-    border: 2px solid #3b2510;
-    background: #cbb27a url(/luffy/luffy-sheet.png) 0 0 / 2850px 114px no-repeat;
-    image-rendering: pixelated;
-    filter: sepia(0.3) contrast(1.05);
-  }
-  .op-wanted-doa {
-    font-family: Georgia, serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-  }
-  .op-wanted-name {
-    font-size: 15px;
-    line-height: 1.05;
-  }
-  .op-wanted-bounty {
-    font-size: 14px;
+  .op-hat {
+    width: 100%;
+    height: 100%;
+    opacity: 0.85;
+    filter: brightness(0.85) drop-shadow(0 4px 6px rgb(0 0 0 / 0.5));
+    animation: op-hat-spin 2.6s ease-in-out infinite;
   }
   /* « ドン!! » de manga qui claquent de temps en temps */
   .op-don {
@@ -822,6 +805,41 @@
   .op-wave path {
     stroke-width: 1.5;
     vector-effect: non-scaling-stroke;
+  }
+  /* le Thousand Sunny, entre deux vagues (le dessin regarde à gauche : il file vers la gauche) */
+  .op-sunny-track {
+    position: absolute;
+    left: 0;
+    bottom: 7.5vh;
+    width: clamp(130px, 13vw, 190px);
+    aspect-ratio: 204 / 180;
+    animation: op-sail-left 150s linear -40s infinite;
+  }
+  .op-sunny {
+    position: absolute;
+    inset: 0;
+    background: center / contain no-repeat;
+    filter: brightness(0.82) saturate(0.95);
+    transform-origin: 50% 85%;
+    animation: op-bob 4.2s ease-in-out infinite;
+  }
+  /* le Vogue Merry, tout petit sur l'horizon, dans l'autre sens */
+  .op-merry-track {
+    position: absolute;
+    left: 0;
+    bottom: calc(24vh - 40px);
+    width: 42px;
+    aspect-ratio: 149 / 170;
+    animation: op-sail 260s linear -150s infinite;
+  }
+  .op-merry {
+    position: absolute;
+    inset: 0;
+    background: center / contain no-repeat;
+    opacity: 0.55;
+    filter: brightness(0.6) saturate(0.7) blur(0.3px);
+    transform-origin: 50% 90%;
+    animation: op-bob 5.5s ease-in-out infinite;
   }
   .op-wave-back {
     bottom: 9vh;
@@ -1048,13 +1066,51 @@
     filter: brightness(0.75);
   }
 }
-@keyframes op-sway {
+@keyframes op-poster {
   0%,
   100% {
-    transform: rotate(-7deg);
+    transform: rotate(-1.5deg);
   }
   50% {
-    transform: rotate(-4deg);
+    transform: rotate(1.5deg);
+  }
+}
+/* visible sur le premier cinquième de la boucle (son tour), fondu enchaîné avec le suivant */
+@keyframes op-crew {
+  0%,
+  22%,
+  100% {
+    opacity: 0;
+  }
+  4%,
+  18% {
+    opacity: 0.3;
+  }
+}
+@keyframes op-sail-left {
+  from {
+    transform: translateX(105vw);
+  }
+  to {
+    transform: translateX(-200px);
+  }
+}
+@keyframes op-hat-fly {
+  0%,
+  60% {
+    transform: translate(-90px, 0);
+  }
+  100% {
+    transform: translate(105vw, -10vh);
+  }
+}
+@keyframes op-hat-spin {
+  0%,
+  100% {
+    transform: rotate(-18deg) translateY(0);
+  }
+  50% {
+    transform: rotate(22deg) translateY(-14px);
   }
 }
 @keyframes op-don {
@@ -1110,7 +1166,9 @@
   .rgb-fans,
   .jojo-menace,
   .jojo-star,
-  .op-ship-track,
+  .op-sunny-track,
+  .op-merry-track,
+  .op-hat-track,
   .op-gull,
   .op-don {
     display: none;

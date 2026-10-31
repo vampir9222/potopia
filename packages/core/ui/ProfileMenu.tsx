@@ -1,8 +1,8 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Avatar } from "@app/ui";
+import { AppLink, Avatar } from "@app/ui";
 
 type Props = {
   user: { name: string; image: string | null };
@@ -10,7 +10,7 @@ type Props = {
   signOut: () => Promise<void>;
 };
 
-/** Avatar du header : un clic ouvre un petit menu avec la déconnexion. */
+/** Avatar du header : un clic ouvre un petit menu (paramètres, déconnexion). */
 export function ProfileMenu({ user, signOut }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -49,6 +49,14 @@ export function ProfileMenu({ user, signOut }: Props) {
           <p className="border-border text-text truncate border-b px-4 py-2 text-sm font-medium">
             {user.name}
           </p>
+          <AppLink
+            href="/parametres"
+            onClick={() => setOpen(false)}
+            className="text-muted hover:bg-surface-hover hover:text-text flex w-full items-center gap-2 px-4 py-2.5 text-sm"
+          >
+            <Settings size={16} aria-hidden />
+            Paramètres
+          </AppLink>
           <form action={signOut}>
             <button
               type="submit"
