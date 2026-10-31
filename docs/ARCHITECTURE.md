@@ -441,10 +441,11 @@ affichée serait décalée et le rendu serveur différerait du rendu client (err
   l'erreur part dans la console. `global-error.tsx` couvre une panne du layout racine (son propre
   `<html>`, styles en ligne car sans `globals.css`).
 - `not-found.tsx` : page introuvable aux couleurs du thème ; `forbidden.tsx` : 403.
-- `(platform)/loading.tsx` : squelette discret. Limite de Next sans Cache Components : il ne
+- `(platform)/loading.tsx` : la mascotte seule, au centre, qui rebondit (une roue qui tourne sans
+  image). Limite de Next sans Cache Components : il ne
   s'affiche qu'une fois le layout `(platform)` chargé (session, notifications, solde, activité).
 - La mascotte y apparaît : affaissée sur les erreurs (`ErrorScreen`), perplexe sur la page
-  introuvable, qui rebondit au-dessus du squelette de chargement. Pour un visiteur non connecté
+  introuvable, qui rebondit pendant le chargement. Pour un visiteur non connecté
   (ou sans image envoyée), l'icône habituelle reste à sa place.
 
 **Mascotte** (`apps/web/components/Mascot.tsx`, `lib/mascot.ts`). Son visage est celui d'un
