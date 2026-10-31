@@ -4,6 +4,7 @@ import { Button, buttonClasses, EmptyState } from "@app/ui";
 import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
+import { Mascot } from "./Mascot";
 
 type Props = {
   /** Valeur levée (une `Error` depuis le serveur, n'importe quoi depuis un composant client). */
@@ -23,7 +24,7 @@ export function ErrorScreen({ error, retry }: Props) {
 
   return (
     <EmptyState
-      icon={<TriangleAlert size={32} />}
+      icon={<Mascot mood="erreur" height={140} fallback={<TriangleAlert size={32} />} />}
       title="Quelque chose s'est mal passé"
       description="Une erreur est survenue de notre côté. Réessaie dans un instant ; si ça continue, préviens un admin."
       action={
