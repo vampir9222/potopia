@@ -26,49 +26,55 @@ function Wave({ className, amplitude }: { className: string; amplitude: number }
   );
 }
 
-// Le grand Sunny (public/onepiece/sunny.webp, 640 × 564) et l'équipage sur le pont, en pixel art
-// (One Piece: Gigant Battle 2, planches deck-*.png : cases de w × h, pieds en bas). Chacun est
-// placé par ses pieds, en pixels de l'image du Sunny, et dessiné à 2 pixels par pixel du sprite
-// (× scale) ; ms : durée d'un tour d'animation, alternate : aller-retour.
-const SHIP_W = 640;
-const SHIP_H = 564;
+// Le grand Sunny en pixel art (public/onepiece/sunny-px.webp, 799 × 789, détouré) et l'équipage à
+// bord, en pixel art aussi (One Piece: Gigant Battle 2, planches deck-*.png : cases de w × h,
+// pieds en bas). Chacun est placé par ses pieds, en pixels de l'image du Sunny, à K pixels de
+// l'image par pixel du sprite (× scale) ; ms : durée d'un tour d'animation, alternate :
+// aller-retour. L'avant-plan (sunny-px-front.webp : bastingage de la proue, rambarde du pont) est
+// redessiné par-dessus : l'équipage a les jambes dans le navire.
+const SHIP_W = 799;
+const SHIP_H = 789;
+const K = 2.4;
 const CREW = [
   // Luffy danse sur la tête de lion de la proue
-  { name: "luffy", frames: 3, w: 36, h: 47, x: 62, y: 262, ms: 520, alternate: true },
-  // Zoro soulève ses haltères dans la vigie
-  { name: "zoro", frames: 2, w: 31, h: 42, x: 300, y: 54, ms: 1400, alternate: false },
-  { name: "usopp", frames: 4, w: 22, h: 42, x: 160, y: 306, ms: 900, alternate: true },
-  { name: "chopper", frames: 4, w: 15, h: 32, x: 200, y: 312, ms: 700, alternate: false },
-  { name: "nami", frames: 14, w: 21, h: 40, x: 330, y: 350, ms: 2400, alternate: false },
-  // Sanji en mode amoureux, à côté de Nami
-  { name: "sanji", frames: 3, w: 39, h: 50, x: 384, y: 344, ms: 420, alternate: true },
-  { name: "robin", frames: 2, w: 22, h: 43, x: 452, y: 336, ms: 3200, alternate: false },
-  { name: "brook", frames: 3, w: 23, h: 40, x: 512, y: 318, ms: 600, alternate: true },
+  { name: "luffy", frames: 3, w: 36, h: 47, x: 72, y: 524, ms: 520, alternate: true },
+  // Usopp et Chopper derrière le bastingage de la proue
+  { name: "usopp", frames: 4, w: 22, h: 42, x: 178, y: 612, ms: 900, alternate: true },
+  { name: "chopper", frames: 4, w: 15, h: 32, x: 228, y: 596, ms: 700, alternate: false },
+  // sur la pelouse du pont : Zoro aux haltères, Nami, Sanji en mode amoureux
+  { name: "zoro", frames: 2, w: 31, h: 42, x: 312, y: 668, ms: 1400, alternate: false },
+  { name: "nami", frames: 14, w: 21, h: 40, x: 384, y: 690, ms: 2400, alternate: false },
+  { name: "sanji", frames: 3, w: 39, h: 50, x: 436, y: 692, ms: 420, alternate: true },
+  // sur le toit de la cabine arrière : Robin qui lit, Franky ; Brook au violon sur le dôme
+  { name: "robin", frames: 2, w: 22, h: 43, x: 530, y: 594, ms: 3200, alternate: false },
   {
     name: "franky",
     frames: 2,
     w: 67,
     h: 54,
-    x: 575,
-    y: 392,
+    x: 610,
+    y: 596,
     ms: 900,
     alternate: false,
     scale: 0.8,
   },
+  { name: "brook", frames: 3, w: 23, h: 40, x: 712, y: 514, ms: 600, alternate: true },
 ];
-const PX = 2;
+// pavillons découpés du navire (boîte dans l'image), qui claquent au vent depuis leur mât
+const FLAGS = [
+  { name: "main", x0: 250, y0: 12, x1: 333, y1: 74, origin: "92% 40%" },
+  { name: "aft", x0: 528, y0: 0, x1: 594, y1: 58, origin: "75% 40%" },
+];
 
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 
-/** Le Thousand Sunny, l'équipage sur le pont et le pavillon en haut du grand mât. */
+/** Le Thousand Sunny, l'équipage à bord et les pavillons au vent. */
 function Sunny() {
   return (
     <span className="op-sunny-track">
       <span className="op-sunny">
-        <span className="op-sunny-pole" />
-        <span className="op-sunny-flag" />
         {CREW.map((c) => {
-          const k = PX * (c.scale ?? 1);
+          const k = K * (c.scale ?? 1);
           return (
             <span
               key={c.name}
@@ -87,6 +93,21 @@ function Sunny() {
             />
           );
         })}
+        <span className="op-sunny-front" />
+        {FLAGS.map((f) => (
+          <span
+            key={f.name}
+            className="op-sunny-flag"
+            style={{
+              left: pct(f.x0, SHIP_W),
+              top: pct(f.y0, SHIP_H),
+              width: pct(f.x1 - f.x0, SHIP_W),
+              height: pct(f.y1 - f.y0, SHIP_H),
+              backgroundImage: `url(/onepiece/sunny-flag-${f.name}.png)`,
+              transformOrigin: f.origin,
+            }}
+          />
+        ))}
       </span>
     </span>
   );
@@ -94,8 +115,8 @@ function Sunny() {
 
 /**
  * Décor du thème One Piece, en fond : nuit sur la mer (lune et son reflet, étoiles), houle sur
- * trois plans, le Vogue Merry au loin sur l'horizon, le grand Thousand Sunny qui tangue au premier
- * plan avec tout l'équipage sur le pont (et le pavillon au chapeau de paille en haut du mât), le
+ * trois plans, le Vogue Merry au loin sur l'horizon, le grand Thousand Sunny en pixel art qui tangue
+ * au premier plan avec tout l'équipage à bord (et ses pavillons qui claquent au vent), le
  * panneau des avis de recherche, des mouettes et des « ドン!! » de manga. Affiché seulement par ce
  * thème (--onepiece), décoratif (aria-hidden, aucun clic).
  */
@@ -151,8 +172,9 @@ export function OnePieceDecor() {
           className="op-don"
           style={
             {
-              left: `${30 + seeded(i, 12) * 40}%`,
-              top: `${12 + seeded(i, 13) * 36}%`,
+              // dans le ciel, entre le Sunny et la lune
+              left: `${52 + seeded(i, 12) * 30}%`,
+              top: `${10 + seeded(i, 13) * 30}%`,
               fontSize: `${48 + seeded(i, 14) * 40}px`,
               animationDuration: `${11 + seeded(i, 15) * 7}s`,
               animationDelay: `${-seeded(i, 16) * 18}s`,

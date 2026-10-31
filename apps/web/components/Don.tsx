@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const DON_MS = 1900;
-const SUNNY = "/onepiece/sunny.webp";
+const SUNNY = "/onepiece/sunny-px.webp";
 // nuages de vapeur laissés par le Coup de Burst, le long de la trajectoire du Sunny (en % de
 // l'écran) : chacun éclate quand le navire passe
 const PUFFS = Array.from({ length: 7 }, (_, i) => ({
