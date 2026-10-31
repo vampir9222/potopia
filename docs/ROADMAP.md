@@ -470,6 +470,8 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 
 - [x] Schéma `tcg` : `TcgSet`, `TcgCard`, enum `TcgRarity` (migration `tcg_cards`, ajout seul).
 - [x] Catalogue d'effets (`src/effects.ts`) et fonctions des cartes (`src/cards.ts`).
+- [x] Effet Heimdall (`reveal_move_allies_left` : tes autres cartes passent d'un lieu vers la
+      gauche), pour la carte « SPINNING SPINNING ».
 - [x] Admin : `/admin/cartes`, `/admin/cartes/[id]`, `/admin/cartes/nouvelle`,
       `/admin/cartes/import`, `/admin/cartes/illustrations` (envoi en masse),
       `/api/admin/cards/[id]/image` ; entrée « Cartes » sur `/admin`.

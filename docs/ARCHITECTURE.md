@@ -482,11 +482,11 @@ et modifient les cartes.
   famille et la description pré-remplis et l'image de l'idée. Garde-fou : si l'idée a déjà des
   cartes, elles sont listées et il faut cocher « Créer quand même » (vérifié côté serveur).
 
-- Catalogue d'effets (`games/tcg/src/effects.ts`, `EFFECTS`, 48 effets) : chaque effet a une clé,
+- Catalogue d'effets (`games/tcg/src/effects.ts`, `EFFECTS`, 49 effets) : chaque effet a une clé,
   un moment (à la révélation, permanent, fin de tour, quand elle est détruite), des réglages
   (nombre borné, famille ou nom de jeton, validés par `paramsSchema`), un modèle de texte
   (`effectText`) et, souvent, la carte de Marvel Snap qui l'inspire (`snap`, affichée dans
-  l'éditeur : Iron Man, Wong, Sera, Armor, Shang-Chi, Killmonger, Deadpool…). L'admin choisit
+  l'éditeur : Iron Man, Wong, Sera, Armor, Shang-Chi, Killmonger, Deadpool, Heimdall…). L'admin choisit
   l'effet d'une carte dans cette liste et règle ses nombres, sans déploiement ; un effet nouveau
   s'ajoute dans le code.
 - `games/tcg/src/cards.ts` : `listSets`, `createSet`, `ensureSet`, `listCards` (par set, réserve
