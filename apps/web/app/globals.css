@@ -702,29 +702,44 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
   }
 }
 
-/* Coup de Burst : le Thousand Sunny surgit en bas à droite et file vers le haut à gauche */
-.don-sunny {
+/* Gear 5 surgit au centre, derrière l'onomatopée : il jaillit, rebondit comme du caoutchouc,
+   puis s'efface */
+.don-gear5 {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: clamp(180px, 26vw, 340px);
-  aspect-ratio: 799 / 789;
+  left: 50%;
+  top: 52%;
+  width: clamp(280px, 52vw, 680px);
+  aspect-ratio: 1100 / 713;
+  margin: calc(clamp(280px, 52vw, 680px) * -0.324) 0 0 calc(clamp(280px, 52vw, 680px) * -0.5);
   background: center / contain no-repeat;
-  image-rendering: pixelated;
-  filter: drop-shadow(0 12px 18px rgb(0 0 0 / 0.55));
-  animation: don-sunny 1.5s cubic-bezier(0.3, 0.1, 0.4, 1) 0.18s both;
+  filter: drop-shadow(0 0 30px rgb(255 255 255 / 0.55));
+  animation: don-gear5 1.9s cubic-bezier(0.3, 1.4, 0.5, 1) 0.05s both;
 }
 
-@keyframes don-sunny {
-  from {
-    transform: translate(105vw, 70vh) rotate(-4deg) scale(0.8);
+@keyframes don-gear5 {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-8deg);
   }
-  to {
-    transform: translate(-40vw, -10vh) rotate(-16deg) scale(1.15);
+  18% {
+    opacity: 1;
+    transform: scale(1.08, 0.9) rotate(2deg);
+  }
+  28% {
+    transform: scale(0.94, 1.08) rotate(-1deg);
+  }
+  38%,
+  72% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.12) rotate(3deg);
   }
 }
 
-/* nuages de vapeur : ils éclatent derrière le navire puis se dissipent */
+/* nuages de vapeur de Gear 5 : ils éclatent autour de lui puis se dissipent */
 .don-puff {
   position: absolute;
   margin: -40px 0 0 -40px;

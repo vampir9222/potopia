@@ -5,31 +5,39 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const DON_MS = 1900;
-const SUNNY = "/onepiece/sunny-px.webp";
-// nuages de vapeur laissés par le Coup de Burst, le long de la trajectoire du Sunny (en % de
-// l'écran) : chacun éclate quand le navire passe
-const PUFFS = Array.from({ length: 7 }, (_, i) => ({
-  x: 92 - i * 14,
-  y: 72 - i * 8.5,
-  delay: 260 + i * 120,
-  size: 70 + (i % 3) * 26,
-}));
+const GEAR5 = "/onepiece/portrait-gear5.webp";
+// nuages de vapeur de Gear 5, en couronne autour de lui (en % de l'écran), qui éclatent l'un
+// après l'autre
+const PUFFS = Array.from({ length: 8 }, (_, i) => {
+  const angle = (i / 8) * Math.PI * 2;
+  return {
+    x: 50 + Math.cos(angle) * 30,
+    y: 52 + Math.sin(angle) * 30,
+    delay: 120 + i * 70,
+    size: 80 + (i % 3) * 30,
+  };
+});
+// Tambours de la Libération, le cœur de Nika : « ドン・ドッ・トッ・ト » (instant en s, volume, hauteur)
+const BEATS = [
+  { at: 0, gain: 1, pitch: 1 },
+  { at: 0.3, gain: 0.7, pitch: 1.12 },
+  { at: 0.44, gain: 0.55, pitch: 1.2 },
+  { at: 0.58, gain: 0.5, pitch: 1.12 },
+];
 const VOLUME = 0.9;
 
 /**
  * Coup de taiko synthétisé : un sinus grave dont la hauteur chute (le fût qui résonne) et un
  * bruit court filtré (la frappe sur la peau).
  */
-function drum(volume: number) {
-  const ctx = new AudioContext();
-  const t = ctx.currentTime + 0.01;
+function drum(ctx: AudioContext, t: number, volume: number, pitch: number) {
   const out = ctx.createGain();
   out.gain.value = volume;
   out.connect(ctx.destination);
 
   const body = ctx.createOscillator();
-  body.frequency.setValueAtTime(150, t);
-  body.frequency.exponentialRampToValueAtTime(48, t + 0.5);
+  body.frequency.setValueAtTime(150 * pitch, t);
+  body.frequency.exponentialRampToValueAtTime(48 * pitch, t + 0.5);
   const bodyGain = ctx.createGain();
   bodyGain.gain.setValueAtTime(0.0001, t);
   bodyGain.gain.exponentialRampToValueAtTime(1, t + 0.006);
@@ -51,22 +59,29 @@ function drum(volume: number) {
   hitGain.gain.value = 0.7;
   hit.connect(filter).connect(hitGain).connect(out);
   hit.start(t);
+}
 
-  window.setTimeout(() => void ctx.close(), 1600);
+/** Le rythme des Tambours de la Libération, sur un seul contexte audio. */
+function drums(volume: number) {
+  const ctx = new AudioContext();
+  const t = ctx.currentTime + 0.01;
+  for (const beat of BEATS) drum(ctx, t + beat.at, volume * beat.gain, beat.pitch);
+  window.setTimeout(() => void ctx.close(), 2400);
 }
 
 /**
- * « ドン!! » façon manga (thème One Piece) : coup de tambour, flash, lignes de vitesse noires qui
- * convergent vers le centre et onomatopée qui claque en tremblant ; le Thousand Sunny traverse
- * l'écran en « Coup de Burst », en laissant des nuages de vapeur, puis tout s'efface. Déclenché
- * par `don()` de `@app/ui` (choix du thème One Piece). Monté une fois, layout racine.
+ * « ドン!! » façon manga (thème One Piece) : les Tambours de la Libération, flash, lignes de
+ * vitesse noires qui convergent vers le centre et onomatopée qui claque en tremblant ; Luffy en
+ * Gear 5 surgit derrière en riant, rebondit comme du caoutchouc dans une couronne de nuages de
+ * vapeur, puis tout s'efface. Déclenché par `don()` de `@app/ui` (choix du thème One Piece).
+ * Monté une fois, layout racine.
  */
 export function Don() {
   const [on, setOn] = useState(false);
   const onRef = useRef(false);
 
-  // le Sunny est chargé d'avance : il doit traverser l'écran au moment du coup de tambour
-  useEffect(() => void preloadImages([SUNNY]), []);
+  // Gear 5 est chargé d'avance : il doit surgir au moment du coup de tambour
+  useEffect(() => void preloadImages([GEAR5]), []);
 
   useEffect(() => {
     let timer = 0;
@@ -75,7 +90,7 @@ export function Don() {
       onRef.current = true;
       setOn(true);
       const level = effectiveVolume() * VOLUME;
-      if (level > 0) drum(level);
+      if (level > 0) drums(level);
       timer = window.setTimeout(() => {
         onRef.current = false;
         setOn(false);
@@ -106,7 +121,7 @@ export function Don() {
           }}
         />
       ))}
-      <span className="don-sunny" style={{ backgroundImage: `url(${SUNNY})` }} />
+      <span className="don-gear5" style={{ backgroundImage: `url(${GEAR5})` }} />
       <span className="don-text">
         <span>
           ドン<span className="don-bang">!!</span>
