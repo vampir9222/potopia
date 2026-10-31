@@ -474,7 +474,7 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 - [x] Planche plus rapide et plus grande : illustrations signées directement par la page avec des
       URLs stables 5 min (`presignGetStable`, mises en cache par le navigateur) au lieu d'une
       redirection par carte, chargement à l'approche de l'écran, cartes hors écran non dessinées ;
-      cartes aux trois quarts de leur taille.
+      cartes agrandies d'un tiers (400 px de large).
 - [x] Cadrage des illustrations dans l'éditeur (glisser, zoomer), migration
       `tcg_card_image_frame` (ajout d'une colonne).
 - [x] Une carte par idée de la boîte à idées, générée hors du dépôt et importée par l'admin ;

@@ -126,21 +126,21 @@ export default async function AdminCardsPage({
         </Card>
       ) : (
         <MoveCardsForm targets={targets}>
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(235px,1fr))] gap-4">
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-4">
             {cards.map((card) => (
               <li
                 key={card.id}
                 className="flex flex-col items-center gap-1"
                 // Le navigateur ne dessine pas les cartes hors de l'écran (défilement fluide).
-                style={{ contentVisibility: "auto", containIntrinsicSize: "auto 345px" }}
+                style={{ contentVisibility: "auto", containIntrinsicSize: "auto 585px" }}
               >
                 <Link
                   href={`/admin/cartes/${card.id}`}
                   aria-label={`Modifier ${card.name}`}
                   className="flex flex-col items-center"
                 >
-                  {/* Aperçu aux trois quarts : la carte fait 300 × 420. */}
-                  <div style={{ zoom: 0.75 }} className="pointer-events-none">
+                  {/* Aperçu agrandi d'un tiers (400 × 560) : la carte fait 300 × 420. */}
+                  <div style={{ zoom: 4 / 3 }} className="pointer-events-none">
                     <GameCard
                       card={card}
                       imageUrl={images.get(card.id) ?? null}
