@@ -581,9 +581,13 @@ power?, effectKey?, effectParams?, effectText? }] }`. Chaque carte de base est r
   déjà une carte est ignorée (réimporter ne crée pas de doublon et n'écrase pas les
   modifications). Tout ou rien, avec la carte fautive dans le message. Les fichiers de cartes
   générées depuis les idées ne vont jamais dans le dépôt (contenu des membres).
-- Pages : `/admin/cartes` (un onglet par set et la réserve, `?set=<code>` ou `?set=reserve`,
-  24 cartes par page avec `?page=` ; recherche `?q=` sur le nom, le type, la famille, l'effet et
-  la description, dans tous les sets et la réserve, sans tenir compte des accents ; cases à cocher pour déplacer des cartes d'un coup ; création d'un set), `/admin/cartes/[id]` et
+- Pages : `/admin/cartes` (un onglet par set et la réserve, `?set=<code>` ou `?set=reserve` ; la
+  réserve par défaut ; 24 cartes par page avec `?page=`, pagination « < 1 2 … 5 > » qui garde
+  toujours la première et la dernière page (`Pagination`, `pageList`) ; recherche `?q=` juste
+  au-dessus des cartes, sur le nom, le type, la famille, l'effet et la description, dans tous les
+  sets et la réserve, sans tenir compte des accents : `CardSearch` met l'adresse à jour pendant
+  la frappe (300 ms après la dernière touche, Entrée tout de suite, Échap efface) par une
+  navigation côté client, sans recharger la page ; cases à cocher pour déplacer des cartes d'un coup ; création d'un set), `/admin/cartes/[id]` et
   `/admin/cartes/nouvelle` (`CardEditor` : formulaire et aperçu en direct, normale ou full art,
   envoi d'illustration), `/admin/cartes/import`, `/admin/cartes/illustrations` (`CardImagesUpload` :
   plusieurs images d'un coup, chacune posée sur la carte dont elle porte le numéro, « 12.jpg »). Les cartes s'affichent dans le design retenu
