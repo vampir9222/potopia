@@ -39,7 +39,7 @@ export function EmeraldCircle({ items }: { items: readonly string[] }) {
   const toggle = () => {
     const next = !sealed;
     const sound = next ? SOUNDS.seal : SOUNDS.unseal;
-    playClip(sound.src, sound.volume, 150);
+    playClip(sound.src, sound.volume, 80);
     setWave(next ? "seal" : "unseal");
     setEmeraldsDisabled(next);
     window.setTimeout(() => setWave(null), WAVE_MS);
@@ -63,7 +63,7 @@ export function EmeraldCircle({ items }: { items: readonly string[] }) {
               height={63}
               draggable={false}
               className={cx(
-                "absolute w-[22%] -translate-1/2",
+                "emerald-slot absolute w-[22%] -translate-1/2",
                 !owned ? "emerald-locked" : complete && sealed ? "emerald-sealed" : "emerald-owned",
                 owned && wave === "unseal" && "emerald-awaken",
                 owned && wave === "seal" && "emerald-fade",

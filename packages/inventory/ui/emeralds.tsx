@@ -22,8 +22,8 @@ type Ctx = {
 
 const EmeraldsContext = createContext<Ctx | null>(null);
 
-// Ramasser une émeraude : le bruitage de Sonic 2 (10,4 s → 14,7 s de la piste), discret.
-const playPickup = () => playClip(SOUNDS.pickup.src, SOUNDS.pickup.volume, 200);
+// Ramasser une émeraude : bruitage de Sonic 2, discret.
+const playPickup = () => playClip(SOUNDS.pickup.src, SOUNDS.pickup.volume, 80);
 
 /**
  * Les émeraudes déjà trouvées par le membre, et le ramassage (server action passée par l'app).

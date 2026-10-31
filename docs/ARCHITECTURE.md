@@ -301,16 +301,18 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
   (`components/LuffyRun.tsx`, masqué sous 640 px) et la boule (`components/SpinOrb.tsx`) lancent
   une animation et une musique en boucle au clic, et se mettent en pause au second.
 - Sonic : planches en pixel art à l'échelle 1 dans `public/sonic/` (attente, marche, course, sprint,
-  puis transformation, course et vol de Super Sonic), tirées de gifs de sources différentes,
-  ramenées à la même taille de pixel et aux mêmes bleus et rouges que la marche. À l'arrêt il
-  attend (la pause du gif d'origine allongée) ; au clic, musique `public/audio/sonic.mp3` (silences
-  de début et de fin coupés, pour boucler sans trou) : il marche, accélère, court, pique des
-  sprints de 2,6 à 4,2 s, avec une traînée en tirets sur le liseré, à la couleur du thème. Les 7
-  Émeraudes du Chaos trouvées et leur pouvoir libéré (`superSonic`, voir Inventaire), le clic le
-  transforme en Super Sonic (`public/audio/super-sonic.mp3`) : transformation, sprint doré, puis
-  il s'envole. Une fois transformé, il le reste (mémorisé sur l'appareil) : son attente devient
-  celle de Super Sonic (`sonic-ss-idle.png`), en lévitation au-dessus du liseré, et les clics
-  suivants sautent la transformation.
+  puis transformation, course, vol et attente de Super Sonic), tirées de gifs de sources
+  différentes, ramenées à la même taille de pixel et aux mêmes couleurs. À l'arrêt il attend (la
+  pause du gif d'origine allongée) ; au clic, musique `public/audio/sonic.mp3` (silences de début
+  et de fin coupés, pour boucler sans trou) : il marche, accélère, court, pique des sprints de 2,6
+  à 4,2 s. Traînée en tirets sur le liseré, à la couleur du thème, dont les tirets défilent à sa
+  vitesse. Les 7 Émeraudes du Chaos trouvées et leur pouvoir libéré (`superSonic`, voir
+  Inventaire), le clic le transforme en Super Sonic (`public/audio/super-sonic.mp3`) :
+  transformation (~1,7 s), départ en trottinant puis sprint bien plus rapide que Sonic (4,5 s en
+  tout), puis il s'envole avec une traînée immense qui file à toute allure ; sa traînée est
+  toujours dorée, quel que soit le thème. Une fois transformé, il le reste (mémorisé sur
+  l'appareil) : son attente devient celle de Super Sonic (`sonic-ss-idle.png`), en lévitation
+  au-dessus du liseré, et les clics suivants sautent la transformation.
 - Combo Luffy + steel ball (`components/LuffyCombo.tsx`, état partagé dans
   `components/headerStage.ts`) : si la boule tourne et qu'on clique sur le fruit, Luffy sort du
   fruit en courant sur place (`public/luffy/luffy-run-sheet.png`) puis file vers la gauche. La
@@ -321,12 +323,8 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
   Piece (`public/audio/one-piece.mp3`) arrive ensuite en fondu. Pendant le combo, la case de la
   boule montre un bouton stop ; à l'arrêt, tout s'efface en 0,6 s et chacun regagne sa case. Le
   calque ne déborde jamais du header (pas de barre de défilement).
-- Nouvelle notification (`components/LuffyGatling.tsx`, juste avant la cloche) : Luffy surgit et
-  mitraille la cloche (Gomu Gomu no Gatling, `public/luffy/luffy-gatling.png`), qui tremble. Une
-  fois par hausse du nombre de non lues, mémorisé sur l'appareil (`localStorage`). Pour tester :
-  « M'envoyer une notification de test » en bas de la liste de la cloche (server action
-  `sendTestNotification`), proposé à tous en local et aux admins seulement en production
-  (`lib/notifications.ts`).
+- Notification de test : « M'envoyer une notification de test » en bas de la liste de la cloche
+  (server action `sendTestNotification`, réservée aux admins, `lib/notifications.ts`).
 - Luffy : à l'arrêt, son fruit du démon flotte au-dessus du liseré (`public/luffy/devil-fruit.png`,
   pixel art 24 × 33, étoiles de l'image d'origine retirées) avec quelques étincelles qui
   s'allument au hasard. Au clic, le fruit tremble, éclate en lumière et Luffy en sort en
@@ -356,7 +354,7 @@ sous les yeux du joueur à Agents Doubles. L'intro de Roundabout (`public/audio/
   (au bout de la phrase de l'historique), Mon avatar (bord gauche), TROIS (après le fil d'Ariane),
   Agents Doubles (bord droit), Crédits (tout en bas), Boîte à idées (dans le titre). Le layout
   `(platform)` charge les objets du membre et pose `EmeraldsProvider`, qui cache celles déjà
-  trouvées ; un clic joue un bruitage de Sonic 2 (`public/audio/emerald.mp3`, discret) et appelle
+  trouvées ; un clic joue un bruitage de Sonic 2 (`public/audio/emerald.mp3`, découpé à la main, discret) et appelle
   la server action `collectEmerald` (`app/actions/inventory.ts`), qui rafraîchit le layout.
 - Page `/inventaire` (« Mon inventaire », dans le menu sous « Mon avatar ») : « Chaos Emerald »,
   les 7 pierres disposées comme sur l'image d'origine (six en cercle autour de la bleue), en noir
@@ -366,7 +364,7 @@ sous les yeux du joueur à Agents Doubles. L'intro de Roundabout (`public/audio/
   base. La bascule passe d'une pierre à l'autre en vague (libéré : de la bleue vers le cercle,
   chacune s'illumine puis retombe sur son éclat ; scellé : en sens inverse, chacune brille une
   dernière fois puis s'éteint), avec un bruitage de Sonic 2 (`emeralds-unseal.mp3`,
-  `emeralds-seal.mp3`).
+  `emeralds-seal.mp3`, découpés à la main).
 
 **Dates.** Toutes les dates affichées passent par `BRAND.timeZone` (`Europe/Paris`) : le serveur
 Vercel tourne en UTC, les navigateurs des membres en France ; sans fuseau explicite, l'heure

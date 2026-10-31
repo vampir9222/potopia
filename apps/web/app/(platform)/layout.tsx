@@ -14,7 +14,6 @@ import {
   markNotificationAsRead,
   sendTestNotification,
 } from "@/app/actions/notifications";
-import { LuffyGatling } from "@/components/LuffyGatling";
 import { LuffyRun } from "@/components/LuffyRun";
 import { MobileMenu } from "@/components/MobileMenu";
 import { SideNav } from "@/components/SideNav";
@@ -69,8 +68,6 @@ export default async function PlatformLayout({ children }: { children: ReactNode
             <LuffyRun />
             <SpinOrb />
             <ThemeSwitcher current={theme} />
-            {/* nouvelle notification : Luffy mitraille la cloche, juste à sa droite */}
-            <LuffyGatling unreadCount={unreadCount} />
             <NotificationBell
               notifications={notifications}
               unreadCount={unreadCount}

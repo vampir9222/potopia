@@ -185,7 +185,7 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
     - Header : marque, Sonic (marche, course, sprint ; Super Sonic avec les 7 Émeraudes du
       Chaos), Luffy (fruit du démon étincelant à l'arrêt ; au clic, il en sort avec sa musique et
       rebondit sur le liseré du header ; combo avec la boule, qu'il poursuit sur le liseré),
-      boule musicale, thème, cloche (Luffy la mitraille à chaque nouvelle notification), volume,
+      boule musicale, thème, cloche, volume,
       menu du profil (déconnexion).
     - « Mon inventaire » (`/inventaire`) : les Émeraudes du Chaos cachées dans les pages, puis
       les hauts faits.

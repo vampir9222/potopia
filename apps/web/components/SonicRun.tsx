@@ -28,14 +28,15 @@ const SUPER_MUSIC = "/audio/super-sonic.mp3";
 const WIDTH = 48;
 // Le liseré du header occupe sa dernière ligne de pixels (header h-14 = 56 px) : les pieds dessus.
 const LINE_Y = 55;
-// Transformation en Super Sonic : durées du gif d'origine.
-const TRANS_MS = [250, 250, 250, 250, 250, 250, 250, 500];
+// Transformation en Super Sonic : le rythme du gif d'origine, un peu accéléré.
+const TRANS_MS = [190, 190, 190, 190, 190, 190, 190, 380];
 // Super Sonic démarre en trottinant puis accélère (images de plus en plus rapprochées, traînée
 // qui s'allonge), avant de s'envoler.
-const SUPER_RUN_MS = 3000;
+const SUPER_RUN_MS = 4500;
 const SUPER_RAMP_MS = 1400;
 const SUPER_STEP_SLOW = 190;
-const SUPER_STEP_FAST = 50;
+// à pleine vitesse, bien plus vite que Sonic (40 ms) : c'est Super Sonic
+const SUPER_STEP_FAST = 24;
 
 const STREAK_COLORS = {
   // la couleur du liseré du thème (Classique, Fantasy, RGB…), avec une tête blanche
@@ -100,10 +101,18 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
       sprite.style.top = `${LINE_Y - s.h - Math.round(lift)}px`;
       sprite.style.backgroundPosition = `${-(frame % s.frames) * s.w}px 0`;
     };
-    const trail = (length: number, color: keyof typeof STREAK_COLORS) => {
+    // traînée : longueur, couleur, et vitesse de défilement des tirets (un tiret toutes les
+    // `dashMs` ms : plus il court vite, plus ils filent)
+    let dashMs = 0;
+    const trail = (length: number, color: keyof typeof STREAK_COLORS, dash = 180) => {
       streak.style.width = `${Math.round(length)}px`;
       streak.style.opacity = length > 4 ? "1" : "0";
       streak.style.backgroundImage = STREAK_COLORS[color];
+      const ms = Math.round(dash / 10) * 10;
+      if (ms !== dashMs) {
+        dashMs = ms;
+        streak.style.animationDuration = `${ms}ms`;
+      }
     };
 
     let raf = 0;
@@ -139,7 +148,9 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
           lastStep = now;
         }
         show(name, frame);
-        trail(name === "walk" ? 0 : name === "run" ? 50 : 130 + 20 * Math.sin(now / 60), "accent");
+        if (name === "walk") trail(0, "accent");
+        else if (name === "run") trail(50, "accent", 220);
+        else trail(130 + 20 * Math.sin(now / 60), "accent", 120);
       } else {
         // déjà transformé : il repart directement en courant
         const transTotal = startTransformed ? 0 : TRANS_MS.reduce((a, b) => a + b, 0);
@@ -163,13 +174,16 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
             lastStep = now;
           }
           show("ssRun", frame);
-          trail(eased * (110 + 15 * Math.sin(now / 50)), "gold");
+          // les tirets accélèrent avec lui (de 300 ms à 70 ms par tiret)
+          trail(eased * (170 + 25 * Math.sin(now / 40)), "gold", 300 - 230 * eased);
         } else {
           // il décolle, puis flotte au-dessus du liseré
           const flight = t - transTotal - SUPER_RUN_MS;
           const lift = Math.min(9, flight / 40) + 2 * Math.sin(now / 300);
           show("ssFly", Math.floor(t / 70), lift);
-          trail(190 + 25 * Math.sin(now / 45), "gold");
+          // en vol : traînée immense, tirets qui défilent à toute allure (toujours dorée, quel que
+          // soit le thème)
+          trail(300 + 40 * Math.sin(now / 35), "gold", 40);
         }
       }
       raf = requestAnimationFrame(tick);

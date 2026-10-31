@@ -278,6 +278,13 @@
   }
 }
 
+/* Les pierres de l'inventaire restent toujours sur leur propre calque : sans ça, le navigateur
+   les recale au pixel près à la fin de chaque animation (un micro-saut visible). */
+.emerald-slot {
+  will-change: transform, filter, opacity;
+  backface-visibility: hidden;
+}
+
 /* Inventaire : émeraude trouvée qui brille, ou silhouette noire à débloquer. Mêmes fonctions de
    filtre dans le même ordre partout, pour que les animations passent de l'un à l'autre en douceur. */
 .emerald-owned {
@@ -338,7 +345,38 @@
   100% {
     filter: grayscale(0.75) brightness(0.55) drop-shadow(0 0 0 transparent);
     opacity: 0.75;
-    scale: 0.96;
+    scale: 1;
+  }
+}
+
+/* « To Be Continued » (ToBeContinued) : l'image se fige en sépia, la flèche glisse en bas. */
+html.tbc-freeze body > :not(.tbc-layer) {
+  filter: sepia(0.9) contrast(1.15) brightness(0.85);
+  transition: filter 0.12s;
+}
+
+html.tbc-freeze body > :not(.tbc-layer) *,
+html.tbc-freeze body > :not(.tbc-layer) *::before,
+html.tbc-freeze body > :not(.tbc-layer) *::after {
+  animation-play-state: paused !important;
+}
+
+.tbc-layer {
+  cursor: pointer;
+  transition: opacity 0.7s;
+}
+
+.tbc-leaving {
+  opacity: 0;
+}
+
+.tbc-arrow {
+  animation: tbc-slide 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+
+@keyframes tbc-slide {
+  from {
+    transform: translateX(-120%);
   }
 }
 
