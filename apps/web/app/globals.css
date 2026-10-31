@@ -633,6 +633,24 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
   }
 }
 
+/* le temps reste arrêté jusqu'au clic : petite indication, qui apparaît après un moment */
+.za-hint {
+  position: absolute;
+  inset: auto 0 2.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.35);
+  animation: za-hint 0.8s 2.5s ease-out both;
+}
+
+@keyframes za-hint {
+  from {
+    opacity: 0;
+  }
+}
+
 /* « ドン!! » (Don, thème One Piece) : flash, lignes de vitesse de manga, onomatopée qui claque. */
 .don-flash {
   position: absolute;

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Animation, Direction } from "@app/avatar-assets";
+import { timeNow } from "@app/ui";
 import { useEffect, useRef, useState } from "react";
 import type { SheetLayout } from "../src/compose";
 import { drawFrame, frameAt, prefersReducedMotion } from "./animation";
@@ -60,9 +61,10 @@ export function AvatarSprite({
       return;
     }
     let raf = 0;
-    const start = performance.now();
-    const loop = (now: number) => {
-      draw(frameAt(layout, animation, now - start));
+    // horloge commune : figée par « ZA WARUDO » (thème JoJo)
+    const start = timeNow();
+    const loop = () => {
+      draw(frameAt(layout, animation, timeNow() - start));
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);

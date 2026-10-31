@@ -1,6 +1,8 @@
 "use client";
 
-// Confettis sur un canvas temporaire : aucune dépendance, le canvas se retire tout seul à la fin.
+import { isTimeStopped, timeNow } from "@app/ui";
+
+// Confettis sur un canvas temporaire, qui se retire tout seul à la fin.
 
 const COLORS = ["#16a34a", "#f59e0b", "#f4f4f5", "#22c55e", "#fbbf24", "#60a5fa", "#f472b6"];
 
@@ -67,10 +69,12 @@ export function confetti({ big = false } = {}) {
     }
   }
 
-  const start = performance.now();
+  // horloge commune : « ZA WARUDO » (thème JoJo) fige les confettis en plein vol
+  const start = timeNow();
   const duration = big ? 4500 : 2200;
-  const frame = (now: number) => {
-    const t = now - start;
+  const frame = () => {
+    if (isTimeStopped()) return void requestAnimationFrame(frame);
+    const t = timeNow() - start;
     c.clearRect(0, 0, W, H);
     for (const p of pieces) {
       p.vy += 0.25;

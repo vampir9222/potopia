@@ -6,7 +6,7 @@ import type { SheetLayout } from "../../src/compose";
 import { drawFrame, frameAt, prefersReducedMotion } from "../animation";
 import { loadSheet } from "../browser";
 import { CLICK_LINES, reactionsFor, type PlaceEvent } from "./reactions";
-import { cx } from "@app/ui";
+import { cx, timeNow } from "@app/ui";
 import {
   buildScene,
   drawBubble,
@@ -103,7 +103,7 @@ export function Place({
     let since = initialRef.current.now;
     let hovered: string | null = null;
     let clock = 0;
-    let last = performance.now();
+    let last = timeNow();
     let raf = 0;
 
     const isAsleep = (m: PlaceMemberView) =>
@@ -269,7 +269,9 @@ export function Place({
       }
     };
 
-    const tick = (now: number) => {
+    const tick = () => {
+      // Horloge commune : figée par « ZA WARUDO » (thème JoJo), la place s'arrête aussi.
+      const now = timeNow();
       // Onglet caché : requestAnimationFrame est suspendu ; au retour, pas de grand saut de temps.
       const dt = Math.min(now - last, 100);
       last = now;

@@ -322,13 +322,16 @@ décors.
   site) est posé dans le coin du cadre du compte : la classe `theme-hat` (`AccountPanel`) marque
   le cadre où un thème peut poser un objet. Images du wiki One Piece (Fandom) et de Sprite
   Database, détourées et réduites.
-- Passer au thème JoJo déclenche **ZA WARUDO** (`apps/web/components/ZaWarudo.tsx`, `zaWarudo()` de
-  `@app/ui`) : la voix (`public/audio/za-warudo.mp3`), une onde qui inverse les couleurs, la page
-  figée et délavée (« 時よ止まれ ! »), puis la reprise (`time-resume.mp3`). Un clic ou Échap
-  abrège. Pendant l'effet, tout le reste s'arrête vraiment : les animations en JavaScript lisent
-  l'horloge commune `timeNow()` (`packages/ui/src/timeStop.ts`), que `stopTime()` fige ; les sons
-  en cours sont mis en pause puis reprennent (`trackMedia()`), la musique en Web Audio de Super
-  Sonic aussi (`onTimeStop`).
+- Passer au thème JoJo, ou cliquer de nouveau dessus dans le sélecteur, déclenche **ZA WARUDO**
+  (`apps/web/components/ZaWarudo.tsx`, `zaWarudo()` de `@app/ui`) : la voix
+  (`public/audio/za-warudo.mp3`), une onde qui inverse les couleurs, puis la page figée et délavée
+  (« 時よ止まれ ! ») jusqu'à un clic ou Échap, qui lance la reprise (`time-resume.mp3`, onde
+  inverse). Pendant l'arrêt, tout s'arrête vraiment : les animations CSS (classe `time-stop`), les
+  animations Web et transitions en cours (`document.getAnimations()`, mises en pause puis
+  relancées), les animations en JavaScript, qui lisent l'horloge commune `timeNow()`
+  (`packages/ui/src/timeStop.ts`) que `stopTime()` fige (Sonic, Luffy, La Place, sprites
+  d'avatar, confettis de TROIS…) ; les sons en cours sont mis en pause puis reprennent
+  (`trackMedia()`), la musique en Web Audio de Super Sonic aussi (`onTimeStop`).
 - Passer au thème One Piece déclenche **ドン!!** (`apps/web/components/Don.tsx`, `don()` de
   `@app/ui`) : un coup de taiko synthétisé en Web Audio (pas de fichier), un flash, des lignes de
   vitesse de manga qui convergent vers le centre, « ドン!! » qui tombe de haut, s'écrase et
