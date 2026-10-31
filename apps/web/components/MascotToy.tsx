@@ -14,6 +14,8 @@ const DRAG_THRESHOLD = 4;
 const BUBBLE_MS = 3500;
 const CHATTER_MIN_MS = 20_000;
 const CHATTER_MAX_MS = 40_000;
+// temps laissé à la page suivante pour réserver sa place avant que la mascotte reparte au coin
+const RELEASE_MS = 1500;
 
 /** Distance au bord droit et au bas de la fenêtre. */
 type Position = { right: number; bottom: number };
@@ -57,12 +59,21 @@ export function MascotToy() {
   const dragged = useRef(false);
 
   // Place réservée : on la suit à chaque image (défilement, redimensionnement, colonne sticky).
-  // Quand elle disparaît, la mascotte repart au coin en bas à droite.
+  // Quand elle disparaît (changement de page), la mascotte reste où elle est un instant : si la page
+  // suivante lui réserve une place, elle y va directement, sinon elle repart au coin en bas à
+  // droite (sans ce délai, elle filerait au coin avant de remonter vers la nouvelle place).
+  const release = useRef(0);
   useEffect(() => {
     if (!anchor) return;
+    window.clearTimeout(release.current);
     let raf = 0;
-    let last = "";
+    let last: string | null = null;
     const follow = () => {
+      // nouvelle place : on oublie un éventuel glisser sur la page d'avant
+      if (last === null) {
+        setDetached(false);
+        setFree(CORNER);
+      }
       const pos = anchorPosition(anchor);
       const key = pos ? `${pos.right}:${pos.bottom}` : "";
       if (key !== last) {
@@ -74,9 +85,11 @@ export function MascotToy() {
     raf = requestAnimationFrame(follow);
     return () => {
       cancelAnimationFrame(raf);
-      setAnchored(null);
-      setDetached(false);
-      setFree(CORNER);
+      release.current = window.setTimeout(() => {
+        setAnchored(null);
+        setDetached(false);
+        setFree(CORNER);
+      }, RELEASE_MS);
     };
   }, [anchor]);
 

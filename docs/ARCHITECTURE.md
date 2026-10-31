@@ -474,7 +474,8 @@ membre : ses images ne sont jamais dans le repo ni dans `public/`.
   la mascotte flottante glisse jusqu'à lui, le suit et prend cette humeur. Options : `movable` (on
   peut l'en décrocher en la faisant glisser) et `chatty` (bulle de phrases au hasard, quand
   l'humeur passe à victoire ou erreur et toutes les 20 à 40 s). Quand il disparaît (on quitte la
-  page), elle repart au coin en bas à droite. État partagé dans `components/mascotStage.ts`.
+  page), elle attend 1,5 s : si la page suivante lui réserve une place, elle y va directement,
+  sinon elle repart au coin en bas à droite. État partagé dans `components/mascotStage.ts`.
   Usages : le coin en bas à droite du cadre « Apps » de l'accueil (`movable`, la grille garde une
   marge pour elle), et sous le podium de TROIS (`chatty`, fixe ; prop `belowPodium` de
   `TroisApp`, qui reçoit la réaction au dernier mot : saut sur un mot trouvé, affaissée sur un
