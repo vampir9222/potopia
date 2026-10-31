@@ -219,7 +219,10 @@ et l'arrêt sur image « To Be Continued », `components/ToBeContinued.tsx`) ; a
 
 Un bloc `[data-theme="montheme"]` de variables CSS dans `packages/ui/theme.css` (couleurs, dégradés,
 police des titres, décors) et une entrée dans `packages/ui/src/themes.ts`. Le sélecteur du header le
-propose aussitôt.
+propose aussitôt. Une police de titres vient de `next/font/google` dans `apps/web/app/layout.tsx`
+(variable CSS, comme `--font-onepiece-face`) ; un décor animé est un composant de `packages/ui`
+monté dans ce layout et affiché par une variable du thème (exemples : `JojoDecor` et `--jojo`,
+`OnePieceDecor` et `--onepiece`).
 
 ### Ajouter ou modifier des cartes
 

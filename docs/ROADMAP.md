@@ -195,6 +195,8 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
     - Défaite dans un jeu : arrêt sur image « To Be Continued » (JoJo).
     - Thème JoJo (Stardust Crusaders) : décor manga, portraits, « ゴゴゴ » ; le choisir déclenche
       ZA WARUDO, qui fige vraiment tout le site (animations et musiques) le temps de l'effet.
+    - Thème One Piece : nuit sur la mer (houle, lune, navire, mouettes, pavillon au chapeau de
+      paille, avis de recherche de Luffy), cadres en corde tressée ; le choisir déclenche « ドン!! ».
     - Navigation sans rechargement entre les pages (tuiles, logo, notifications, jeux : `AppLink`
       et `useNavigate` de `@app/ui`) : la musique du header continue d'une page à l'autre.
     - Sur mobile, la colonne gauche passe dans un menu.
