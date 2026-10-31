@@ -5,8 +5,10 @@
  */
 export const BRAND = {
   name: "Potopia",
-  /** Logo du site, aussi utilisé comme favicon (fichier servi par apps/web/public). */
+  /** Logo du site (fichier servi par apps/web/public). */
   logo: "/brand/logo.png",
+  /** Favicon : le logo sur tuile sombre, traits renforcés et halo pour rester lisible en 16 px. */
+  favicon: "/brand/favicon.png",
   currency: {
     name: "PotoCoin",
     plural: "PotoCoins",
