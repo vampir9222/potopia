@@ -172,6 +172,7 @@ export default async function AdminCardsPage({
                       card={card}
                       imageUrl={images.get(card.id) ?? null}
                       setSize={cards.length}
+                      still
                     />
                   </div>
                 </Link>

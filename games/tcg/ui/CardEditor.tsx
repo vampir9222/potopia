@@ -23,6 +23,7 @@ import {
 } from "../src/effects";
 import { GameCard, GameCardDefs } from "./GameCard";
 import { ImageFramer } from "./ImageFramer";
+import { shrinkImage } from "./shrinkImage";
 
 export type CardEditorState =
   { status: "idle" } | { status: "ok"; message: string } | { status: "error"; message: string };
@@ -180,9 +181,10 @@ export function CardEditor({
     startTransition(() => dispatch(data));
   }
 
-  async function sendImage(file: File) {
+  async function sendImage(original: File) {
     if (!upload || !card) return;
     setUploadState("Envoi…");
+    const file = await shrinkImage(original);
     const target = await upload.request(file.type, file.size);
     if ("error" in target) return setUploadState(target.error);
     const put = await fetch(target.url, {
