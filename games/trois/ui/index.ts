@@ -1,1 +1,1 @@
-export { TroisApp, type Me } from "./App";
+export { TroisApp, type Me, type TroisReaction } from "./App";

@@ -14,14 +14,24 @@ import { setMuted, sfx, useMuted } from "./sound";
 export type Me = { name: string; image: string | null };
 type Tab = "jeu" | "classement" | "profil";
 
+/** Dernier mot joué, gardé quelques secondes pour faire réagir ce qui est sous le podium. */
+export type TroisReaction = "won" | "lost" | null;
+const REACTION_MS = { won: 2500, lost: 4000 };
+
 export function TroisApp({
   me,
   belowPodium,
 }: {
   me: Me;
-  /** Affiché sous le podium de la colonne de gauche (la mascotte du portail). */
-  belowPodium?: ReactNode;
+  /** Affiché sous le podium de la colonne de gauche (la mascotte du portail), selon la réaction. */
+  belowPodium?: (reaction: TroisReaction) => ReactNode;
 }) {
+  const [reaction, setReaction] = useState<TroisReaction>(null);
+  useEffect(() => {
+    if (!reaction) return;
+    const timer = window.setTimeout(() => setReaction(null), REACTION_MS[reaction]);
+    return () => window.clearTimeout(timer);
+  }, [reaction]);
   const [day, setDay] = useState<DayView | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState(false);
@@ -88,7 +98,7 @@ export function TroisApp({
           <div className="w-full">
             <Podium entries={dayEntries(players)} />
           </div>
-          {belowPodium}
+          {belowPodium?.(reaction)}
         </div>
       </aside>
 
@@ -156,6 +166,7 @@ export function TroisApp({
               onNewDay={load}
               onSkipToToday={() => load(true)}
               onShowLeaderboard={() => setTab("classement")}
+              onOutcome={setReaction}
             />
           )}
           {tab === "classement" && day && <Leaderboard players={players} reload={loadPlayers} />}

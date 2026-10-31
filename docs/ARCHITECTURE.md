@@ -332,10 +332,7 @@ décors.
   feuille CSS par jeu (`games/*/ui/*.css`), importée dans `apps/web/app/globals.css`.
 
 **Header** (`packages/core/ui/Header.tsx`, boutons passés par `(platform)/layout.tsx`). De gauche à
-droite : la mascotte, Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil.
-
-- Mascotte (`apps/web/components/MascotToy.tsx`, 40 px) : elle respire et cligne des yeux ; un
-  clic la fait sauter une fois. Sans image envoyée, le bouton disparaît (voir « Mascotte »).
+droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil.
 
 - Sonic (`apps/web/components/SonicRun.tsx`, masqué sous 1024 px), Luffy
   (`components/LuffyRun.tsx`, masqué sous 640 px) et la boule (`components/SpinOrb.tsx`) lancent
@@ -464,10 +461,14 @@ membre : ses images ne sont jamais dans le repo ni dans `public/`.
   dans `globals.css` (bloc « Mascotte », coupées si l'utilisateur réduit les animations), à
   l'échelle `--s` ; les paupières (couleur peau) et la couronne y sont placées en px du dessin
   d'origine. Si l'image ne charge pas (401, 404), le composant affiche `fallback`.
-- Utilisée par le header, les pages d'erreur, la 404, le chargement, la confirmation de la
-  boîte à idées (prop `successIcon` d'`IdeaForm`) et sous le podium de TROIS (prop `belowPodium`
-  de `TroisApp`) : les packages et les jeux ne la connaissent pas, l'app la leur passe. Jamais sur `/login` ni `/refused`, vues par des
-  non-membres.
+- Accueil : en bas à droite du cadre « Apps », à côté de la grille (`components/MascotToy.tsx`,
+  180 px comme sous le podium de TROIS, masquée sous 640 px) : elle respire et cligne des yeux, un
+  clic la fait sauter. Sans image envoyée, le bouton disparaît.
+- Utilisée aussi par les pages d'erreur, la 404, le chargement, la confirmation de la boîte à
+  idées (prop `successIcon` d'`IdeaForm`) et sous le podium de TROIS (prop `belowPodium` de
+  `TroisApp`, qui reçoit la réaction au dernier mot : saut sur un mot trouvé, affaissée sur un
+  perdu) : les packages et les jeux ne la connaissent pas, l'app la leur passe. Jamais sur
+  `/login` ni `/refused`, vues par des non-membres.
 
 **Réponses des routes.** Les routes JSON privées répondent via `json()` (`apps/web/lib/route.ts`),
 qui pose `cache-control: private, no-store`. `errorResponse` traduit les erreurs connues (401, 403,

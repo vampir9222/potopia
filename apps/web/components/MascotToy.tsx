@@ -1,12 +1,16 @@
 "use client";
 
+import { cx } from "@app/ui";
 import { useEffect, useState } from "react";
 import { Mascot } from "./Mascot";
 
 const JUMP_MS = 1000;
 
-/** La mascotte dans le header : elle respire et cligne des yeux ; un clic la fait sauter de joie. */
-export function MascotToy() {
+/**
+ * La mascotte cliquable, en bas à droite du cadre « Apps » de l'accueil (masquée sur petit écran) :
+ * elle respire et cligne des yeux ; un clic la fait sauter de joie.
+ */
+export function MascotToy({ className }: { className?: string }) {
   const [jumping, setJumping] = useState(false);
 
   useEffect(() => {
@@ -22,9 +26,12 @@ export function MascotToy() {
       aria-label="Mascotte"
       title="Mascotte"
       // sans image (rien d'envoyé encore), le bouton disparaît
-      className="hover:bg-surface relative rounded-md p-1 transition-transform empty:hidden hover:scale-110"
+      className={cx(
+        "hidden shrink-0 transition-transform hover:scale-105 sm:not-empty:block",
+        className,
+      )}
     >
-      <Mascot mood={jumping ? "victoire" : "repos"} height={40} className="block" />
+      <Mascot mood={jumping ? "victoire" : "repos"} height={180} className="block" />
     </button>
   );
 }

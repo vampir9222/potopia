@@ -21,7 +21,8 @@ Jeu intégré au portail : page `/trois`, routes `/api/trois/*`, tuile dans le r
   et un podium. Pour la semaine et le mois, un mot trouvé rapporte 6 points en 1 essai, puis un de
   moins par essai, jusqu'à 1 point en 6 essais.
 - **Mascotte** : sur très grand écran, le podium du jour est aussi à gauche du jeu, avec la
-  mascotte du portail en dessous (prop `belowPodium` de `TroisApp`, remplie par la page).
+  mascotte du portail en dessous (prop `belowPodium` de `TroisApp`, remplie par la page). Elle saute
+  de joie quand un mot est trouvé et s'affaisse quand il est perdu (`onOutcome` de `Game`).
 - **Historique du classement** : les flèches ‹ › sous Jour / Semaine / Mois remontent aux jours,
   semaines et mois passés, jusqu'au premier jour où quelqu'un a joué
   (`GET /api/trois/leaderboard?period=…&date=AAAA-MM-JJ` : le jour, ou la période qui contient ce
