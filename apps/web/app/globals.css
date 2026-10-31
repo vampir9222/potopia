@@ -358,7 +358,8 @@
   }
 }
 
-/* « To Be Continued » (ToBeContinued) : l'image se fige en sépia, la flèche glisse en bas. */
+/* « To Be Continued » (ToBeContinued) : dès la défaite, l'image se fige en sépia, la flèche glisse
+   en bas. */
 html.tbc-freeze body > :not(.tbc-layer) {
   filter: sepia(0.9) contrast(1.15) brightness(0.85);
   transition: filter 0.12s;
@@ -372,7 +373,7 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
 
 .tbc-layer {
   cursor: pointer;
-  transition: opacity 0.7s;
+  transition: opacity 0.9s; /* comme le fondu de la musique (FADE_MS) */
 }
 
 .tbc-leaving {

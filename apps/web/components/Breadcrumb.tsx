@@ -14,6 +14,7 @@ const SECTION_LABELS: Record<string, string> = {
   credits: "Crédits",
   economy: "Monnaie",
   inventaire: "Mon inventaire",
+  parametres: "Paramètres",
   wallet: "Ma monnaie",
 };
 

@@ -14,7 +14,12 @@ export { AppLink, NavigationProvider, useNavigate, type LinkComponent } from "./
 export { imagesReady, preloadImages } from "./preload";
 export { RgbFans } from "./RgbFans";
 export { ThemeSwitcher } from "./ThemeSwitcher";
-export { TO_BE_CONTINUED_EVENT, toBeContinued } from "./toBeContinued";
+export {
+  setToBeContinuedDisabled,
+  TO_BE_CONTINUED_EVENT,
+  toBeContinued,
+  useToBeContinuedDisabled,
+} from "./toBeContinued";
 export { ZA_WARUDO_EVENT, zaWarudo } from "./zaWarudo";
 export { isTimeStopped, onTimeStop, resumeTime, stopTime, timeNow, trackMedia } from "./timeStop";
 export { DEFAULT_THEME, resolveTheme, THEME_COOKIE, THEMES, type ThemeId } from "./themes";

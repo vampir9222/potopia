@@ -4,21 +4,21 @@ import { cx, effectiveVolume, preloadImages, TO_BE_CONTINUED_EVENT } from "@app/
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-// Intro de Roundabout coupée pour l'occasion (public/audio/roundabout.mp3, ~9 s) : la montée du
-// piano inversé culmine à 2,4 s, c'est là que l'image se fige.
+// Roundabout découpé à la main (public/audio/roundabout.mp3, 6,4 s) : il part directement sur le
+// passage de la guitare, l'image se fige dès la défaite. Discret, avec un petit fondu sur la fin.
 const MUSIC = "/audio/roundabout.mp3";
 const ARROW = "/jojo/to-be-continued.png"; // la même image que la classe de fond de la flèche
-const FREEZE_MS = 2400;
-const END_MS = 9000;
-const FADE_MS = 700;
+const VOLUME = 0.45;
+const END_MS = 6300;
+const FADE_MS = 900;
 
-type Phase = "off" | "music" | "frozen" | "leaving";
+type Phase = "off" | "frozen" | "leaving";
 
 /**
- * « To Be Continued » (JoJo) après une défaite : la musique démarre, l'image se fige en sépia sur
- * le pic, la flèche glisse en bas à gauche, puis tout repart. Un clic ou Échap l'écourte.
- * Déclenché par `toBeContinued()` de `@app/ui` (TROIS, Agents Doubles). Monté une fois, dans le
- * layout racine.
+ * « To Be Continued » (JoJo) après une défaite : dès la défaite, l'image se fige en sépia, la
+ * flèche glisse en bas à gauche sur Roundabout, puis tout repart dans un fondu. Un clic ou Échap
+ * l'écourte. Déclenché par `toBeContinued()` de `@app/ui` (TROIS, Agents Doubles), qui ne fait rien
+ * si le membre a coupé l'effet dans ses paramètres. Monté une fois, dans le layout racine.
  */
 export function ToBeContinued() {
   const [phase, setPhase] = useState<Phase>("off");
@@ -62,11 +62,10 @@ export function ToBeContinued() {
     const start = () => {
       if (phaseRef.current !== "off") return;
       const audio = new Audio(MUSIC);
-      audio.volume = effectiveVolume();
+      audio.volume = effectiveVolume() * VOLUME;
       audio.play().catch(() => {});
       audioRef.current = audio;
-      go("music");
-      later(FREEZE_MS, () => go("frozen"));
+      go("frozen");
       later(END_MS - FADE_MS, stop);
     };
 

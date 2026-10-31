@@ -376,10 +376,18 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
 
 **To Be Continued** (`apps/web/components/ToBeContinued.tsx`, monté dans le layout racine).
 `toBeContinued()` de `@app/ui` le déclenche : un mot raté à TROIS (mode test compris), une mission perdue
-sous les yeux du joueur à Agents Doubles. L'intro de Roundabout (`public/audio/roundabout.mp3`,
-~9 s coupées dans le morceau) démarre ; à son pic (2,4 s) la page se fige en sépia
+sous les yeux du joueur à Agents Doubles. Dès la défaite, la page se fige en sépia
 (`html.tbc-freeze`, animations en pause) et la flèche « To Be Continued »
-(`public/jojo/to-be-continued.png`) glisse en bas à gauche. Un clic ou Échap écourte.
+(`public/jojo/to-be-continued.png`) glisse en bas à gauche, sur Roundabout
+(`public/audio/roundabout.mp3`, 6,4 s découpées à la main, à 45 % du volume du site, fondu de
+0,9 s sur la fin). Un clic ou Échap écourte. L'effet se coupe pour de bon dans les paramètres
+(voir ci-dessous) : `toBeContinued()` ne fait alors plus rien.
+
+**Paramètres** (`/parametres`, entrée « Paramètres » du menu de l'avatar du header,
+`ProfileMenu`). Réglages du membre, gardés sur l'appareil (`localStorage`) :
+`apps/web/components/SettingsView.tsx`. Premier réglage : « To Be Continued » quand on perd
+(`useToBeContinuedDisabled` / `setToBeContinuedDisabled` de `@app/ui`, clé
+`potopia:to-be-continued-disabled`).
 
 **Images préchargées** (`preloadImages` / `imagesReady` de `@app/ui`, `src/preload.ts`). Les
 planches de sprites et images d'effets (Sonic et Super Sonic, fruit, Luffy et combo, flèche « To
