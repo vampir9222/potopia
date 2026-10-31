@@ -36,8 +36,8 @@ export function ThemeSwitcher({ current }: { current: ThemeId }) {
   }, [open]);
 
   function choose(id: ThemeId) {
-    // passer au thème JoJo : « ZA WARUDO ! », le temps s'arrête un instant
-    if (id === "jojo" && theme !== "jojo") zaWarudo();
+    // thème JoJo (choisi ou cliqué de nouveau) : « ZA WARUDO ! », le temps s'arrête jusqu'au clic
+    if (id === "jojo") zaWarudo();
     // passer au thème One Piece : « ドン!! », coup de tambour et onomatopée de manga
     if (id === "onepiece" && theme !== "onepiece") don();
     setTheme(id);

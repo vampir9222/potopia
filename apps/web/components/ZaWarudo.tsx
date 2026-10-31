@@ -8,7 +8,6 @@ import { createPortal } from "react-dom";
 const STOP_SOUND = "/audio/za-warudo.mp3";
 const RESUME_SOUND = "/audio/time-resume.mp3";
 const WAVE_MS = 950; // l'onde s'étend puis se referme ; le temps est arrêté à la fin
-const RESUME_AT_MS = 4400;
 const RESUME_HIT_MS = 800;
 const OUT_MS = 500;
 const VOLUME = 0.8;
@@ -17,9 +16,11 @@ type Phase = "off" | "wave" | "stopped" | "resume";
 
 /**
  * Arrêt du temps façon DIO (thème JoJo). Le cri part, une onde inverse les couleurs depuis le
- * centre, puis la page se fige dans une teinte délavée (animations en pause, « 時よ止まれ ! »).
- * Au bout de quelques secondes le temps reprend, dans une onde inverse. Un clic ou Échap abrège.
- * Déclenché par `zaWarudo()` de `@app/ui` (choix du thème JoJo). Monté une fois, layout racine.
+ * centre, puis la page se fige dans une teinte délavée, « 時よ止まれ ! » : animations CSS et
+ * transitions, animations Web (`element.animate`), animations JS qui lisent `timeNow()`, sons.
+ * Le temps reste arrêté jusqu'à un clic (ou Échap) : il reprend alors, dans une onde inverse.
+ * Déclenché par `zaWarudo()` de `@app/ui` (choix du thème JoJo, ou nouveau clic dessus). Monté une
+ * fois, layout racine.
  */
 export function ZaWarudo() {
   const [phase, setPhase] = useState<Phase>("off");
@@ -29,12 +30,31 @@ export function ZaWarudo() {
 
   useEffect(() => {
     trackMedia();
+    // animations Web et transitions en cours hors de l'effet (émeraudes…) : mises en pause,
+    // relancées à la reprise. Les animations CSS, elles, sont figées par la classe time-stop (les
+    // piloter ici leur ferait ignorer animation-play-state ensuite).
+    let frozen: Animation[] = [];
     const go = (next: Phase) => {
       phaseRef.current = next;
       setPhase(next);
       document.documentElement.classList.toggle("time-stop", next === "stopped");
       // tout le reste se fige (animations du header, musiques) pendant l'effet, et repart à la fin
       if (next === "wave" || next === "stopped") stopTime();
+      if (next === "stopped") {
+        frozen = document.getAnimations().filter((a) => {
+          const target = (a.effect as KeyframeEffect | null)?.target;
+          return (
+            a.playState === "running" &&
+            !(a instanceof CSSAnimation) &&
+            !target?.closest(".za-layer")
+          );
+        });
+        frozen.forEach((a) => a.pause());
+      }
+      if (next === "resume") {
+        frozen.forEach((a) => a.play());
+        frozen = [];
+      }
       if (next === "off") resumeTime();
     };
     const later = (ms: number, fn: () => void) => timers.current.push(window.setTimeout(fn, ms));
@@ -65,8 +85,8 @@ export function ZaWarudo() {
       if (phaseRef.current !== "off") return;
       voice = play(STOP_SOUND);
       go("wave");
+      // puis le temps reste arrêté, jusqu'à ce qu'on clique
       later(WAVE_MS, () => go("stopped"));
-      later(RESUME_AT_MS, resume);
     };
 
     skipRef.current = () => {
@@ -98,7 +118,12 @@ export function ZaWarudo() {
         <span className={cx("za-wave", phase === "resume" && "za-wave-out")} />
       )}
       {phase === "wave" && <span className="za-shout">ZA WARUDO !</span>}
-      {phase === "stopped" && <span className="za-stopped">時よ止まれ！</span>}
+      {phase === "stopped" && (
+        <>
+          <span className="za-stopped">時よ止まれ！</span>
+          <span className="za-hint">Clic : le temps reprend</span>
+        </>
+      )}
     </div>,
     document.body,
   );
