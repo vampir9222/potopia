@@ -7,10 +7,12 @@ import {
   CARD_IMAGE_TYPES,
   CARD_LIMITS,
   CARD_RARITIES,
+  FRAME_ZOOM,
   type Card,
   type CardImageType,
   type CardRarityId,
   type CardSet,
+  type ImageFrame,
 } from "./card-rules";
 import { EFFECT_KEYS, type EffectParams, effectText, getEffect, paramsSchema } from "./effects";
 
@@ -28,6 +30,9 @@ export {
   type Card,
   type CardRarityId,
   type CardSet,
+  DEFAULT_FRAME,
+  FRAME_ZOOM,
+  type ImageFrame,
 } from "./card-rules";
 
 /** Utilisateur qui lit ou modifie : seuls les admins (ADMIN_DISCORD_IDS) y ont droit. */
@@ -84,6 +89,17 @@ const cardFields = z.object({
   effectParams: z.record(z.string(), z.union([z.string(), z.number()])).nullish(),
   effectText: optionalText(CARD_LIMITS.effectText, "Texte de l'effet"),
   flavor: optionalText(CARD_LIMITS.flavor, "Description"),
+  imageFrame: z
+    .object({
+      x: z.coerce.number().min(0).max(100),
+      y: z.coerce.number().min(0).max(100),
+      zoom: z.coerce
+        .number()
+        .min(FRAME_ZOOM.min, "Zoom trop petit.")
+        .max(FRAME_ZOOM.max, "Zoom trop grand."),
+    })
+    .nullish()
+    .transform((v) => v ?? null),
 });
 
 export type CardInput = z.input<typeof cardFields>;
@@ -97,12 +113,15 @@ function parseCard(input: CardInput) {
     ...fields,
     effectParams: params,
     effectText: fields.effectText ?? effectText(fields.effectKey, params),
+    // JSON null en base : Prisma attend DbNull.
+    imageFrame: fields.imageFrame ?? Prisma.DbNull,
   };
 }
 
-type CardRow = Omit<Card, "setCode" | "effectParams" | "rarity"> & {
+type CardRow = Omit<Card, "setCode" | "effectParams" | "rarity" | "imageFrame"> & {
   rarity: string;
   effectParams: unknown;
+  imageFrame: unknown;
   set: { code: string };
 };
 
@@ -112,6 +131,7 @@ function toCard(row: CardRow): Card {
     ...rest,
     rarity: row.rarity as CardRarityId,
     effectParams: (row.effectParams as EffectParams | null) ?? null,
+    imageFrame: (row.imageFrame as ImageFrame | null) ?? null,
     setCode: set.code,
   };
 }
@@ -256,7 +276,12 @@ export async function updateCard(
     if (current.baseCardId) {
       const row = await tx.tcgCard.update({
         where: { id },
-        data: { name: fields.name, rarity: fields.rarity, flavor: fields.flavor },
+        data: {
+          name: fields.name,
+          rarity: fields.rarity,
+          flavor: fields.flavor,
+          imageFrame: fields.imageFrame,
+        },
         include: withSet,
       });
       return toCard(row);
@@ -264,7 +289,13 @@ export async function updateCard(
     const stats = shared(fields);
     const row = await tx.tcgCard.update({
       where: { id },
-      data: { ...stats, name: fields.name, rarity: fields.rarity, flavor: fields.flavor },
+      data: {
+        ...stats,
+        name: fields.name,
+        rarity: fields.rarity,
+        flavor: fields.flavor,
+        imageFrame: fields.imageFrame,
+      },
       include: withSet,
     });
     await tx.tcgCard.updateMany({ where: { baseCardId: id }, data: stats });

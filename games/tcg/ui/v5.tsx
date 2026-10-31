@@ -31,7 +31,7 @@ import {
  *   (1 pour la légendaire, 2 pour la SR, 3 pour la SSR) ;
  * - le cadre prend la couleur de la rareté (`RARITY_FRAME`), uni et sans effet de lumière d'un
  *   côté, pour une épaisseur égale tout autour ;
- * - bandeau court (n°70) : titre à la hauteur du mana, centré dans la place que le mana laisse.
+ * - bandeau court (n°70) : titre à la hauteur du mana, centré sur toute la largeur de la carte.
  *
  * Le 65 et le 66 gardent leur rendu (`ui/v4.tsx`) : seules des exportations y ont été ajoutées.
  */
@@ -135,10 +135,10 @@ function Band({ card, layout, shape }: { card: CardData; layout: TopLayout; shap
         height,
         display: "grid",
         placeItems: "center",
-        // Bandeau court : le titre se centre dans la place laissée libre par le mana (à droite du
-        // rond, jusqu'au cadre), à la hauteur du centre du mana.
+        // Bandeau court : le titre se centre sur toute la largeur de la carte, avec la même marge
+        // des deux côtés pour ne jamais passer sous le mana, à la hauteur du centre du mana.
         padding: short
-          ? `${FRAME - top}px 22px 0 ${Math.round(MANA.x + MANA.r) + 2 - left}px`
+          ? `${FRAME - top}px ${Math.round(MANA.x + MANA.r) + 2 - left}px 0`
           : `0 ${TITLE.inset - left}px`,
         overflow: "hidden",
         ...panelStyle(card, STYLE.panel, layout),

@@ -223,7 +223,7 @@ propose aussitôt.
 
 Les cartes se gèrent dans **Administration › Cartes** (`/admin/cartes`) : nom, type, famille,
 mana, puissance, rareté, effet (choisi dans le catalogue `games/tcg/src/effects.ts`, puis réglé),
-description et illustration. Pour en créer beaucoup d'un coup, `/admin/cartes/import` prend un
+description et illustration (à envoyer, puis à cadrer en la faisant glisser et en zoomant). Pour en créer beaucoup d'un coup, `/admin/cartes/import` prend un
 fichier JSON (format affiché sur la page), et `/admin/cartes/illustrations` plusieurs images d'un
 coup (chaque fichier porte le numéro de sa carte : `12.jpg`). Les cartes générées à partir des
 idées restent hors du dépôt, puisqu'elles reprennent le contenu des membres. Un effet nouveau s'ajoute dans

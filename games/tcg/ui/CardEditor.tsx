@@ -8,6 +8,8 @@ import {
   CARD_RARITY_LABELS,
   type Card,
   type CardSet,
+  DEFAULT_FRAME,
+  type ImageFrame,
 } from "../src/card-rules";
 import {
   defaultParams,
@@ -19,6 +21,7 @@ import {
   TRIGGER_LABELS,
 } from "../src/effects";
 import { GameCard, GameCardDefs } from "./GameCard";
+import { ImageFramer } from "./ImageFramer";
 
 export type CardEditorState =
   { status: "idle" } | { status: "ok"; message: string } | { status: "error"; message: string };
@@ -100,6 +103,7 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
   );
   const [layout, setLayout] = useState<"normal" | "fullart">("normal");
   const [image, setImage] = useState(imageUrl);
+  const [frame, setFrame] = useState<ImageFrame>(card?.imageFrame ?? DEFAULT_FRAME);
   const [uploadState, setUploadState] = useState<string | null>(null);
 
   const variant = !!card?.baseCardId;
@@ -115,8 +119,9 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
       effectText: shownText,
       number: card?.number ?? (setSize ?? 0) + 1,
       setCode: card?.setCode ?? sets.find((s) => s.id === setId)?.code,
+      imageFrame: frame,
     }),
-    [fields, shownText, card?.number, card?.setCode, sets, setId, setSize],
+    [fields, shownText, card?.number, card?.setCode, sets, setId, setSize, frame],
   );
 
   function set<K extends keyof Fields>(key: K, value: Fields[K]) {
@@ -130,7 +135,10 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
 
   function submit() {
     const data = new FormData();
-    data.set("card", JSON.stringify({ ...fields, effectText: shownText }));
+    data.set(
+      "card",
+      JSON.stringify({ ...fields, effectText: shownText, imageFrame: image ? frame : null }),
+    );
     if (!card) data.set("setId", setId);
     startTransition(() => dispatch(data));
   }
@@ -149,6 +157,7 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
     const failed = await upload.confirm(target.key);
     if (failed) return setUploadState(failed.error);
     setImage(URL.createObjectURL(file));
+    setFrame(DEFAULT_FRAME);
     setUploadState("Illustration enregistrée.");
   }
 
@@ -375,6 +384,21 @@ export function CardEditor({ card, sets, families, imageUrl, setSize, save, uplo
             </button>
           ))}
         </div>
+        {image && (
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-muted text-sm">
+              Cadrage : glisse l&apos;image, zoome, puis enregistre la carte.
+            </p>
+            <ImageFramer
+              imageUrl={image}
+              frame={frame}
+              onChange={setFrame}
+              // Proportions de la fenêtre d'illustration : carte normale (264 × 172) ou full art.
+              width={layout === "normal" ? 264 : 200}
+              height={layout === "normal" ? 172 : 280}
+            />
+          </div>
+        )}
         {upload && card && (
           <Label
             className="w-full max-w-[300px]"

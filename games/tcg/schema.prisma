@@ -62,6 +62,8 @@ model TcgCard {
   flavor       String?
   // Clé de l'illustration dans le stockage (jamais une URL) ; sans elle, l'image de l'idée.
   imageKey     String?   @map("image_key")
+  // Cadrage de l'illustration (point central en % et zoom) : l'image n'est jamais rognée.
+  imageFrame   Json?     @map("image_frame")
   ideaId       String?   @unique @map("idea_id")
   baseCardId   String?   @map("base_card_id")
   createdAt    DateTime  @default(now()) @map("created_at")

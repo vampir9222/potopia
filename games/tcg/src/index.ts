@@ -16,6 +16,8 @@ export {
   CARD_RARITY_LABELS,
   CardInputError,
   createCard,
+  DEFAULT_FRAME,
+  FRAME_ZOOM,
   createCardImageUpload,
   ensureSet,
   getCard,
@@ -29,6 +31,7 @@ export {
   type CardInput,
   type CardRarityId,
   type CardSet,
+  type ImageFrame,
 } from "./cards";
 export {
   defaultParams,

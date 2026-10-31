@@ -12,6 +12,8 @@ export type GameCardFields = Pick<
 > & {
   /** Code du set, affiché devant le numéro (« S1 07/116 »). */
   setCode?: string;
+  /** Cadrage de l'illustration. */
+  imageFrame?: Card["imageFrame"];
 };
 
 /** Ligne de type affichée : « Instrument — Grenouilles », ou le type seul sans famille. */
@@ -61,6 +63,7 @@ export function GameCard({
     cost: card.cost,
     power: card.power,
     imageUrl,
+    imageFrame: card.imageFrame,
     serial: [card.setCode, setSize ? `${pad(card.number)}/${pad(setSize)}` : pad(card.number)]
       .filter(Boolean)
       .join(" "),

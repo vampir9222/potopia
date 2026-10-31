@@ -184,7 +184,8 @@ passe d'une partie à l'autre sans rechargement.
 - `TcgSet` : code (unique, `S1`), name, createdAt. Une édition de cartes.
 - `TcgCard` : setId, number (`(set_id, number)` unique), name, rarity (enum `TcgRarity` :
   common, uncommon, rare, epic, legendary, sr, ssr), type, family?, cost (0 à 6), power, effectKey?,
-  effectParams? (JSON), effectText, flavor?, imageKey?, ideaId? (unique, `ideas.ideas` sans
+  effectParams? (JSON), effectText, flavor?, imageKey?, imageFrame? (JSON : cadrage de
+  l'illustration, point central x/y en % et zoom de 1 à 4 ; l'image n'est jamais rognée), ideaId? (unique, `ideas.ideas` sans
   relation), baseCardId? (variante full art → sa carte de base), createdAt, updatedAt. La base ne
   contient aucune logique d'effet : seulement la clé d'un effet du catalogue et ses réglages.
 
@@ -356,8 +357,8 @@ rafraîchit le routeur client sans recharger la page.
   (`RARITY_STARS` : 1 pour la légendaire, 2 pour la SR, 3 pour la SSR), précédés du code du set
   (« S1 07/116 »). Pas de symbole d'édition : la rareté se voit au cadre (`RARITY_FRAME` : argent,
   vert, bleu, violet (épique), or, nacre, arc-en-ciel), uni et sans lumière venant d'un côté pour une épaisseur égale
-  tout autour, puis aux effets. Bandeau court (n°70) : titre à la hauteur du mana, centré dans la
-  place que le mana laisse ; la planche du n°70 montre aussi les sept raretés. Le n°67 (`final-bandeau`) a le bandeau plein et
+  tout autour, puis aux effets. Bandeau court (n°70) : titre à la hauteur du mana, centré sur toute la
+  largeur de la carte ; la planche du n°70 montre aussi les sept raretés. Le n°67 (`final-bandeau`) a le bandeau plein et
   se montre dans chaque rareté ; les n°68 à 71 (`BAND_DESIGNS`, `BandShape`) essaient d'autres
   formes de bandeau autour du mana : échancré, mana serti dans un anneau de métal, bandeau court
   (le mana déborde dessous), sans bandeau. Seul le n°70 (bandeau court), retenu pour l'instant,
@@ -413,6 +414,9 @@ et modifient les cartes.
   envoi d'illustration), `/admin/cartes/import`, `/admin/cartes/illustrations` (`CardImagesUpload` :
   plusieurs images d'un coup, chacune posée sur la carte dont elle porte le numéro, « 12.jpg »). Les cartes s'affichent dans le design retenu
   (n°70, `GameCard`, ligne de type « {type} — {famille} »).
+- Cadrage : sous l'aperçu de l'éditeur, `ImageFramer` montre la fenêtre d'illustration (normale ou
+  full art) ; on y fait glisser l'image et on règle le zoom, le cadrage est enregistré avec la
+  carte et appliqué partout où elle s'affiche (`frameStyle`).
 - Illustration : `GET /api/admin/cards/[id]/image` (admin, 302 vers une URL présignée de 5 min),
   celle de la carte ou, à défaut, celle de son idée (`listIdeaIdsWithImage` dit lesquelles en
   ont une).

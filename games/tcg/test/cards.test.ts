@@ -81,6 +81,20 @@ describe("createCard", () => {
     ).rejects.toThrow(ZodError);
   });
 
+  it("garde le cadrage de l'illustration, borné", async () => {
+    const card = await createCard(ADMIN, { ...BASE, setId });
+    expect(card.imageFrame).toBeNull();
+    const framed = await updateCard(ADMIN, card.id, {
+      ...BASE,
+      imageFrame: { x: 30, y: 70, zoom: 1.5 },
+    });
+    expect(framed.imageFrame).toEqual({ x: 30, y: 70, zoom: 1.5 });
+    expect((await updateCard(ADMIN, card.id, { ...BASE, imageFrame: null })).imageFrame).toBeNull();
+    await expect(
+      updateCard(ADMIN, card.id, { ...BASE, imageFrame: { x: 50, y: 50, zoom: 9 } }),
+    ).rejects.toThrow(ZodError);
+  });
+
   it("refuse un effet inconnu ou mal réglé", async () => {
     await expect(createCard(ADMIN, { ...BASE, setId, effectKey: "inconnu" })).rejects.toThrow(
       ZodError,
