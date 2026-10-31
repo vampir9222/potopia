@@ -464,8 +464,9 @@ membre : ses images ne sont jamais dans le repo ni dans `public/`.
   dans `globals.css` (bloc « Mascotte », coupées si l'utilisateur réduit les animations), à
   l'échelle `--s` ; les paupières (couleur peau) et la couronne y sont placées en px du dessin
   d'origine. Si l'image ne charge pas (401, 404), le composant affiche `fallback`.
-- Utilisée par le header, les pages d'erreur, la 404, le chargement, et la confirmation de la
-  boîte à idées (prop `successIcon` d'`IdeaForm`). Jamais sur `/login` ni `/refused`, vues par des
+- Utilisée par le header, les pages d'erreur, la 404, le chargement, la confirmation de la
+  boîte à idées (prop `successIcon` d'`IdeaForm`) et sous le podium de TROIS (prop `belowPodium`
+  de `TroisApp`) : les packages et les jeux ne la connaissent pas, l'app la leur passe. Jamais sur `/login` ni `/refused`, vues par des
   non-membres.
 
 **Réponses des routes.** Les routes JSON privées répondent via `json()` (`apps/web/lib/route.ts`),

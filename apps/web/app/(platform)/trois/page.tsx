@@ -2,6 +2,7 @@ import { TroisApp } from "@app/trois/ui";
 import { HiddenEmerald } from "@app/inventory/ui";
 import type { Metadata } from "next";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { Mascot } from "@/components/Mascot";
 import { getCurrentMember } from "@/lib/session";
 
 export const metadata: Metadata = { title: "TROIS" };
@@ -11,7 +12,7 @@ export default async function TroisPage() {
   return (
     <div className="relative flex flex-col gap-4">
       <Breadcrumb />
-      <TroisApp me={{ name: user.name, image: user.image }} />
+      <TroisApp me={{ name: user.name, image: user.image }} belowPodium={<Mascot height={180} />} />
       <HiddenEmerald color="yellow" className="absolute top-1 left-44" />
     </div>
   );
