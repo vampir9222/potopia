@@ -25,11 +25,11 @@ const BOOST_MAX = 15;
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
-// Au repos, régulièrement (toutes les 6 à 8 s), la boule rebondit sur place : elle descend
+// Au repos, régulièrement (toutes les 3 s environ), la boule rebondit sur place : elle descend
 // toucher le liseré, s'écrase, rebondit (sans sortir de l'écran), retouche et se pose ; au
 // contact, un éclat d'étincelles dorées et un reflet qui balaie la boule.
-const IDLE_MIN_MS = 6000;
-const IDLE_MAX_MS = 8000;
+const IDLE_MIN_MS = 2800;
+const IDLE_MAX_MS = 3400;
 const HOP_MS = 1100;
 // éclats au contact du liseré : direction (px) de chaque étincelle
 const HOP_SPARKS = [
