@@ -190,6 +190,8 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
     - « Mon inventaire » (`/inventaire`) : les Émeraudes du Chaos cachées dans les pages, puis
       les hauts faits.
     - Défaite dans un jeu : arrêt sur image « To Be Continued » (JoJo).
+    - Thème JoJo (Stardust Crusaders) : décor manga, portraits, « ゴゴゴ » ; le choisir déclenche
+      ZA WARUDO, qui fige vraiment tout le site (animations et musiques) le temps de l'effet.
     - Navigation sans rechargement entre les pages (tuiles, logo, notifications, jeux : `AppLink`
       et `useNavigate` de `@app/ui`) : la musique du header continue d'une page à l'autre.
     - Sur mobile, la colonne gauche passe dans un menu.

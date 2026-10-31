@@ -5,7 +5,7 @@ import {
   useEmeraldsDisabled,
   useSuperSonicTransformed,
 } from "@app/inventory/ui";
-import { cx, effectiveVolume, onVolumeChange } from "@app/ui";
+import { cx, effectiveVolume, onVolumeChange, timeNow } from "@app/ui";
 import { useEffect, useRef, useState } from "react";
 import { LoopTrack } from "./loopTrack";
 
@@ -161,7 +161,8 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
     lines.style.opacity = "0";
     wind.style.opacity = "0";
     // `lift` : hauteur de vol de Super Sonic ; les traits montent et descendent avec lui
-    const rush = (k: number, fly = false, now = 0, lift = FLY_LIFT) => {
+    const rush = (k: number, fly = false, now = 0, lift = FLY_LIFT, plain = false) => {
+      lines.classList.toggle("sonic-speedlines-plain", plain);
       // traits discrets : ils accompagnent le dédoublement sans le cacher. En vol, le vent en SVG
       // (qui ondule) remplace les traits droits de la course.
       const k01 = Math.max(0, Math.min(1, k));
@@ -169,7 +170,8 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
       lines.style.width = `${Math.round(40 + 80 * k)}px`;
       wind.style.opacity = fly ? String(k01 * 0.6) : "0";
       if (fly) blow(now, lift);
-      const next = fly ? "fly" : k > 0.5 ? "run" : "";
+      // Sonic de base : traits seulement, pas d'images rémanentes (réservées à Super Sonic)
+      const next = fly ? "fly" : k > 0.5 && !plain ? "run" : "";
       if (next !== level) {
         level = next;
         sprite.classList.toggle("sonic-ghost", next === "run");
@@ -205,7 +207,7 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
     };
 
     let raf = 0;
-    const start = performance.now();
+    const start = timeNow();
     // vitesse du sprint : un boost de temps en temps pendant la course
     let boostUntil = 0;
     let nextBoost = start + 3500;
@@ -213,7 +215,9 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
     let lastStep = start;
     let noted = false;
 
-    const tick = (now: number) => {
+    // horloge commune : figée pendant un arrêt du temps (ZA WARUDO)
+    const tick = () => {
+      const now = timeNow();
       const t = now - start;
       if (idleSuper) {
         show("ssIdle", Math.floor(t / 140), SUPER_IDLE_LIFT + 2 * Math.sin(now / 520));
@@ -227,8 +231,8 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
         rush(0);
       } else if (mode === "running") {
         if (now > nextBoost) {
-          // sprint bien long : 2,6 à 4,2 s
-          boostUntil = now + 2600 + Math.random() * 1600;
+          // sprint bien long : 4,5 à 7 s
+          boostUntil = now + 4500 + Math.random() * 2500;
           nextBoost = boostUntil + 3500 + Math.random() * 3500;
         }
         const name: SheetName = t < 1600 ? "walk" : now < boostUntil ? "fast" : "run";
@@ -243,7 +247,8 @@ export function SonicRun({ superSonic: allEmeralds }: { superSonic: boolean }) {
         if (name === "walk") trail(0, "accent");
         else if (name === "run") trail(90, "accent", 220);
         else trail(210 + 25 * Math.sin(now / 60), "accent", 120);
-        rush(0);
+        // au sprint, Sonic a lui aussi ses petits traits de vitesse (à la couleur du thème)
+        rush(name === "fast" ? 0.45 : 0, false, now, FLY_LIFT, true);
       } else {
         // déjà transformé : il repart directement en courant
         const transTotal = startTransformed ? 0 : TRANS_MS.reduce((a, b) => a + b, 0);

@@ -280,12 +280,23 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 décors.
 
 - Un thème est un bloc `[data-theme="…"]` de variables CSS, déclaré aussi dans
-  `packages/ui/src/themes.ts`. Trois thèmes : **Classique**, le thème par défaut (bleu sobre, sans
-  décors), **Fantasy** (or, pourpre, cadres ornés, braises, titres en Cinzel) et **RGB** (néon gaming :
+  `packages/ui/src/themes.ts`. Quatre thèmes : **Classique**, le thème par défaut (bleu sobre, sans
+  décors), **Fantasy** (or, pourpre, cadres ornés, braises, titres en Cinzel), **RGB** (néon gaming :
   la teinte de l'accent tourne en continu via une propriété CSS animée, cadres à bordure arc-en-ciel,
-  boucle de watercooling animée en fond, titres en Orbitron).
-- Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`) : un thème
-  sobre les coupe sans toucher aux composants.
+  boucle de watercooling animée en fond, titres en Orbitron) et **JoJo** (Stardust Crusaders : nuit
+  indigo, or et violet, cadres encrés façon case de manga avec étoiles Joestar, titres en Anton ;
+  petits textes en capitales pleines pour rester lisibles).
+- Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`, `--jojo`) :
+  un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons,
+  portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.png` : Jotaro, Star Platinum, DIO,
+  The World), « ゴゴゴ » qui montent, étoiles, Jotaro qui prend la pose (`jotaro-pose.png`).
+- Passer au thème JoJo déclenche **ZA WARUDO** (`apps/web/components/ZaWarudo.tsx`, `zaWarudo()` de
+  `@app/ui`) : la voix (`public/audio/za-warudo.mp3`), une onde qui inverse les couleurs, la page
+  figée et délavée (« 時よ止まれ ! »), puis la reprise (`time-resume.mp3`). Un clic ou Échap
+  abrège. Pendant l'effet, tout le reste s'arrête vraiment : les animations en JavaScript lisent
+  l'horloge commune `timeNow()` (`packages/ui/src/timeStop.ts`), que `stopTime()` fige ; les sons
+  en cours sont mis en pause puis reprennent (`trackMedia()`), la musique en Web Audio de Super
+  Sonic aussi (`onTimeStop`).
 - Le choix se fait avec le bouton palette du header (`ThemeSwitcher`). Il est mémorisé par appareil
   dans le cookie `theme`, que le layout racine lit pour poser `data-theme` dès le rendu serveur, sans
   flash.
@@ -304,8 +315,8 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
   puis transformation, course, vol et attente de Super Sonic), tirées de gifs de sources
   différentes, ramenées à la même taille de pixel et aux mêmes couleurs. À l'arrêt il attend (la
   pause du gif d'origine allongée) ; au clic, musique `public/audio/sonic.mp3` (silences de début
-  et de fin coupés, pour boucler sans trou) : il marche, accélère, court, pique des sprints de 2,6
-  à 4,2 s. Traînée en tirets sur le liseré, à la couleur du thème, dont les tirets défilent à sa
+  et de fin coupés, pour boucler sans trou) : il marche, accélère, court, pique des sprints de 4,5
+  à 7 s, avec de petits traits de vitesse à la couleur du thème. Traînée en tirets sur le liseré, à la couleur du thème, dont les tirets défilent à sa
   vitesse. Les 7 Émeraudes du Chaos trouvées et leur pouvoir libéré (`superSonic`, voir
   Inventaire), le clic le transforme en Super Sonic : transformation (~1,7 s), départ en
   trottinant puis sprint bien plus rapide que Sonic (4,5 s en tout), puis il s'envole. Traînée

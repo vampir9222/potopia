@@ -1,6 +1,6 @@
 "use client";
 
-import { cx, effectiveVolume, ZA_WARUDO_EVENT } from "@app/ui";
+import { cx, effectiveVolume, resumeTime, stopTime, trackMedia, ZA_WARUDO_EVENT } from "@app/ui";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -28,10 +28,14 @@ export function ZaWarudo() {
   const skipRef = useRef<() => void>(() => {});
 
   useEffect(() => {
+    trackMedia();
     const go = (next: Phase) => {
       phaseRef.current = next;
       setPhase(next);
       document.documentElement.classList.toggle("time-stop", next === "stopped");
+      // tout le reste se fige (animations du header, musiques) pendant l'effet, et repart à la fin
+      if (next === "wave" || next === "stopped") stopTime();
+      if (next === "off") resumeTime();
     };
     const later = (ms: number, fn: () => void) => timers.current.push(window.setTimeout(fn, ms));
     const clear = () => {
@@ -40,6 +44,8 @@ export function ZaWarudo() {
     };
     const play = (src: string) => {
       const audio = new Audio(src);
+      // la voix de DIO n'est pas figée par son propre arrêt du temps
+      audio.dataset.timeStopProof = "1";
       audio.volume = effectiveVolume() * VOLUME;
       audio.play().catch(() => {});
       return audio;
@@ -78,6 +84,7 @@ export function ZaWarudo() {
       clear();
       voice?.pause();
       document.documentElement.classList.remove("time-stop");
+      resumeTime();
     };
   }, []);
 

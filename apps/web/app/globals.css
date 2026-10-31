@@ -634,3 +634,22 @@ html.time-stop body > :not(.za-layer) *::before,
 html.time-stop body > :not(.za-layer) *::after {
   animation-play-state: paused !important;
 }
+
+/* Sonic de base au sprint : les mêmes petits traits, à la couleur du thème, plus courts. */
+.sonic-speedlines.sonic-speedlines-plain {
+  background:
+    repeating-linear-gradient(
+        to left,
+        color-mix(in oklab, var(--accent) 60%, white) 0 12px,
+        transparent 12px 24px
+      )
+      0 6px / 100% 2px no-repeat,
+    repeating-linear-gradient(to left, var(--accent) 0 18px, transparent 18px 28px) 6px 15px / 100%
+      2px no-repeat,
+    repeating-linear-gradient(
+        to left,
+        color-mix(in oklab, var(--accent) 60%, white) 0 10px,
+        transparent 10px 22px
+      )
+      2px 24px / 100% 2px no-repeat;
+}

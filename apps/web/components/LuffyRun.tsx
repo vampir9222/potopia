@@ -1,6 +1,6 @@
 "use client";
 
-import { cx, effectiveVolume, onVolumeChange } from "@app/ui";
+import { cx, effectiveVolume, onVolumeChange, timeNow } from "@app/ui";
 import {
   type AnimationEvent,
   type CSSProperties,
@@ -207,9 +207,11 @@ export function LuffyRun() {
   useEffect(() => {
     if (!running) return;
     let raf = 0;
-    let start = performance.now();
+    let start = timeNow();
     let current = frame;
-    const tick = (now: number) => {
+    // horloge commune : figée pendant un arrêt du temps (ZA WARUDO)
+    const tick = () => {
+      const now = timeNow();
       const steps = Math.floor((now - start) / FRAME_MS);
       if (steps > 0) {
         start += steps * FRAME_MS;

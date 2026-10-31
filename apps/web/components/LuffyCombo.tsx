@@ -1,6 +1,6 @@
 "use client";
 
-import { cx, effectiveVolume, onVolumeChange } from "@app/ui";
+import { cx, effectiveVolume, onVolumeChange, timeNow } from "@app/ui";
 import { useEffect, useRef } from "react";
 import { COMBO_CHARGE_MS, COMBO_LEAVE_MS, fadeAudio } from "./headerStage";
 
@@ -102,7 +102,7 @@ export function LuffyCombo({
     const luffyMin = minX - GAP;
     // largeur lue à chaque frame : un redimensionnement ne relance pas le combo
     const maxX = () => widthRef.current - BALL / 2 - 8;
-    const t0 = performance.now();
+    const t0 = timeNow();
     let ballX = ballStart;
     let dir = -1;
     let angle = 0;
@@ -155,7 +155,9 @@ export function LuffyCombo({
       luffy.style.translate = `0 ${-hop}px`;
     };
 
-    const tick = (now: number) => {
+    // horloge commune : figée pendant un arrêt du temps (ZA WARUDO)
+    const tick = () => {
+      const now = timeNow();
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const t = now - t0;

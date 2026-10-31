@@ -319,10 +319,20 @@
   [data-theme="jojo"] .theme-frame::after {
     bottom: -7px;
   }
-  /* titres : Anton, ombre d'encre décalée, légèrement penchés */
+  /* titres : Anton, ombre d'encre décalée */
   [data-theme="jojo"] .font-display {
     letter-spacing: 0.06em;
-    filter: drop-shadow(2px 2px 0 #050308);
+    filter: drop-shadow(1.5px 1.5px 0 #050308);
+  }
+  /* petits textes (noms des tuiles, titres de cartes) : Anton y devient illisible, on garde une
+     police pleine, en capitales grasses, sans ombre */
+  [data-theme="jojo"] :is(.font-display.text-xs, .font-display.text-sm) {
+    /* !important : la classe font-display de Tailwind (couche utilities) passerait devant */
+    font-family: var(--font-body) !important;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    filter: none;
   }
 
   /* Texte en dégradé d'or (logo, titres importants). */

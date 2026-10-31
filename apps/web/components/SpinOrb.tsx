@@ -1,6 +1,6 @@
 "use client";
 
-import { cx, effectiveVolume, onVolumeChange } from "@app/ui";
+import { cx, effectiveVolume, onVolumeChange, timeNow } from "@app/ui";
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { Square } from "lucide-react";
 import { COMBO_CHARGE_MS, fadeAudio, onComboChange, setStage, useHeaderStage } from "./headerStage";
@@ -92,7 +92,7 @@ export function SpinOrb() {
     const [, blur1, blur2] = layers;
     const wind = windRef.current;
     let raf = 0;
-    let last = performance.now();
+    let last = timeNow();
     let boost = 6; // démarrage lancé
     let target = 0;
     let holdUntil = 0;
@@ -100,7 +100,9 @@ export function SpinOrb() {
     let windPhase = 0;
     let wasFast = false;
 
-    const tick = (now: number) => {
+    // horloge commune : figée pendant un arrêt du temps (ZA WARUDO)
+    const tick = () => {
+      const now = timeNow();
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
 

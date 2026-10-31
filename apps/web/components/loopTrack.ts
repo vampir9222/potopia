@@ -1,5 +1,7 @@
 "use client";
 
+import { onTimeStop } from "@app/ui";
+
 /**
  * Musique qui boucle sans le moindre blanc : décodée une fois, puis rejouée par Web Audio entre
  * deux points précis (un lecteur `<audio loop>` laisse un petit trou à chaque tour avec un MP3).
@@ -18,6 +20,12 @@ export class LoopTrack {
     private readonly loopStart: number,
     private readonly loopEnd: number,
   ) {}
+
+  // arrêt du temps (ZA WARUDO) : la musique se fige puis reprend où elle en était
+  private readonly offTimeStop = onTimeStop((stopped) => {
+    if (stopped) void this.ctx?.suspend();
+    else void this.ctx?.resume();
+  });
 
   async play(volume: number): Promise<void> {
     this.stop();
