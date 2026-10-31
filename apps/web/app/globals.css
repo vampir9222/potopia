@@ -632,6 +632,110 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
   }
 }
 
+/* « ドン!! » (Don, thème One Piece) : flash, lignes de vitesse de manga, onomatopée qui claque. */
+.don-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgb(255 246 214 / 0.85),
+    rgb(255 200 80 / 0.35) 45%,
+    transparent 75%
+  );
+  animation: don-flash 0.6s ease-out forwards;
+}
+
+@keyframes don-flash {
+  to {
+    opacity: 0;
+  }
+}
+
+.don-lines {
+  position: absolute;
+  inset: -25%;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    rgb(2 7 13 / 0.85) 0deg 1.2deg,
+    transparent 1.2deg 5deg,
+    rgb(2 7 13 / 0.6) 5deg 5.6deg,
+    transparent 5.6deg 9deg
+  );
+  mask-image: radial-gradient(circle at 50% 50%, transparent 22%, #000 62%);
+  animation: don-lines 1.6s ease-out forwards;
+}
+
+@keyframes don-lines {
+  0% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1) rotate(2deg);
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.06) rotate(4deg);
+  }
+}
+
+.don-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  white-space: nowrap;
+  font-family: "Yu Gothic", Meiryo, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-size: clamp(4rem, 16vw, 12rem);
+  font-weight: 900;
+  font-style: italic;
+  color: #f6c544;
+  -webkit-text-stroke: 8px #02070d;
+  paint-order: stroke fill;
+  text-shadow:
+    10px 10px 0 #02070d,
+    0 0 60px rgb(230 58 46 / 0.6);
+  animation: don-text 1.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+}
+
+.don-bang {
+  color: #e63a2e;
+}
+
+/* elle tombe de très haut, s'écrase, tremble sous le choc, tient, puis s'efface */
+@keyframes don-text {
+  0% {
+    opacity: 0;
+    transform: scale(3.2) rotate(-14deg);
+  }
+  14% {
+    opacity: 1;
+    transform: scale(0.92) rotate(-6deg);
+  }
+  18% {
+    transform: translate(-7px, 4px) rotate(-6deg);
+  }
+  21% {
+    transform: translate(6px, -3px) rotate(-6deg);
+  }
+  24% {
+    transform: translate(-3px, 2px) rotate(-6deg);
+  }
+  27%,
+  75% {
+    opacity: 1;
+    transform: rotate(-6deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08) rotate(-6deg);
+  }
+}
+
 /* temps arrêté : tout se fige dans une teinte délavée, vert-gris */
 html.time-stop body > :not(.za-layer) {
   filter: grayscale(0.85) sepia(0.25) hue-rotate(70deg) brightness(0.8) contrast(1.15);

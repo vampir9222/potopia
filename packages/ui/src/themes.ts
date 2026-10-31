@@ -12,6 +12,11 @@ export const THEMES = [
     swatch: "conic-gradient(#ff0040, #ffee00, #00ff6a, #00d0ff, #c000ff, #ff0040)",
   },
   { id: "jojo", label: "JoJo", swatch: "linear-gradient(135deg, #f4c430 0%, #7a4cff 100%)" },
+  {
+    id: "onepiece",
+    label: "One Piece",
+    swatch: "linear-gradient(135deg, #f6c544 0%, #e63a2e 48%, #0b3a5a 100%)",
+  },
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]["id"];

@@ -42,6 +42,7 @@
   --ambient: 1;
   --fans: none;
   --jojo: none;
+  --onepiece: none;
 }
 
 /* Classique (par défaut, voir DEFAULT_THEME) : bleu nuit et sobre, sans décors. */
@@ -163,6 +164,38 @@
   --ambient: 0.85;
   --fans: none;
   --jojo: block;
+}
+
+/*
+ * One Piece : nuit sur la Grand Line. Bleu de la mer, or du chapeau de paille, rouge de Luffy ;
+ * cadres bordés de corde tressée, roses des vents aux coins, titres en Pirata One. Décor
+ * (composant OnePieceDecor) : lune et étoiles, houle, navire au loin, mouettes, pavillon au
+ * chapeau de paille, avis de recherche, « ドン!! ». Choisir ce thème déclenche « ドン!! ».
+ */
+[data-theme="onepiece"] {
+  --bg: #061420;
+  --surface: #0c2233;
+  --surface-hover: #12304a;
+  --border: #1f4762;
+  --text: #f8eed6;
+  --muted: #9db8c8;
+  --accent: #f6c544;
+  --accent-hover: #ffd96e;
+  --on-accent: #2a1a04;
+  --arcane: #e63a2e;
+  --danger: #ff5c4d;
+  --success: #4fd6a0;
+
+  --radius: 0.55rem;
+  --font-display: var(--font-onepiece-face, "Pirata One"), Georgia, serif;
+
+  --accent-gradient: linear-gradient(135deg, #fff2bd 0%, #f6c544 45%, #e63a2e 100%);
+  --frame: #c9a46a;
+  --ornaments: block;
+  --embers: none;
+  --ambient: 0.4;
+  --fans: none;
+  --onepiece: block;
 }
 
 @theme inline {
@@ -330,6 +363,53 @@
     /* !important : la classe font-display de Tailwind (couche utilities) passerait devant */
     font-family: var(--font-body) !important;
     font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    filter: none;
+  }
+
+  /* One Piece : bordure de corde tressée (torons clairs et foncés en biais), nuit marine dedans,
+     roses des vents dorées aux coins. */
+  [data-theme="onepiece"] .theme-frame {
+    border: 3px solid transparent;
+    background:
+      linear-gradient(
+          180deg,
+          color-mix(in oklab, var(--surface) 86%, var(--accent)) 0%,
+          var(--surface) 40%
+        )
+        padding-box,
+      repeating-linear-gradient(-55deg, #e6c88e 0 2.5px, #a8814a 2.5px 4.5px, #6b4e27 4.5px 6px)
+        border-box;
+    box-shadow:
+      inset 0 0 0 1px rgb(0 0 0 / 0.55),
+      0 12px 28px -16px rgb(0 0 0 / 0.95),
+      0 0 26px -16px var(--accent);
+  }
+  [data-theme="onepiece"] .theme-frame::before,
+  [data-theme="onepiece"] .theme-frame::after {
+    width: 15px;
+    height: 15px;
+    transform: none;
+    clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+    filter: drop-shadow(0 0 4px var(--accent));
+  }
+  [data-theme="onepiece"] .theme-frame::before {
+    top: -9px;
+  }
+  [data-theme="onepiece"] .theme-frame::after {
+    bottom: -9px;
+  }
+  /* titres : Pirata One n'a qu'une graisse (le gras simulé la baverait), ombre portée sombre */
+  [data-theme="onepiece"] .font-display {
+    font-weight: 400 !important;
+    letter-spacing: 0.03em;
+    filter: drop-shadow(1px 2px 0 #02080e);
+  }
+  /* petits textes : la police gothique y devient illisible, police pleine en capitales grasses */
+  [data-theme="onepiece"] :is(.font-display.text-xs, .font-display.text-sm) {
+    font-family: var(--font-body) !important;
+    font-weight: 800 !important;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     filter: none;
@@ -518,6 +598,259 @@
     animation: jojo-pose 3.6s steps(30) infinite;
   }
 
+  /* Décor du thème One Piece (composant OnePieceDecor), affiché seulement par ce thème. */
+  .op-decor {
+    display: var(--onepiece);
+  }
+  /* ciel de nuit, horizon à 76 % de la hauteur avec une lueur, mer plus sombre dessous */
+  .op-sky {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(55% 5% at 50% 76%, rgb(120 190 230 / 0.16), transparent 70%),
+      linear-gradient(to bottom, #030b14 0%, #071a2b 48%, #0f3654 75.6%, #0a2a42 76%, #061b2c 100%);
+  }
+  /* grande lune, avec le pavillon qui se découpe devant */
+  .op-moon {
+    position: absolute;
+    right: 6vw;
+    top: 8vh;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 64% 60%, rgb(160 140 100 / 0.35) 0 11px, transparent 12px),
+      radial-gradient(circle at 34% 68%, rgb(160 140 100 / 0.3) 0 8px, transparent 9px),
+      radial-gradient(circle at 70% 30%, rgb(160 140 100 / 0.25) 0 5px, transparent 6px),
+      radial-gradient(circle at 38% 36%, #fffbe8 0%, #f1e3ba 55%, #d6c08a 100%);
+    box-shadow:
+      0 0 50px 14px rgb(255 240 200 / 0.18),
+      0 0 180px 70px rgb(255 240 200 / 0.07);
+    opacity: 0.8;
+  }
+  /* reflet de la lune sur la mer */
+  .op-moon-glint {
+    position: absolute;
+    right: calc(6vw + 30px);
+    top: 76.3%;
+    bottom: 0;
+    width: 60px;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgb(255 236 190 / 0.28) 0 2px,
+        transparent 2px 8px
+      )
+      0 0 / 100% 16px;
+    /* trait plus large et plus net près de l'horizon, qui s'éparpille vers le bas */
+    mask-image:
+      linear-gradient(to bottom, #000 0%, transparent 75%),
+      linear-gradient(to right, transparent, #000 35% 65%, transparent);
+    mask-composite: intersect;
+    animation:
+      op-glint 3.2s ease-in-out infinite alternate,
+      op-glint-drift 4s linear infinite;
+  }
+  .op-star {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0.2;
+    animation: op-twinkle ease-in-out infinite;
+  }
+  /* navire : silhouette sur l'horizon, il traverse en plusieurs minutes et tangue */
+  .op-ship-track {
+    position: absolute;
+    left: 0;
+    top: calc(76% - 49px);
+    width: 110px;
+    height: 55px;
+    /* déjà en route au chargement de la page */
+    animation: op-sail 280s linear -100s infinite;
+  }
+  .op-ship {
+    width: 100%;
+    height: 100%;
+    opacity: 0.6;
+    transform-origin: 50% 90%;
+    animation: op-bob 5s ease-in-out infinite;
+  }
+  .op-ship-body,
+  .op-ship-flag {
+    fill: #02070d;
+  }
+  .op-ship-hull {
+    fill: none;
+    stroke: #02070d;
+    stroke-width: 3;
+  }
+  .op-ship-sail {
+    fill: #29506b;
+  }
+  /* mouettes : elles traversent le ciel en battant des ailes */
+  .op-gull {
+    position: absolute;
+    left: 0;
+    width: calc(22px * var(--gull-size, 1));
+    height: calc(10px * var(--gull-size, 1));
+    animation: op-gull linear infinite;
+  }
+  .op-gull-wings {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: none;
+    stroke: rgb(220 235 245 / 0.5);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    transform-origin: 50% 70%;
+    animation: op-flap ease-in-out infinite alternate;
+  }
+  /* pavillon au chapeau de paille, en bandes qui ondulent l'une après l'autre */
+  .op-flag {
+    position: absolute;
+    right: calc(6vw + 50px);
+    top: calc(8vh + 34px);
+    width: 150px;
+    height: 100px;
+    opacity: 0.75;
+    filter: drop-shadow(0 8px 10px rgb(0 0 0 / 0.6));
+  }
+  .op-flag-pole {
+    position: absolute;
+    left: -6px;
+    top: -12px;
+    width: 5px;
+    height: 180px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #5a3c1c, #a77a42, #5a3c1c);
+  }
+  .op-flag-slice {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: url(/onepiece/jolly-roger.svg) 0 0 / 150px 100px no-repeat;
+    animation: op-flag 2.2s ease-in-out infinite;
+  }
+  /* avis de recherche de Luffy, épinglé, qui se balance un peu */
+  .op-wanted {
+    position: absolute;
+    left: 2.5vw;
+    bottom: 19vh;
+    width: 132px;
+    padding: 8px 9px 7px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: #3b2510;
+    text-align: center;
+    font-family: var(--font-onepiece-face, Georgia), Georgia, serif;
+    background: radial-gradient(circle at 30% 20%, #f3e2b6, #dcc28a 70%, #c4a467);
+    box-shadow:
+      0 10px 22px -6px rgb(0 0 0 / 0.8),
+      inset 0 0 18px rgb(110 70 20 / 0.45);
+    opacity: 0.5;
+    transform-origin: 50% 0;
+    animation: op-sway 7s ease-in-out infinite;
+  }
+  /* la punaise */
+  .op-wanted::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 9px;
+    height: 9px;
+    margin-left: -4.5px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ff8a7a, #b3241a);
+    box-shadow: 0 2px 3px rgb(0 0 0 / 0.5);
+  }
+  .op-wanted-title {
+    font-size: 30px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+  .op-wanted-photo {
+    width: 114px;
+    height: 114px;
+    border: 2px solid #3b2510;
+    background: #cbb27a url(/luffy/luffy-sheet.png) 0 0 / 2850px 114px no-repeat;
+    image-rendering: pixelated;
+    filter: sepia(0.3) contrast(1.05);
+  }
+  .op-wanted-doa {
+    font-family: Georgia, serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+  .op-wanted-name {
+    font-size: 15px;
+    line-height: 1.05;
+  }
+  .op-wanted-bounty {
+    font-size: 14px;
+  }
+  /* « ドン!! » de manga qui claquent de temps en temps */
+  .op-don {
+    position: absolute;
+    white-space: nowrap;
+    font-family: "Yu Gothic", Meiryo, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    color: var(--accent);
+    -webkit-text-stroke: 3px #02070d;
+    paint-order: stroke fill;
+    text-shadow: 4px 4px 0 #02070d;
+    opacity: 0;
+    animation: op-don ease-out infinite;
+  }
+  /* houle sur trois plans, chacun à sa vitesse */
+  .op-sea {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 24vh;
+  }
+  .op-wave {
+    position: absolute;
+    left: 0;
+    width: 200%;
+    animation: op-swell linear infinite;
+  }
+  .op-wave path {
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  .op-wave-back {
+    bottom: 9vh;
+    height: 9vh;
+    animation-duration: 52s;
+  }
+  .op-wave-back path {
+    fill: rgb(14 52 80 / 0.85);
+    stroke: rgb(150 205 235 / 0.12);
+  }
+  .op-wave-mid {
+    bottom: 4vh;
+    height: 10vh;
+    animation-duration: 34s;
+  }
+  .op-wave-mid path {
+    fill: rgb(10 40 64 / 0.92);
+    stroke: rgb(150 205 235 / 0.16);
+  }
+  .op-wave-front {
+    bottom: -1vh;
+    height: 10vh;
+    animation-duration: 22s;
+  }
+  .op-wave-front path {
+    fill: #06192a;
+    stroke: rgb(170 220 240 / 0.22);
+  }
+
   .ember {
     display: var(--embers);
     position: absolute;
@@ -654,6 +987,102 @@
     background-position: -3240px 0;
   }
 }
+@keyframes op-twinkle {
+  50% {
+    opacity: 0.85;
+  }
+}
+@keyframes op-glint {
+  from {
+    opacity: 0.5;
+    transform: scaleX(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1.25);
+  }
+}
+@keyframes op-glint-drift {
+  to {
+    background-position-y: 16px;
+  }
+}
+@keyframes op-sail {
+  from {
+    transform: translateX(-130px);
+  }
+  to {
+    transform: translateX(105vw);
+  }
+}
+@keyframes op-bob {
+  0%,
+  100% {
+    transform: rotate(-2.5deg) translateY(0);
+  }
+  50% {
+    transform: rotate(2deg) translateY(2px);
+  }
+}
+@keyframes op-gull {
+  from {
+    transform: translate(-40px, 0);
+  }
+  to {
+    transform: translate(105vw, var(--gull-rise, 0));
+  }
+}
+@keyframes op-flap {
+  to {
+    transform: scaleY(-0.35);
+  }
+}
+@keyframes op-flag {
+  0%,
+  100% {
+    transform: translateY(calc(var(--flag-amp, 2px) * -1));
+    filter: brightness(1.05);
+  }
+  50% {
+    transform: translateY(var(--flag-amp, 2px));
+    filter: brightness(0.75);
+  }
+}
+@keyframes op-sway {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(-4deg);
+  }
+}
+@keyframes op-don {
+  0%,
+  72% {
+    opacity: 0;
+    transform: rotate(var(--don-tilt, 0deg)) scale(1.7);
+  }
+  75% {
+    opacity: 0.22;
+    transform: rotate(var(--don-tilt, 0deg)) scale(0.94);
+  }
+  77% {
+    transform: rotate(var(--don-tilt, 0deg)) scale(1);
+  }
+  92% {
+    opacity: 0.16;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--don-tilt, 0deg)) scale(1.03);
+  }
+}
+@keyframes op-swell {
+  to {
+    transform: translateX(-50%);
+  }
+}
 @keyframes ember-rise {
   0% {
     opacity: 0;
@@ -680,7 +1109,10 @@
   .ember,
   .rgb-fans,
   .jojo-menace,
-  .jojo-star {
+  .jojo-star,
+  .op-ship-track,
+  .op-gull,
+  .op-don {
     display: none;
   }
 }

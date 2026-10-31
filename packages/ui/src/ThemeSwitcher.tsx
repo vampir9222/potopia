@@ -4,6 +4,7 @@ import { Check, Palette } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cx } from "./cx";
 import { THEME_COOKIE, THEMES, type ThemeId } from "./themes";
+import { don } from "./don";
 import { zaWarudo } from "./zaWarudo";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -37,6 +38,8 @@ export function ThemeSwitcher({ current }: { current: ThemeId }) {
   function choose(id: ThemeId) {
     // passer au thème JoJo : « ZA WARUDO ! », le temps s'arrête un instant
     if (id === "jojo" && theme !== "jojo") zaWarudo();
+    // passer au thème One Piece : « ドン!! », coup de tambour et onomatopée de manga
+    if (id === "onepiece" && theme !== "onepiece") don();
     setTheme(id);
     setOpen(false);
     document.documentElement.dataset.theme = id;
