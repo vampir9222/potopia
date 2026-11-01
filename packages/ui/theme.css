@@ -664,7 +664,7 @@
   .jojo-stand {
     display: none;
     position: relative;
-    padding: 10px 10px 6px;
+    padding: 12px 14px 10px;
     border: 2px solid #050308;
     background:
       radial-gradient(circle, rgb(255 255 255 / 0.06) 1px, transparent 1.6px) 0 0 / 6px 6px,
@@ -677,13 +677,12 @@
   [data-theme="jojo"] .jojo-stand {
     display: block;
   }
-  /* bouton « STAND » (police JoJo) : il s'allume quand le Stand est sorti (classe posée par
-     JojoFx) */
+  /* bouton « STAND » (police JoJo), en tête de fiche : il s'allume quand le Stand est sorti
+     (classe posée par JojoFx) */
   .jojo-stand-toggle {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    padding: 2px 9px 1px;
+    display: inline-block;
+    margin: 0 0 8px 2px;
+    padding: 3px 12px 2px;
     border: 2px solid #050308;
     background: #2a1c5c;
     color: var(--muted);
@@ -710,18 +709,12 @@
       3px 3px 0 #050308,
       0 0 16px 2px color-mix(in oklab, var(--arcane) 80%, transparent);
   }
-  .jojo-stand-kind,
   .jojo-stand-name {
     display: block;
   }
   [data-theme="jojo"] .theme-identity {
     /* !important : la classe flex de Tailwind (couche utilities) passerait devant */
     display: none !important;
-  }
-  .jojo-stand-kind {
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    color: var(--muted);
   }
   .jojo-stand-name {
     font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
@@ -738,8 +731,8 @@
   .jojo-stand-user {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 8px;
+    gap: 12px;
+    margin-top: 12px;
   }
   /* avatar dans son aura de Stand : violet et or qui pulsent */
   .jojo-stand-photo {
@@ -779,8 +772,15 @@
     display: block;
     width: 100%;
     max-width: 230px;
-    margin: 6px auto 0;
+    margin: 12px auto 0;
     overflow: visible;
+  }
+  /* un clic sur une capacité affiche ce qu'elle mesure (bulle, JojoFx) */
+  .jojo-stand-stat {
+    cursor: pointer;
+  }
+  .jojo-stand-stat:hover .jojo-stand-label {
+    fill: var(--accent);
   }
   .jojo-stand-ring {
     fill: none;

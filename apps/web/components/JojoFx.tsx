@@ -426,9 +426,40 @@ export function JojoFx() {
     const onHidden = () => {
       if (document.hidden) endRush(false);
     };
+    // Bulle qui explique une capacité de la fiche de Stand (d'où vient sa note).
+    let tip: HTMLElement | null = null;
+    const closeTip = () => {
+      tip?.remove();
+      tip = null;
+    };
+    const showTip = (stat: Element) => {
+      closeTip();
+      const r = stat.getBoundingClientRect();
+      tip = document.createElement("div");
+      tip.className = "jojo-fx-tip";
+      tip.setAttribute("role", "status");
+      const title = document.createElement("strong");
+      title.textContent = stat.querySelector(".jojo-stand-label")?.textContent ?? "";
+      const body = document.createElement("span");
+      body.textContent = stat.getAttribute("data-stand-help") ?? "";
+      tip.append(title, body);
+      document.body.append(tip);
+      // à droite de la capacité si la place le permet, sinon en dessous ; jamais hors de l'écran
+      const w = tip.offsetWidth;
+      const h = tip.offsetHeight;
+      const right = r.right + 10 + w <= window.innerWidth - 8;
+      const left = right ? r.right + 10 : Math.min(Math.max(r.left, 8), window.innerWidth - w - 8);
+      const top = right ? r.top + r.height / 2 - h / 2 : r.bottom + 8;
+      tip.style.left = `${left}px`;
+      tip.style.top = `${Math.min(Math.max(top, 8), window.innerHeight - h - 8)}px`;
+      later(7000, closeTip);
+    };
     const onClick = (e: MouseEvent) => {
-      if (!(e.target instanceof Element) || !e.target.closest("[data-stand-toggle]")) return;
-      if (isJojo()) setStand(!standOn);
+      if (!(e.target instanceof Element)) return;
+      const stat = e.target.closest("[data-stand-help]");
+      if (stat && isJojo()) return showTip(stat);
+      closeTip();
+      if (e.target.closest("[data-stand-toggle]") && isJojo()) setStand(!standOn);
     };
     // un appui long au doigt ouvrirait le menu contextuel en pleine rafale
     const onContext = (e: Event) => {
@@ -480,6 +511,7 @@ export function JojoFx() {
       themeWatch.disconnect();
       timers.forEach((t) => window.clearTimeout(t));
       document.querySelector(".jojo-fx-hint")?.remove();
+      closeTip();
       root().classList.remove("jojo-stand-on");
       window.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointermove", onMove);

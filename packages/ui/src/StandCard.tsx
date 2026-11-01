@@ -13,11 +13,37 @@ const PUNS: ((n: string) => string)[] = [
   (n) => `Hierophant ${n}`, // Hierophant Green
   (n) => `Purple ${n}`, // Purple Haze
   (n) => `${n} in Heaven`, // Made in Heaven
+  (n) => `Magician's ${n}`, // Magician's Red
+  (n) => `Hermit ${n}`, // Hermit Purple
+  (n) => `${n}'s Door`, // Heaven's Door
+  (n) => `${n} Act 3`, // Echoes Act 3
+  (n) => `${n} Pistols`, // Sex Pistols
+  (n) => `${n}smith`, // Aerosmith
+  (n) => `Moody ${n}`, // Moody Blues
+  (n) => `Weather ${n}`, // Weather Report
+  (n) => `${n}snake`, // Whitesnake
+  (n) => `C-${n}`, // C-Moon
+  (n) => `${n} & Wet`, // Soft & Wet
+  (n) => `${n} Act 4`, // Tusk Act 4
+  (n) => `Dirty Deeds Done ${n}`, // D4C
+  (n) => `Spice ${n}`, // Spice Girl
+  (n) => `Black ${n}`, // Black Sabbath
+  (n) => `Beach ${n}`, // Beach Boy
+  (n) => `Green ${n}`, // Green Day
+  (n) => `${n} Hand`, // The Hand
+  (n) => `Pearl ${n}`, // Pearl Jam
+  (n) => `Highway ${n}`, // Highway Star
+  (n) => `Red Hot ${n} Pepper`, // Red Hot Chili Pepper
+  (n) => `${n} Bites the Dust`, // Killer Queen : Bites the Dust
+  (n) => `Stray ${n}`, // Stray Cat
+  (n) => `Love ${n}`, // Love Train
+  (n) => `Wonder of ${n}`, // Wonder of U
+  (n) => `Paisley ${n}`, // Paisley Park
+  (n) => `Cheap ${n}`, // Cheap Trick
+  (n) => `Super ${n}`, // Super Fly
+  (n) => `${n} Heart Father`, // Atom Heart Father
+  (n) => `${n} Diver`, // Diver Down
 ];
-
-// Les six capacités des fiches de l'anime, dans l'ordre de l'hexagone (en partant du haut).
-const STATS = ["Puissance", "Vitesse", "Portée", "Endurance", "Précision", "Potentiel"] as const;
-const GRADES = ["E", "D", "C", "B", "A"] as const;
 
 /** Les vraies données du membre dont viennent les notes. */
 export type StandStats = {
@@ -35,21 +61,48 @@ export type StandStats = {
   emeralds: number;
 };
 
+type Thresholds = [d: number, c: number, b: number, a: number];
 /** Note de 0 (E) à 4 (A) : le nombre de seuils atteints (seuils de D à A, croissants). */
-const grade = (value: number, thresholds: [number, number, number, number]) =>
-  thresholds.filter((t) => value >= t).length;
+const grade = (value: number, t: Thresholds) => t.filter((x) => value >= x).length;
 
-function grades(s: StandStats): number[] {
-  return [
-    grade(s.balance, [50, 200, 500, 1000]),
+/*
+ * Les six capacités des fiches de l'anime, dans l'ordre de l'hexagone (en partant du haut) : d'où
+ * vient chaque note, et l'explication montrée quand on clique dessus (bulle, `JojoFx` de l'app).
+ */
+const STATS: { label: string; help: string; grade: (s: StandStats) => number }[] = [
+  {
+    label: "Puissance",
+    help: "Ton solde de Potocoins. D dès 50, C dès 200, B dès 500, A dès 1 000.",
+    grade: (s) => grade(s.balance, [50, 200, 500, 1000]),
+  },
+  {
+    label: "Vitesse",
+    help: "À TROIS, tes essais moyens pour trouver un mot : moins il t'en faut, plus tu es rapide. D sous 4,5 essais, C sous 3,5, B sous 3, A sous 2,5.",
     // moins d'essais = plus rapide : on note l'inverse (6 essais au plus)
-    s.avgTries === null ? 0 : grade(6 - s.avgTries, [1.5, 2.5, 3, 3.5]),
-    grade(s.agentsGames, [2, 6, 15, 30]),
-    grade(s.maxStreak, [3, 7, 14, 30]),
-    grade(s.perfectDays, [1, 4, 10, 20]),
-    grade(s.emeralds, [1, 3, 5, 7]),
-  ];
-}
+    grade: (s) => (s.avgTries === null ? 0 : grade(6 - s.avgTries, [1.5, 2.5, 3, 3.5])),
+  },
+  {
+    label: "Portée",
+    help: "Tes parties d'Agents Doubles. D dès 2, C dès 6, B dès 15, A dès 30.",
+    grade: (s) => grade(s.agentsGames, [2, 6, 15, 30]),
+  },
+  {
+    label: "Endurance",
+    help: "Ta plus longue série de journées TROIS terminées. D dès 3 jours, C dès 7, B dès 14, A dès 30.",
+    grade: (s) => grade(s.maxStreak, [3, 7, 14, 30]),
+  },
+  {
+    label: "Précision",
+    help: "Tes journées TROIS parfaites, tous les mots trouvés. D dès 1, C dès 4, B dès 10, A dès 20.",
+    grade: (s) => grade(s.perfectDays, [1, 4, 10, 20]),
+  },
+  {
+    label: "Potentiel",
+    help: "Les émeraudes du Chaos que tu as trouvées. D dès 1, C dès 3, B dès 5, A avec les 7 : ton Stand passe alors en Requiem.",
+    grade: (s) => grade(s.emeralds, [1, 3, 5, 7]),
+  },
+];
+const GRADES = ["E", "D", "C", "B", "A"] as const;
 
 /** Nombre pseudo-aléatoire stable tiré d'un texte (même résultat côté serveur et client). */
 function hash(text: string): number {
@@ -76,18 +129,19 @@ type Props = {
 /**
  * Fiche de Stand du membre (thème JoJo), comme les fiches de l'anime : nom du Stand (jeu de mots
  * sur son pseudo, « Requiem » avec les 7 émeraudes), « Manieur », avatar dans son aura, et
- * l'hexagone des six capacités notées de A à E d'après ses vraies données. Le bouton « STAND »
- * l'invoque : Star Platinum flotte alors autour de la souris (`JojoFx` de l'app). Rendue pour tous les thèmes
- * mais affichée seulement par celui-ci (theme.css), où elle remplace la ligne du profil.
+ * l'hexagone des six capacités notées de A à E d'après ses vraies données (un clic sur une
+ * capacité l'explique). Le bouton « STAND » l'invoque : Star Platinum flotte alors autour de la
+ * souris (`JojoFx` de l'app). Rendue pour tous les thèmes mais affichée seulement par celui-ci
+ * (theme.css), où elle remplace la ligne du profil.
  */
 export function StandCard({ userId, name, image, stats }: Props) {
   const first = name.trim().split(/\s+/)[0] || name;
   const pun = PUNS[Math.floor(hash(userId) * PUNS.length)] ?? PUNS[0];
   const stand = `${pun?.(first) ?? first}${stats.emeralds >= 7 ? " Requiem" : ""}`;
-  const notes = grades(stats);
+  const notes = STATS.map((s) => s.grade(stats));
   const R = 62;
   const shape = notes.map((g, i) => vertex(i, (R * (g + 1)) / GRADES.length).join(",")).join(" ");
-  const summary = STATS.map((l, i) => `${l} ${GRADES[notes[i] ?? 0]}`).join(", ");
+  const summary = STATS.map((s, i) => `${s.label} ${GRADES[notes[i] ?? 0]}`).join(", ");
 
   return (
     <div className="jojo-stand">
@@ -95,9 +149,6 @@ export function StandCard({ userId, name, image, stats }: Props) {
       <button type="button" className="jojo-stand-toggle" data-stand-toggle aria-pressed="false">
         STAND
       </button>
-      <span className="jojo-stand-kind" aria-hidden>
-        「スタンド」
-      </span>
       <span className="jojo-stand-name" aria-hidden>
         {stand}
       </span>
@@ -123,13 +174,13 @@ export function StandCard({ userId, name, image, stats }: Props) {
           return <line key={i} x1={0} y1={0} x2={x} y2={y} className="jojo-stand-axis" />;
         })}
         <polygon points={shape} className="jojo-stand-shape" />
-        {STATS.map((label, i) => {
+        {STATS.map((stat, i) => {
           const [x, y] = vertex(i, R + 32);
           const [gx, gy] = vertex(i, R + 9);
           return (
-            <g key={label}>
+            <g key={stat.label} className="jojo-stand-stat" data-stand-help={stat.help}>
               <text x={x} y={y} className="jojo-stand-label">
-                {label}
+                {stat.label}
               </text>
               <text x={gx} y={gy} dy={4} className="jojo-stand-grade">
                 {GRADES[notes[i] ?? 0]}

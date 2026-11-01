@@ -702,14 +702,13 @@ html.jojo-rushing * {
   image-rendering: pixelated;
   filter: drop-shadow(0 0 14px color-mix(in oklab, #7a4cff 75%, transparent));
 }
-/* Star Platinum : 24 images de 148 × 124, retourné pour frapper toujours vers la gauche ; ses
-   poings arrivent sur la souris */
+/* Star Platinum : 24 images de 148 × 124, dessiné frappant vers la gauche ; ses poings arrivent
+   sur la souris */
 .jojo-fx-star {
   --s: 2.2;
   width: calc(148px * var(--s));
   height: calc(124px * var(--s));
   translate: -20% -55%;
-  scale: -1 1;
   background-image: url(/jojo/star-platinum-ora-strip.png);
   background-size: calc(3552px * var(--s)) 100%;
   animation:
@@ -744,7 +743,6 @@ html.jojo-rushing * {
   width: calc(104px * var(--s));
   height: calc(133px * var(--s));
   translate: -50% -50%;
-  scale: -1 1;
   opacity: 0.92;
   background-image: url(/jojo/star-platinum-idle-strip.png);
   background-size: calc(2184px * var(--s)) 100%;
@@ -857,6 +855,31 @@ html.jojo-rushing * {
     opacity: 0;
     transform: skewX(-14deg) translateY(-20px);
   }
+}
+
+/* bulle qui explique une capacité de la fiche de Stand (clic sur « Puissance »…) */
+.jojo-fx-tip {
+  position: fixed;
+  z-index: 92;
+  display: flex;
+  max-width: min(260px, calc(100vw - 16px));
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 2px solid #050308;
+  border-radius: 10px;
+  background: #f6efdc;
+  color: #1a1203;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  box-shadow: 4px 4px 0 #050308;
+  animation: jojo-fx-fade-in 0.15s ease-out;
+}
+.jojo-fx-tip strong {
+  font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  color: #7a4cff;
 }
 
 /* bulle d'aide des secrets du thème (une fois par appareil) */
