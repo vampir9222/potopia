@@ -382,10 +382,12 @@ décors.
 - Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`, `--jojo`,
   `--onepiece`, `--apothicaire`) :
   un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons
-  qui partent de DIO (un carré de 300vmax centré sur lui, qui tourne sans jamais montrer de bord),
-  portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.png` : Jotaro, Star Platinum, DIO,
-  The World), « ゴゴ » animés qui montent (`menacing-gogo-strip.png`), étoiles, et en bas DIO en
-  attente (`dio-idle-strip.png`) face à Jotaro qui prend la pose (`jotaro-pose.png`).
+  qui partent de DIO (un carré centré sur lui, qui tourne sans jamais montrer de bord : son
+  demi-côté est la distance au coin d'écran le plus loin, `hypot()`, et rien de plus, pour ménager
+  la mémoire graphique), portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.webp` :
+  Jotaro, Star Platinum, DIO, The World), « ゴゴ » animés qui montent (`menacing-gogo-strip.webp`),
+  étoiles, et en bas DIO en attente (`dio-idle-strip.webp`) face à Jotaro qui prend la pose
+  (`jotaro-pose.webp`).
   Le cadre du compte devient la **fiche de Stand** du membre (`StandCard` de `@app/ui`, rendue
   pour tous les thèmes, affichée par celui-ci seulement, à la place de `theme-identity`) : le nom
   de son Stand, jeu de mots sur son pseudo calqué sur un vrai Stand des parties 3 à 6 (108 noms ;
@@ -404,15 +406,20 @@ décors.
   qui répond en « MUDA MUDA ». Secret : pendant ZA WARUDO, un clic sur DIO lâche le rouleau
   compresseur dans le temps arrêté (`ROAD_ROLLER_EVENT`) ; 5 s de rafale le renvoient, sinon « To
   Be Continued ». Clic sur Jotaro : « Yare yare daze » ; sur DIO : « WRYYY ». Sprites du jeu de
-  Capcom en bandes animées en `steps()` (`public/jojo/*-strip.png` ; le rouleau en grille 11 × 4,
-  `dio-road-roller-grid.png`, une bande de 44 images dépassant la taille de texture des cartes
-  graphiques), voix et musiques (`public/audio/jojo-*.mp3`, tirés de vidéos du jeu et de
-  l'anime) ; tout est préchargé et décodé dès que le thème est affiché. Sécurités : une rafale
+  Capcom en bandes animées en `steps()` (`public/jojo/*-strip.webp`, WebP sans perte ; le rouleau
+  en grille 11 × 4, `dio-road-roller-grid.webp`, une bande de 44 images dépassant la taille de
+  texture des cartes graphiques), voix et musiques (`public/audio/jojo-*.mp3`, tirés de vidéos du
+  jeu et de l'anime) ; sprites et bruitages sont préchargés et décodés dès que le thème est
+  affiché, le thème de Jotaro (1,4 Mo) se lit en flux à la première rafale. Star Platinum suit la
+  souris dans une boucle `requestAnimationFrame` qui ne tourne que pendant qu'il la rattrape (rien
+  sans Stand ni hors du thème), déplacé par `translate`. Sécurités : une rafale
   s'arrête si l'onglet passe en arrière-plan et au bout de 30 s ; rien pendant l'arrêt du temps,
   sauf le rouleau (la couche `.jojo-fx` échappe au gel, comme Star Platinum).
   Décor One Piece (`OnePieceDecor`) : la carte du monde (Red Line, Grand Line, les quatre
-  Blues : `public/onepiece/world-map.webp`) en fond, rendue en luminosité seulement sur le bleu de
-  la nuit (une vieille carte marine), qui dérive très lentement ; Gear 5 qui rit en haut, devant
+  Blues : `public/onepiece/world-map-night.webp`) en fond, rendue en luminosité seulement sur le
+  bleu de la nuit (une vieille carte marine), qui dérive très lentement ; ce rendu (luminosité,
+  assombrissement, contraste, moitié d'opacité sur le fond `#0b1d33`) est cuit dans l'image, au
+  lieu d'un `mix-blend-mode` et de filtres recalculés à chaque image ; Gear 5 qui rit en haut, devant
   les rayons du soleil de Nika, Zoro et Luffy en bas (`portrait-*.webp`, illustrations
   officielles détourées), en grand et à peine visibles ; des « ドン!! » de manga. De temps en
   temps (35 à 80 s), le **Haki des rois** (`OnePieceHaki`, composant client) : des éclairs noirs
@@ -422,12 +429,21 @@ décors.
   Le cadre du compte devient l'**avis de recherche** du membre (`WantedPoster` de `@app/ui`, rendu
   par le layout de la plateforme pour tous les thèmes, affiché par celui-ci seulement) : une vraie
   affiche vierge « WANTED / DEAD OR ALIVE / MARINE » (`wanted-blank.webp`, fenêtre de la photo
-  transparente), la photo de profil sous la fenêtre, le nom et la prime écrits en Abril Fatface
+  transparente, en `loading="lazy"` : masquée, elle ne se télécharge pas hors du thème), la photo de profil sous la fenêtre, le nom et la prime écrits en Abril Fatface
   (`--font-wanted-face`), la prime étant le solde du membre (« 1,500- », à l'anglaise comme sur
   les affiches) ; le chapeau de paille (`straw-hat.webp`) est accroché au coin. Il remplace alors
   la ligne du profil et le solde, marqués `theme-identity` (`AccountPanel`) et `theme-balance`
   (layout). Les images viennent du web (wiki One Piece, illustrations officielles, carte du
   monde d'un fan), réduites en WebP.
+  **Performance des thèmes JoJo et One Piece** (mêmes règles que l'Apothicaire) : animations en
+  `transform` et `opacity` seulement. Pas de `backdrop-filter` sur les cadres (le décor bouge
+  derrière : flou recalculé à chaque image), donc un fond un peu plus opaque. Pas d'ombre floue
+  sur les grands portraits qui rebondissent. Les planches de sprites (décor et effets JoJo, classe
+  `jojo-strip` de `theme.css`) glissent par `transform` dans la fenêtre de l'élément (`::before`
+  de `--frames` images de large, `--strip`, `--strip-time`) au lieu de `background-position`,
+  qui repeint à chaque image ; seul le rouleau compresseur, en grille, garde `background-position`.
+  L'aura de la fiche de Stand passe d'un halo fixe à l'autre en opacité au lieu d'animer une
+  ombre floue.
   Décor Apothicaire (`ApothicaireDecor`) : le Palais intérieur de nuit sous la Voie lactée, avec
   la danse du « fantôme » sur le rempart (`palace-night.webp`), la pleine lune de l'anime
   (`moon.webp`, découpée dans le visuel officiel de la nuit à la fenêtre à treillis), des nuages
@@ -518,12 +534,12 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
   au-dessus du liseré, et les clics suivants sautent la transformation.
 - Combo Luffy + steel ball (`components/LuffyCombo.tsx`, état partagé dans
   `components/headerStage.ts`) : si la boule tourne et qu'on clique sur le fruit, Luffy sort du
-  fruit en courant sur place (`public/luffy/luffy-run-sheet.png`) puis file vers la gauche. La
+  fruit en courant sur place (`public/luffy/luffy-run-sheet.webp`) puis file vers la gauche. La
   boule se charge dans sa case pendant que sa musique s'éteint (0,9 s), en jaillit dans un éclair
   et le poursuit en roulant sur le liseré (rotation = distance / rayon, dans le sens du
   mouvement). Aux bords, elle freine, s'écrase, soulève un peu de poussière et repart en
   accélérant ; Luffy fait demi-tour en sautant et c'est lui qui la poursuit. Le générique de One
-  Piece (`public/audio/one-piece.mp3`) arrive ensuite en fondu. Pendant le combo, la case de la
+  Piece (`public/audio/one-piece.mp3`, 128 kbit/s) arrive ensuite en fondu. Pendant le combo, la case de la
   boule montre un bouton stop ; à l'arrêt, tout s'efface en 0,6 s et chacun regagne sa case. Le
   calque ne déborde jamais du header (pas de barre de défilement).
 - Notification de test : « M'envoyer une notification de test » en bas de la liste de la cloche
@@ -532,8 +548,9 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
   pixel art 24 × 33, étoiles de l'image d'origine retirées) avec quelques étincelles qui
   s'allument au hasard. Au clic, le fruit tremble, éclate en lumière et Luffy en sort en
   rebondissant ; en pause, l'inverse (animations `luffy-*` de `app/globals.css`).
-- Luffy en action : planche de 25 frames à fond transparent (`public/luffy/luffy-sheet.png`, tirée
-  du gif d'origine), musique `public/audio/luffy.mp3`. Le sol du gif est retiré : c'est le liseré
+- Luffy en action : planche de 25 frames à fond transparent (`public/luffy/luffy-sheet.webp`,
+  tirée du gif d'origine ; WebP qualité 90, affichée réduite à 38 %), musique
+  `public/audio/luffy.mp3` (128 kbit/s, sans pochette intégrée). Le sol du gif est retiré : c'est le liseré
   doré du header qui se creuse et se bombe quand il rebondit (profils par frame dans
   `components/luffyGround.ts`, déformation exagérée ×2,5, Luffy décalé pour suivre la ligne, qui
   s'allume quand elle se tend). Le liseré du header accepte une trouée, `--line-gap-from` /
@@ -544,7 +561,7 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
 `toBeContinued()` de `@app/ui` le déclenche : un mot raté à TROIS (mode test compris), une mission perdue
 sous les yeux du joueur à Agents Doubles. Dès la défaite, la page se fige en sépia
 (`html.tbc-freeze`, animations en pause) et la flèche « To Be Continued »
-(`public/jojo/to-be-continued.png`) glisse en bas à gauche, sur Roundabout
+(`public/jojo/to-be-continued.webp`) glisse en bas à gauche, sur Roundabout
 (`public/audio/roundabout.mp3`, 6,4 s découpées à la main, à 45 % du volume du site, fondu de
 0,9 s sur la fin). Un clic ou Échap écourte. L'effet se coupe pour de bon dans les paramètres
 (voir ci-dessous) : `toBeContinued()` ne fait alors plus rien.
@@ -575,7 +592,8 @@ planches de sprites et images d'effets (Sonic et Super Sonic, fruit, Luffy et co
 Be Continued », « ゴゴゴゴ » de TROIS) sont téléchargées et décodées dès l'affichage du composant,
 et gardées en mémoire : sinon le navigateur ne les charge qu'au premier affichage et le
 personnage disparaît le temps du chargement. Un clic sur Sonic ou le fruit avant la fin du
-chargement attend que les planches soient prêtes.
+chargement attend que les planches soient prêtes. Gear 5 du « ドン!! » (choix du thème One Piece)
+est préchargé à l'ouverture du menu des thèmes (`ThemeSwitcher`), pas à chaque page.
 
 **Inventaire** (`packages/inventory`, schéma `inventory`, table `items` : `user_id`, `item_id`,
 `found_at`, unique par membre et objet).

@@ -17,8 +17,8 @@ import { LUFFY_GROUND } from "./luffyGround";
 // planches du fruit, de Luffy et du combo (Luffy qui court, la boule qui le poursuit)
 const IMAGES = [
   "/luffy/devil-fruit.png",
-  "/luffy/luffy-sheet.png",
-  "/luffy/luffy-run-sheet.png",
+  "/luffy/luffy-sheet.webp",
+  "/luffy/luffy-run-sheet.webp",
   "/orb/orb-sheet.png",
 ];
 const FRAMES = 25;
@@ -460,7 +460,7 @@ export function LuffyRun() {
               height: SIZE,
               translate: `0 ${riding}px`,
               transformOrigin: `50% ${(GROUND_ROW / SRC_PX) * 100}%`,
-              backgroundImage: "url(/luffy/luffy-sheet.png)",
+              backgroundImage: "url(/luffy/luffy-sheet.webp)",
               backgroundSize: `${FRAMES * SIZE}px ${SIZE}px`,
               backgroundPosition: `${-frame * SIZE}px 0`,
             }}

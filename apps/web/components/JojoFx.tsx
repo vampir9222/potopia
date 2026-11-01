@@ -5,7 +5,7 @@ import { useEffect } from "react";
 
 /*
  * Effets interactifs du thème JoJo, actifs seulement quand ce thème est affiché. Sprites du jeu de
- * Capcom (public/jojo/*-strip.png), voix et thème de Jotaro (public/audio/jojo-*.mp3).
+ * Capcom (public/jojo/*-strip.webp), voix et thème de Jotaro (public/audio/jojo-*.mp3).
  * - Le bouton « STAND » de la fiche (`data-stand-toggle`) invoque Star Platinum, qui flotte alors
  *   autour de la souris (gardé sur l'appareil). Re-clic : il est rappelé.
  * - Stand invoqué, clic maintenu dans le vide : rafale « ORA ORA ORA » sur le thème de Jotaro ; la
@@ -48,11 +48,11 @@ const SOUNDS = {
 // Sprites du thème, préchargés et décodés dès que le thème est affiché : rien ne se télécharge au
 // moment d'un effet.
 const SPRITES = [
-  "/jojo/star-platinum-idle-strip.png",
-  "/jojo/star-platinum-ora-strip.png",
-  "/jojo/the-world-muda-strip.png",
-  "/jojo/dio-road-roller-grid.png",
-  "/jojo/menacing-gogo-strip.png",
+  "/jojo/star-platinum-idle-strip.webp",
+  "/jojo/star-platinum-ora-strip.webp",
+  "/jojo/the-world-muda-strip.webp",
+  "/jojo/dio-road-roller-grid.webp",
+  "/jojo/menacing-gogo-strip.webp",
 ];
 
 const root = () => document.documentElement;
@@ -213,15 +213,22 @@ export function JojoFx() {
     let pos = { ...mouse };
     let frame = 0;
 
+    // La boucle d'images ne tourne que pendant que le Stand rattrape la souris : posé, il
+    // l'arrête, et le prochain mouvement la relance (sans Stand, rien ne tourne).
     const follow = () => {
-      if (floater && !rush) {
-        // tourné vers la gauche, à droite de la souris et un peu au-dessus ; il rattrape en douceur
-        pos.x += (mouse.x + 70 - pos.x) * 0.12;
-        pos.y += (mouse.y - 50 - pos.y) * 0.12;
-        floater.style.left = `${pos.x}px`;
-        floater.style.top = `${pos.y}px`;
-      }
-      frame = requestAnimationFrame(follow);
+      frame = 0;
+      if (!floater || rush) return;
+      // tourné vers la gauche, à droite de la souris et un peu au-dessus ; il rattrape en douceur
+      const dx = mouse.x + 70 - pos.x;
+      const dy = mouse.y - 50 - pos.y;
+      pos.x += dx * 0.12;
+      pos.y += dy * 0.12;
+      // translate plutôt que left/top : déplacé sans recalcul de la mise en page
+      floater.style.translate = `calc(${pos.x}px - 50%) calc(${pos.y}px - 50%)`;
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) frame = requestAnimationFrame(follow);
+    };
+    const wake = () => {
+      if (!frame && floater && !rush) frame = requestAnimationFrame(follow);
     };
 
     const setStand = (on: boolean, { announce = true } = {}) => {
@@ -238,7 +245,8 @@ export function JojoFx() {
       if (standOn && !floater) {
         // il sort de la souris et glisse vers la droite en apparaissant, comme dans l'anime
         pos = { x: mouse.x, y: mouse.y - 50 };
-        floater = spawn("jojo-fx-sprite jojo-fx-floater");
+        floater = spawn("jojo-fx-sprite jojo-strip jojo-fx-floater", { left: "0", top: "0" });
+        wake();
         if (announce) {
           play(SOUNDS.stand, { volume: 0.9 });
         }
@@ -274,7 +282,7 @@ export function JojoFx() {
       window.getSelection()?.removeAllRanges();
       floater?.classList.add("jojo-fx-hidden");
       const r: Rush = {
-        star: spawn("jojo-fx-sprite jojo-fx-star"),
+        star: spawn("jojo-fx-sprite jojo-strip jojo-fx-star"),
         ora: play(SOUNDS.ora, { loop: true }),
         theme: play(SOUNDS.theme, { loop: true, volume: 0.6 }),
         ticker: 0,
@@ -290,7 +298,7 @@ export function JojoFx() {
         const d = dio ? center(dio) : null;
         const near = !!d && Math.hypot(d.x - x, d.y - y) < DIO_RANGE;
         if (near && d && !r.world) {
-          r.world = spawn("jojo-fx-sprite jojo-fx-world");
+          r.world = spawn("jojo-fx-sprite jojo-strip jojo-fx-world");
           r.muda = play(SOUNDS.muda, { loop: true });
           transient("jojo-fx-ring", { left: `${d.x}px`, top: `${d.y}px` });
         }
@@ -353,6 +361,7 @@ export function JojoFx() {
       r.star.remove();
       r.world?.remove();
       floater?.classList.remove("jojo-fx-hidden");
+      wake();
       if (!final) return;
       transient("jojo-fx-final", { left: `${x}px`, top: `${y}px`, color: "#f4c430" }, "ORA !");
       transient("jojo-fx-ring", { left: `${x}px`, top: `${y}px` });
@@ -410,7 +419,7 @@ export function JojoFx() {
       play(SOUNDS.menacing, { volume: 1 });
       for (let i = 0; i < 6; i++) {
         later(i * 140, () =>
-          transient("jojo-fx-gogo", {
+          transient("jojo-fx-gogo jojo-strip", {
             left: `${r.left + rand(-40, r.width + 40)}px`,
             top: `${r.top + rand(-30, r.height * 0.6)}px`,
             rotate: `${rand(-20, 20)}deg`,
@@ -441,6 +450,7 @@ export function JojoFx() {
     };
     const onMove = (e: PointerEvent) => {
       mouse = { x: e.clientX, y: e.clientY };
+      wake();
       if (!rush && Math.hypot(mouse.x - start.x, mouse.y - start.y) > MOVE_TOLERANCE) {
         window.clearTimeout(holdTimer);
       }
@@ -490,8 +500,9 @@ export function JojoFx() {
     const onContext = (e: Event) => {
       if (rush) e.preventDefault();
     };
-    // Préchargement des sprites (décodés d'avance) et des sons, une fois, dès que le thème JoJo est
-    // affiché ; gardés en mémoire tant que l'app est ouverte.
+    // Préchargement des sprites (décodés d'avance) et des bruitages, une fois, dès que le thème
+    // JoJo est affiché ; gardés en mémoire tant que l'app est ouverte. Pas le thème de Jotaro
+    // (1,4 Mo, musique de fond d'une rafale) : il se lit en flux au premier ORA.
     let preloaded: (HTMLImageElement | HTMLAudioElement)[] | null = null;
     const preload = () => {
       if (preloaded || root().dataset.theme !== "jojo") return;
@@ -502,12 +513,14 @@ export function JojoFx() {
           img.decode().catch(() => {});
           return img;
         }),
-        ...Object.values(SOUNDS).map((src) => {
-          const audio = new Audio();
-          audio.preload = "auto";
-          audio.src = src;
-          return audio;
-        }),
+        ...Object.values(SOUNDS)
+          .filter((src) => src !== SOUNDS.theme)
+          .map((src) => {
+            const audio = new Audio();
+            audio.preload = "auto";
+            audio.src = src;
+            return audio;
+          }),
       ];
     };
 
@@ -542,7 +555,6 @@ export function JojoFx() {
     later(2500, showHint);
     later(800, preload);
     if (readStand()) setStand(true, { announce: false });
-    frame = requestAnimationFrame(follow);
 
     window.addEventListener("pointerdown", onDown);
     window.addEventListener("pointermove", onMove, { passive: true });

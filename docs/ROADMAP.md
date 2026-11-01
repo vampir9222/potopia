@@ -209,6 +209,9 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
       avec le Jolly Roger, titres façon logo ; le cadre du compte devient l'avis de recherche du
       membre (sa prime = son solde, chapeau de paille au coin) ; le choisir déclenche « ドン!! »
       avec Gear 5 et les Tambours de la Libération.
+    - Thèmes JoJo et One Piece allégés (comme l'Apothicaire) : plus de flou sous les cadres,
+      sprites animés sans repeindre, carte du monde précalculée, images en WebP, musiques One Piece
+      plus légères, rien de ces thèmes téléchargé ni animé pour ceux qui ne les ont pas choisis.
     - Thème Apothicaire (Les Carnets de l'apothicaire) : le Palais intérieur de nuit (Voie lactée,
       vraie lune de l'anime, lanternes, pétales, poisons du carnet de Mao Mao), cadres de laque
       vermillon filetés d'or ; le cadre du compte devient le registre du Palais (rang de

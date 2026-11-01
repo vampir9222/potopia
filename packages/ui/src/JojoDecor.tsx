@@ -10,10 +10,10 @@ function seeded(i: number, salt: number): number {
 // estompés vers le centre : Jotaro et Star Platinum en bas à gauche, DIO et The World en haut à
 // droite, comme deux camps qui se font face.
 const PORTRAITS = [
-  { src: "/jojo/portrait-star-platinum.png", className: "jojo-portrait jojo-portrait-sp" },
-  { src: "/jojo/portrait-jotaro.png", className: "jojo-portrait jojo-portrait-jotaro" },
-  { src: "/jojo/portrait-the-world.png", className: "jojo-portrait jojo-portrait-tw" },
-  { src: "/jojo/portrait-dio.png", className: "jojo-portrait jojo-portrait-dio" },
+  { src: "/jojo/portrait-star-platinum.webp", className: "jojo-portrait jojo-portrait-sp" },
+  { src: "/jojo/portrait-jotaro.webp", className: "jojo-portrait jojo-portrait-jotaro" },
+  { src: "/jojo/portrait-the-world.webp", className: "jojo-portrait jojo-portrait-tw" },
+  { src: "/jojo/portrait-dio.webp", className: "jojo-portrait jojo-portrait-dio" },
 ];
 
 /**
@@ -34,7 +34,7 @@ export function JojoDecor() {
       {Array.from({ length: 7 }, (_, i) => (
         <span
           key={`m${i}`}
-          className="jojo-menace"
+          className="jojo-menace jojo-strip"
           style={
             {
               left: `${6 + seeded(i, 1) * 88}%`,
@@ -61,8 +61,8 @@ export function JojoDecor() {
           }}
         />
       ))}
-      <span className="jojo-dio" />
-      <span className="jojo-pose" />
+      <span className="jojo-dio jojo-strip" />
+      <span className="jojo-pose jojo-strip" />
     </div>
   );
 }

@@ -29,7 +29,8 @@ export function WantedPoster({ name, image, bounty }: Props) {
         <span className="op-wanted-photo">
           {image ? <img src={image} alt="" /> : name.slice(0, 1).toUpperCase()}
         </span>
-        <img src="/onepiece/wanted-blank.webp" alt="" className="op-wanted-sheet" />
+        {/* lazy : l'affiche est masquée hors du thème One Piece, elle ne s'y télécharge pas */}
+        <img src="/onepiece/wanted-blank.webp" alt="" loading="lazy" className="op-wanted-sheet" />
         <span
           className="op-wanted-name"
           style={{ "--len": Math.max(name.length, 1) } as CSSProperties}
