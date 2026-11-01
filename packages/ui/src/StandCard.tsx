@@ -1,50 +1,122 @@
 import { StandName } from "./StandName";
 
-// Noms de Stand en jeu de mots sur le pseudo, calqués sur de vrais Stands ; le membre en reçoit
-// un par défaut, toujours le même (tiré de son identifiant), et peut en changer d'un clic.
-const PUNS: ((n: string) => string)[] = [
-  (n) => `${n} Experience`, // Gold Experience
-  (n) => `Crazy ${n}`, // Crazy Diamond
-  (n) => `Killer ${n}`, // Killer Queen
-  (n) => `${n} Platinum`, // Star Platinum
-  (n) => `The ${n}`, // The World
-  (n) => `Silver ${n}`, // Silver Chariot
-  (n) => `Sticky ${n}`, // Sticky Fingers
-  (n) => `King ${n}`, // King Crimson
-  (n) => `${n} Free`, // Stone Free
-  (n) => `Hierophant ${n}`, // Hierophant Green
-  (n) => `Purple ${n}`, // Purple Haze
-  (n) => `${n} in Heaven`, // Made in Heaven
-  (n) => `Magician's ${n}`, // Magician's Red
-  (n) => `Hermit ${n}`, // Hermit Purple
-  (n) => `${n}'s Door`, // Heaven's Door
-  (n) => `${n} Act 3`, // Echoes Act 3
-  (n) => `${n} Pistols`, // Sex Pistols
-  (n) => `${n}smith`, // Aerosmith
-  (n) => `Moody ${n}`, // Moody Blues
-  (n) => `Weather ${n}`, // Weather Report
-  (n) => `${n}snake`, // Whitesnake
-  (n) => `C-${n}`, // C-Moon
-  (n) => `${n} & Wet`, // Soft & Wet
-  (n) => `${n} Act 4`, // Tusk Act 4
-  (n) => `Dirty Deeds Done ${n}`, // D4C
-  (n) => `Spice ${n}`, // Spice Girl
-  (n) => `Black ${n}`, // Black Sabbath
-  (n) => `Beach ${n}`, // Beach Boy
-  (n) => `Green ${n}`, // Green Day
-  (n) => `${n} Hand`, // The Hand
-  (n) => `Pearl ${n}`, // Pearl Jam
-  (n) => `Highway ${n}`, // Highway Star
-  (n) => `Red Hot ${n} Pepper`, // Red Hot Chili Pepper
-  (n) => `${n} Bites the Dust`, // Killer Queen : Bites the Dust
-  (n) => `Stray ${n}`, // Stray Cat
-  (n) => `Love ${n}`, // Love Train
-  (n) => `Wonder of ${n}`, // Wonder of U
-  (n) => `Paisley ${n}`, // Paisley Park
-  (n) => `Cheap ${n}`, // Cheap Trick
-  (n) => `Super ${n}`, // Super Fly
-  (n) => `${n} Heart Father`, // Atom Heart Father
-  (n) => `${n} Diver`, // Diver Down
+// Noms de Stand en jeu de mots sur le pseudo (« * » = le pseudo), calqués sur les vrais Stands des
+// parties 3 à 6 de JoJo (de Stardust Crusaders à Stone Ocean ; rien de Steel Ball Run ni après).
+// Le membre en reçoit un par défaut, toujours le même (tiré de son identifiant) ; un clic sur le
+// nom en tire un autre au hasard.
+const PUNS = [
+  // Partie 3 : Stardust Crusaders
+  "* Platinum", // Star Platinum
+  "Magician's *", // Magician's Red
+  "Hermit *", // Hermit Purple
+  "Hierophant *", // Hierophant Green
+  "Silver *", // Silver Chariot
+  "The *", // The World
+  "The * Fool", // The Fool
+  "Tower of *", // Tower of Gray
+  "Dark Blue *", // Dark Blue Moon
+  "Strength of *", // Strength
+  "Ebony *", // Ebony Devil
+  "Yellow *", // Yellow Temperance
+  "Hanged *", // Hanged Man
+  "* Emperor", // Emperor
+  "* Empress", // Empress
+  "Wheel of *", // Wheel of Fortune
+  "* Justice", // Justice
+  "* Lovers", // Lovers
+  "* Sun", // Sun
+  "Death *", // Death Thirteen
+  "* Judgement", // Judgement
+  "High *", // High Priestess
+  "* Geb", // Geb
+  "* Khnum", // Khnum
+  "Tohth *", // Tohth
+  "* Anubis", // Anubis
+  "Bastet *", // Bastet
+  "Sethan *", // Sethan
+  "Osiris *", // Osiris
+  "Horus *", // Horus
+  "Atum *", // Atum
+  "* Cream", // Cream
+  // Partie 4 : Diamond is Unbreakable
+  "Crazy *", // Crazy Diamond
+  "* Hand", // The Hand
+  "* Act 3", // Echoes Act 3
+  "*'s Door", // Heaven's Door
+  "Killer *", // Killer Queen
+  "Sheer * Attack", // Sheer Heart Attack
+  "* Bites the Dust", // Bites the Dust
+  "Red Hot * Pepper", // Red Hot Chili Pepper
+  "Pearl *", // Pearl Jam
+  "Achtung *", // Achtung Baby
+  "* Ratt", // Ratt
+  "* Harvest", // Harvest
+  "*'s Cinderella", // Cinderella
+  "* Heart Father", // Atom Heart Father
+  "Boy II *", // Boy II Man
+  "Earth Wind and *", // Earth Wind and Fire
+  "Highway *", // Highway Star
+  "Stray *", // Stray Cat
+  "Super *", // Super Fly
+  "* Enigma", // Enigma
+  "Cheap *", // Cheap Trick
+  "* Deluxe", // Love Deluxe
+  "* Surface", // Surface
+  "Bad *", // Bad Company
+  "Aqua *", // Aqua Necklace
+  "The * Lock", // The Lock
+  // Partie 5 : Golden Wind
+  "* Experience", // Gold Experience
+  "Sticky *", // Sticky Fingers
+  "Moody *", // Moody Blues
+  "* Pistols", // Sex Pistols
+  "*smith", // Aerosmith
+  "Purple *", // Purple Haze
+  "Spice *", // Spice Girl
+  "King *", // King Crimson
+  "Black *", // Black Sabbath
+  "Soft *", // Soft Machine
+  "Kraft *", // Kraft Work
+  "Little *", // Little Feet
+  "Man in the *", // Man in the Mirror
+  "Mr. *", // Mr. President
+  "Beach *", // Beach Boy
+  "The Grateful *", // The Grateful Dead
+  "Baby *", // Baby Face
+  "White *", // White Album
+  "* Clash", // Clash
+  "Talking *", // Talking Head
+  "Notorious *", // Notorious B.I.G
+  "Metal *", // Metallica
+  "Green *", // Green Day
+  "* Oasis", // Oasis
+  "Rolling *", // Rolling Stones
+  // Partie 6 : Stone Ocean
+  "* Free", // Stone Free
+  "Kiss *", // Kiss
+  "Burning Down the *", // Burning Down the House
+  "* Fighters", // Foo Fighters
+  "Weather *", // Weather Report
+  "Heavy *", // Heavy Weather
+  "* Diver", // Diver Down
+  "*snake", // Whitesnake
+  "C-*", // C-Moon
+  "* in Heaven", // Made in Heaven
+  "Goo Goo *", // Goo Goo Dolls
+  "Manhattan *", // Manhattan Transfer
+  "Highway to *", // Highway to Hell
+  "Marilyn *", // Marilyn Manson
+  "Jumpin' Jack *", // Jumpin' Jack Flash
+  "Limp *", // Limp Bizkit
+  "* Survivor", // Survivor
+  "Planet *", // Planet Waves
+  "*'s Dream", // Dragon's Dream
+  "Yo-Yo *", // Yo-Yo Ma
+  "Green, Green Grass of *", // Green, Green Grass of Home
+  "Jail House *", // Jail House Lock
+  "Bohemian *", // Bohemian Rhapsody
+  "Sky *", // Sky High
+  "Under *", // Under World
 ];
 
 /** Les vraies données du membre dont viennent les notes. */
@@ -140,7 +212,7 @@ export function StandCard({ userId, name, image, stats }: Props) {
   const first = name.trim().split(/\s+/)[0] || name;
   // les deux seuls Stands Requiem de JoJo, débloqués par les 7 émeraudes, à la fin de la liste
   const names = [
-    ...PUNS.map((pun) => pun(first)),
+    ...PUNS.map((pun) => pun.replace("*", first)),
     ...(stats.emeralds >= 7 ? [`${first} Experience Requiem`, `Silver ${first} Requiem`] : []),
   ];
   const initial = Math.floor(hash(userId) * PUNS.length);

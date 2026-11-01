@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-// Nom choisi par le membre, gardé sur l'appareil (rang dans la liste des noms possibles).
+// Nom tiré par le membre, gardé sur l'appareil (le nom lui-même : la liste peut changer).
 const KEY = "potopia:jojo-stand-name";
 
 /**
- * Nom du Stand (fiche de Stand, thème JoJo) : un clic passe au nom suivant de la liste, et le choix
- * est gardé sur l'appareil. Rendu d'abord avec le nom par défaut (même rendu serveur et client),
+ * Nom du Stand (fiche de Stand, thème JoJo) : un clic en tire un autre au hasard dans la liste, et
+ * le choix est gardé sur l'appareil. Rendu d'abord avec le nom par défaut (même rendu serveur et client),
  * puis le choix gardé s'applique.
  */
 export function StandName({ names, initial }: { names: string[]; initial: number }) {
@@ -15,20 +15,19 @@ export function StandName({ names, initial }: { names: string[]; initial: number
 
   useEffect(() => {
     try {
-      const saved = Number(window.localStorage.getItem(KEY));
-      if (window.localStorage.getItem(KEY) !== null && saved >= 0 && saved < names.length) {
-        setIndex(saved);
-      }
+      const saved = names.indexOf(window.localStorage.getItem(KEY) ?? "");
+      if (saved >= 0) setIndex(saved);
     } catch {
       /* navigation privée : le nom par défaut reste */
     }
-  }, [names.length]);
+  }, [names]);
 
   const next = () => {
-    const i = (index + 1) % names.length;
+    // au hasard, mais jamais le même deux fois de suite
+    const i = (index + 1 + Math.floor(Math.random() * (names.length - 1))) % names.length;
     setIndex(i);
     try {
-      window.localStorage.setItem(KEY, String(i));
+      window.localStorage.setItem(KEY, names[i] ?? "");
     } catch {
       /* navigation privée : le choix ne survivra pas au rechargement */
     }
@@ -39,7 +38,7 @@ export function StandName({ names, initial }: { names: string[]; initial: number
       type="button"
       className="jojo-stand-name"
       onClick={next}
-      title="Clic : un autre nom de Stand"
+      title="Clic : un autre nom de Stand, au hasard"
     >
       {names[index] ?? names[0]}
     </button>
