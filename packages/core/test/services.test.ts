@@ -1,6 +1,6 @@
 import { db } from "@app/db";
 import { truncateTestDb } from "@app/db/testing";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   countUnread,
   EVENT_COMMIT_GRACE_MS,
@@ -34,6 +34,17 @@ async function createUser(discordId: string): Promise<string> {
 beforeEach(truncateTestDb);
 
 describe("registre des apps", () => {
+  it("retire GOTY pour tous les rôles lorsque le module est désactivé", () => {
+    try {
+      vi.stubEnv("GOTY_ENABLED", "false");
+      for (const role of ["member", "admin"] as const)
+        expect(getVisibleApps({ role }).some((app) => app.id === "goty")).toBe(false);
+      vi.stubEnv("GOTY_ENABLED", "true");
+      expect(getVisibleApps({ role: "member" }).some((app) => app.id === "goty")).toBe(true);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it("getVisibleApps filtre par rôle", () => {
     expect(getVisibleApps({ role: "member" }).map((a) => a.id)).toEqual([
       "goty",

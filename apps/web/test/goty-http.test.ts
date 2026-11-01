@@ -1,8 +1,13 @@
 import { FakeDiscord, fakeUser, OTHER_GUILD_ID, signInWithDiscord } from "@app/core/testing";
 import { db } from "@app/db";
 import { truncateTestDb } from "@app/db/testing";
-import { createEdition, setEditionMembers } from "@app/goty";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  createEdition,
+  setEditionMembers,
+  type MemberSnapshot,
+  type PresentationSnapshot,
+} from "@app/goty";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import * as route from "@/app/api/goty/[...path]/route";
 
 const discord = new FakeDiscord();
@@ -55,6 +60,7 @@ async function signIn(discordId = ADMIN) {
 }
 beforeAll(() => discord.install());
 afterAll(() => discord.uninstall());
+afterEach(() => vi.unstubAllEnvs());
 beforeEach(async () => {
   await truncateTestDb();
   discord.users.clear();
@@ -62,6 +68,198 @@ beforeEach(async () => {
 });
 
 describe("Accès aux routes GOTY", () => {
+  it("joue une édition HTTP complète, puis retire et réactive le module sans altérer les archives", async () => {
+    vi.stubEnv("GOTY_ENABLED", "true");
+    vi.stubEnv("IGDB_CLIENT_ID", "");
+    vi.stubEnv("IGDB_CLIENT_SECRET", "");
+    const accounts = [];
+    for (const discordId of [ADMIN, MEMBER, "100000000000000003", "100000000000000004"]) {
+      const id = await signIn(discordId);
+      accounts.push({ id, discordId, cookie });
+    }
+    const [admin, member, presenter, outsider] = accounts;
+    if (!admin || !member || !presenter || !outsider) throw new Error("Comptes fictifs absents");
+    cookie = admin.cookie;
+    const created = await call("POST", "editions", {
+      year: 2151,
+      name: "Recette complète fictive",
+    });
+    expect(created.status).toBe(201);
+    const { id: editionId } = (await created.json()) as { id: string };
+    const base = `editions/${editionId}`;
+    const read = async (account = admin) => {
+      cookie = account.cookie;
+      const response = await call("GET", base);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toContain("no-store");
+      return (await response.json()) as MemberSnapshot;
+    };
+    const television = async () => {
+      const response = await call("GET", `${base}/presentation`);
+      expect(response.status).toBe(200);
+      const data = (await response.json()) as PresentationSnapshot;
+      expect(data).not.toHaveProperty("permissions");
+      expect(data.rounds.every((round) => !("eligibleUsers" in round))).toBe(true);
+      return data;
+    };
+    const command = async (body: object) => {
+      const state = await read();
+      return call("POST", `${base}/control`, { expectedVersion: state.edition.version, ...body });
+    };
+    expect((await read()).rounds).toHaveLength(14);
+    expect(
+      (
+        await call("PUT", `${base}/members`, {
+          expectedVersion: 1,
+          members: [admin, member, presenter].map((account) => ({
+            userId: account.id,
+            organizer: account.id === admin.id,
+            presenter: account.id !== member.id,
+          })),
+        })
+      ).status,
+    ).toBe(200);
+    cookie = member.cookie;
+    const proposal = await call("POST", `${base}/proposals`, { name: "Prix de recette" });
+    expect(proposal.status).toBe(201);
+    const { id: proposalId } = (await proposal.json()) as { id: string };
+    for (const account of [admin, member, presenter]) {
+      cookie = account.cookie;
+      expect(
+        (await call("PUT", `${base}/proposals/${proposalId}/vote`, { favor: true })).status,
+      ).toBe(200);
+      expect((await call("GET", "catalog?q=Jeu")).status).toBe(200);
+      const path = `${base}/import-preview`;
+      const preview = await route.POST(
+        new Request(`http://localhost:3000/api/goty/${path}?format=csv`, {
+          method: "POST",
+          headers: { cookie, origin: "http://localhost:3000" },
+          body: `Titre;Plateforme\nJeu ${account.id} A;PC\nJeu ${account.id} B;PC`,
+        }),
+        { params: Promise.resolve({ path: path.split("/") }) },
+      );
+      expect(preview.status).toBe(200);
+      const batch = (await preview.json()) as { valid: boolean; games: { title: string }[] };
+      expect(batch.valid).toBe(true);
+      expect((await call("POST", `${base}/games`, { games: batch.games })).status).toBe(201);
+    }
+    const preparation = await read();
+    expect(
+      (await call("POST", `${base}/prepare`, { expectedVersion: preparation.edition.version }))
+        .status,
+    ).toBe(200);
+    const prepared = await read();
+    expect(prepared.rounds).toHaveLength(15);
+    const prize = prepared.rounds.find((r) => r.name === "Coup de cœur");
+    const music = prepared.rounds.find((r) => r.soundtrack);
+    if (!prize || !music) throw new Error("Prix de base absents");
+    for (const account of [admin, member, presenter]) {
+      const state = await read(account);
+      const games = state.games.filter((game) => game.userId === account.id);
+      expect((await call("PUT", `${base}/top`, { gameIds: games.map((g) => g.id) })).status).toBe(
+        200,
+      );
+      for (const round of [prize, music])
+        expect(
+          (
+            await call("PUT", `${base}/choices/${round.id}`, {
+              gameId: games[0]?.id,
+              precision: `SECRET-${account.id}`,
+              youtube: round.soundtrack ? "https://youtu.be/abcdefghijk" : null,
+            })
+          ).status,
+        ).toBe(200);
+    }
+    const allGames = (await read()).games.filter((g) => g.userId === admin.id);
+    for (const [account, game] of [
+      [member, allGames[0]],
+      [presenter, allGames[1]],
+    ] as const) {
+      cookie = account.cookie;
+      expect(
+        (await call("PUT", `${base}/predictions/${prize.id}/${admin.id}`, { gameId: game?.id }))
+          .status,
+      ).toBe(200);
+    }
+    for (const account of [admin, member, presenter]) {
+      const state = await read(account);
+      expect(state.choices.every((choice) => choice.userId === account.id)).toBe(true);
+      expect((await television()).choices).toEqual([]);
+      expect((await television()).games).toEqual([]);
+    }
+    cookie = outsider.cookie;
+    expect((await call("GET", base)).status).toBe(403);
+    expect((await call("GET", `${base}/presentation`)).status).toBe(403);
+    let raced = false;
+    for (const round of prepared.rounds) {
+      expect((await command({ action: "announce", roundId: round.id })).status).toBe(200);
+      expect((await command({ action: "lock", roundId: round.id })).status).toBe(200);
+      while (true) {
+        const state = await read();
+        const current = state.rounds.find((r) => r.id === round.id);
+        if (!current || current.revealedCount === current.eligibleCount) break;
+        const body = {
+          action: "reveal",
+          roundId: round.id,
+          expectedVersion: state.edition.version,
+        };
+        if (!raced) {
+          const results = await Promise.all([
+            call("POST", `${base}/control`, body),
+            call("POST", `${base}/control`, body),
+          ]);
+          expect(results.map((result) => result.status).sort()).toEqual([200, 409]);
+          raced = true;
+        } else expect((await call("POST", `${base}/control`, body)).status).toBe(200);
+        const tv = await television();
+        expect(
+          tv.choices.every((choice) =>
+            tv.rounds.find((r) => r.id === choice.roundId)?.revealedUsers.includes(choice.userId),
+          ),
+        ).toBe(true);
+        expect(
+          tv.games.every((game) => tv.choices.some((choice) => choice.gameId === game.id)),
+        ).toBe(true);
+      }
+      expect((await command({ action: "recap", roundId: round.id })).status).toBe(200);
+    }
+    expect(raced).toBe(true);
+    expect((await command({ action: "close" })).status).toBe(200);
+    const archived = await read(outsider);
+    expect(archived.edition.phase).toBe("closed");
+    expect(archived.standings?.find((entry) => entry.id === member.id)?.points).toBe(1);
+    expect(archived.standings?.find((entry) => entry.id === presenter.id)?.points).toBe(0);
+    cookie = admin.cookie;
+    expect(
+      (await call("POST", `${base}/games`, { games: [{ title: "Interdit après clôture" }] }))
+        .status,
+    ).toBe(409);
+    const count = await db.notification.count();
+    expect(JSON.stringify(await db.notification.findMany())).not.toMatch(
+      /SECRET-|youtu|Prix de recette|Jeu /,
+    );
+    expect(await db.activityEvent.count()).toBe(0);
+    vi.stubEnv("GOTY_ENABLED", "false");
+    for (const path of ["editions", base, `${base}/presentation`])
+      expect((await call("GET", path)).status).toBe(404);
+    expect(
+      (
+        await call("POST", `${base}/control`, {
+          action: "restart",
+          confirmRestart: true,
+          expectedVersion: archived.edition.version,
+        })
+      ).status,
+    ).toBe(404);
+    vi.stubEnv("GOTY_ENABLED", "true");
+    expect((await read(outsider)).edition).toEqual(archived.edition);
+    expect(await db.notification.count()).toBe(count);
+    await db.session.deleteMany({ where: { userId: member.id } });
+    cookie = member.cookie;
+    expect((await call("GET", base)).status).toBe(401);
+    await signIn(member.discordId);
+    expect((await call("GET", base)).status).toBe(200);
+  }, 30000);
   it.each(endpoints)(
     "%s %s refuse sans session avant toute lecture du corps",
     async (method, path) => {

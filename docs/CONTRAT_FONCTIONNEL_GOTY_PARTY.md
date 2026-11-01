@@ -376,7 +376,15 @@ participants et un membre extérieur. Tester aussi les cumuls, dont organisateur
 R01 à R29 alimentent les tests unitaires, d’intégration PostgreSQL et d’accès HTTP selon leur
 nature ; R25, R26 et R30 nécessitent aussi une recette navigateur. Ne pas porter les tests de
 mots de passe, sessions MariaDB et uploads d’avatars de la source ; vérifier à leur place les
-contrôles d’identité Potopia. La recette n’est pas exécutée par le présent lot.
+contrôles d’identité Potopia. L’exécution locale et les validations encore ouvertes sont
+consignées dans le [bilan du lot 7](RECETTE_GOTY_PARTY.md).
+
+Retrait temporaire : `GOTY_ENABLED=false` ferme les accès métier et pages en 404 après contrôle
+de session et masque les entrées du registre/admin, sans mutation des données. Réactivation
+= mêmes éditions, versions et archives. Les confirmations de préparation, retrait d’un jeu,
+redémarrage et clôture passent par le dialogue du portail ; annulation = aucune commande.
+Une confirmation conserve la version proposée à son ouverture, un état serveur devenu différent
+doit donc produire le conflit prévu, sans relance automatique.
 
 ## 8. Écarts arbitrés pour le portage
 

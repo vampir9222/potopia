@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./brand": "./brand.ts",
+    "./features": "./features.ts",
     "./eslint/base": "./eslint/base.js",
     "./eslint/library": "./eslint/library.js",
     "./tsconfig/*": "./tsconfig/*"

@@ -15,7 +15,8 @@ et celui de la monnaie viennent de `packages/config/brand.ts`.
   les imports CSV/XLSX, IGDB facultatif, les pronostics, la télécommande et l’écran TV.
   Les notifications internes sont intégrées et le [guide d’exploitation](docs/EXPLOITATION_GOTY_PARTY.md)
   décrit configuration, médias, sauvegarde/restauration et diagnostic. Recette finale et mise
-  en service restent au lot 7.
+  en service sont suivies dans le [bilan de recette](docs/RECETTE_GOTY_PARTY.md) : contrôles locaux
+  et restauration fictive réalisés, validation terrain et autorisation de publication restantes.
 
 **Stack** : monorepo pnpm + Turborepo, TypeScript strict, Next.js 16 (App Router), Tailwind v4,
 PostgreSQL + Prisma 7, Better Auth (Discord), stockage S3 (Cloudflare R2 en prod, RustFS en
@@ -74,6 +75,9 @@ Toute nouvelle variable va dans `.env.example` (documentée) et dans `globalPass
 GOTY Party utilise facultativement `IGDB_CLIENT_ID` et `IGDB_CLIENT_SECRET` (application Twitch,
 côté serveur uniquement). Sans ces clés, la saisie manuelle reste disponible. Le
 [README du module](games/goty/README.md) décrit son catalogue, ses limites et les imports.
+`GOTY_ENABLED=false` retire la tuile et ferme pages/API GOTY sans supprimer ses données ;
+absent ou `true` active le module, toute autre valeur le désactive. Redémarrer/redéployer après
+changement. Le [bilan du lot 7](docs/RECETTE_GOTY_PARTY.md) distingue recette locale et mise en service.
 
 ---
 

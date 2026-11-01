@@ -61,7 +61,7 @@ export function useSnapshot<T extends Snapshot>(
       setError("");
     } catch (caught) {
       if (controller.signal.aborted || !active.current || !epoch.current.current(ticket)) return;
-      if (caught instanceof GotyRequestError && [401, 403].includes(caught.status))
+      if (caught instanceof GotyRequestError && [401, 403, 404].includes(caught.status))
         setSnapshot(null);
       setError(caught instanceof Error ? caught.message : "Connexion interrompue.");
     } finally {
@@ -112,7 +112,7 @@ export function useSnapshot<T extends Snapshot>(
         success = true;
       } catch (caught) {
         if (!active.current) return false;
-        if (caught instanceof GotyRequestError && [401, 403].includes(caught.status))
+        if (caught instanceof GotyRequestError && [401, 403, 404].includes(caught.status))
           setSnapshot(null);
         mutationError = caught instanceof Error ? caught.message : "Enregistrement impossible.";
         setError(mutationError);

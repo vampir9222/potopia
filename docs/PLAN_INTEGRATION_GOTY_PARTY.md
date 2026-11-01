@@ -1,6 +1,6 @@
 # Plan d’intégration de GOTY Party dans Potopia
 
-Statut : lots 1 à 6 terminés ; recette finale et mise en service au lot 7. Analyse des dépôts le
+Statut : lots 1 à 6 terminés ; lot 7 techniquement préparé, validation finale et mise en service en attente. Analyse des dépôts le
 31 octobre 2026. Ce document ne déclenche ni migration ni déploiement.
 
 Le [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) détaille les droits, transitions,
@@ -224,6 +224,12 @@ Aucune nouvelle migration ou variable. Les tests couvrent ciblage, rejeu, rollba
 et comportement des médias simulés ; la répétition sur sauvegarde réelle reste au lot 7.
 
 ### Lot 7 — Recette et mise en service
+
+État au 1er novembre 2026 : [bilan de recette](RECETTE_GOTY_PARTY.md), cycle HTTP complet,
+suite globale sur PostgreSQL/RustFS, restauration fictive et objet privé vérifiés. Retrait
+temporaire réversible par `GOTY_ENABLED`, avec fermeture des pages et services. Confirmations
+du portail conservant la version proposée. Répétition visuelle/terrain, acceptation utilisateur,
+check GitHub et autorisation de déploiement restent ouvertes ; ce lot n’est pas déclaré clôturé.
 
 - Jouer une édition fictive complète : catégories, préparation, pronostics, cérémonie, archives.
 - Tester rôles cumulés, membre exclu de l’édition, session révoquée, reprise après déconnexion,

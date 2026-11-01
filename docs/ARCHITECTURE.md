@@ -255,6 +255,15 @@ jaquettes distantes disposent d’un repli et IGDB est attribué. Pas de cache b
 supplémentaire, variable ou migration. Le [guide d’exploitation](EXPLOITATION_GOTY_PARTY.md)
 couvre sauvegarde complète du portail, stockage privé commun, restauration isolée et diagnostic.
 
+Le lot 7 ajoute `@app/config/features` : `isGotyEnabled()` consulte `GOTY_ENABLED` côté serveur.
+Absent ou `true` = actif ; sinon le registre et l’administration cachent leurs entrées et
+`resolveActor` refuse les accès métier en 404. Les pages traduisent ce refus après authentification.
+Pas de suppression de données, d’inscription ou de notification lors du retrait/rétablissement.
+Les confirmations utilisent le dialogue du portail et capturent la commande/version à l’ouverture,
+pour conserver le conflit serveur malgré le polling. Le [bilan de recette](RECETTE_GOTY_PARTY.md)
+consigne cycle HTTP complet, tests globaux PostgreSQL/RustFS et restauration complète vérifiée
+sur données fictives, ainsi que les validations terrain et de mise en service encore ouvertes.
+
 ### trois et agents
 
 Décrits dans les README des jeux : [games/trois/README.md](../games/trois/README.md) (`games`,

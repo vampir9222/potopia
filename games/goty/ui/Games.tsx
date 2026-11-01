@@ -9,6 +9,7 @@ import type { previewGameImport } from "../src/imports";
 import type { MemberSnapshot } from "../src/snapshot";
 import { api } from "./api";
 import { Cover, Trailer, type Game } from "./common";
+import { ConfirmAction } from "./ConfirmAction";
 import type { Mutation } from "./useSnapshot";
 
 type Preview = Awaited<ReturnType<typeof previewGameImport>>;
@@ -413,17 +414,16 @@ export function Games({ view, userId, busy, mutate }: Props) {
                       <Pencil size={14} />
                       Modifier
                     </button>
-                    <button
+                    <ConfirmAction
+                      title="Retirer un jeu"
+                      message={`Supprimer « ${game.title} » de ta liste ? Ses choix et les pronostics associés seront retirés.`}
                       className="goty-text-button danger"
                       disabled={busy}
-                      onClick={() => {
-                        if (window.confirm(`Supprimer « ${game.title} » de ta liste ?`))
-                          void mutate(`games/${game.id}`, "DELETE");
-                      }}
+                      onConfirm={() => mutate(`games/${game.id}`, "DELETE")}
                     >
                       <Trash2 size={14} />
                       Retirer
-                    </button>
+                    </ConfirmAction>
                   </div>
                 )}
               </div>

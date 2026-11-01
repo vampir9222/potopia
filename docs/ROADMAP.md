@@ -543,7 +543,8 @@ Le [plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) décrit les lots. Le
 [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) fixe droits, transitions, projections HTTP
 et scénarios de recette. Le module possède sa tuile et ses pages dans le portail ;
 les notifications et le [guide d’exploitation](EXPLOITATION_GOTY_PARTY.md) sont intégrés.
-La recette finale et la mise en service restent à réaliser.
+La recette technique locale et la restauration isolée sont réalisées ; la répétition terrain,
+l’acceptation et la mise en service restent ouvertes dans le [bilan](RECETTE_GOTY_PARTY.md).
 
 - [x] Lot 1 : comparaison des sources, règles, matrice des droits, transitions, contrats HTTP et
       scénarios R01 à R30. Décisions utilisateur : départ à zéro, archives pour tous les membres.
@@ -556,7 +557,9 @@ La recette finale et la mise en service restent à réaliser.
 - [x] Lot 5 : interface React, navigation du portail, routes privées, synchronisation et écran TV.
 - [x] Lot 6 : profils du portail, notifications transactionnelles ciblées, médias externes
       et guide d’installation, sauvegarde/restauration, diagnostic et bascule.
-- [ ] Lot 7 : recette complète, contrôles CI et mise en service autorisée.
+- [ ] Lot 7 : contrôles locaux et restauration fictive validés ; confirmations intégrées au
+      portail et retrait temporaire `GOTY_ENABLED` testés. Répétition visuelle/terrain, acceptation,
+      CI GitHub et mise en service autorisée restent nécessaires ; voir le bilan de recette.
 
 **Fini quand**
 

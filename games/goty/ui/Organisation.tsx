@@ -4,6 +4,7 @@ import { Check, LockKeyhole, Plus, Users, Vote } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import type { MemberSnapshot } from "../src/snapshot";
 import { api } from "./api";
+import { ConfirmAction } from "./ConfirmAction";
 import { moveItem, Sortable } from "./Sortable";
 import type { Mutation } from "./useSnapshot";
 type Props = { view: MemberSnapshot; userId: string; busy: boolean; mutate: Mutation };
@@ -152,20 +153,14 @@ export function Organisation({ view, busy, mutate, isAdmin }: Props & { isAdmin:
               atteint 75 % seront ajoutées au programme.
             </p>
           </div>
-          <button
-            className="goty-button"
+          <ConfirmAction
+            title="Ouvrir la préparation"
+            message="Fixer les catégories et ouvrir la préparation des palmarès ? Les votes seront fermés."
             disabled={busy || draft !== null}
-            onClick={() => {
-              if (
-                window.confirm(
-                  "Fixer les catégories et ouvrir la préparation des palmarès ? Les votes seront fermés.",
-                )
-              )
-                void mutate("prepare", "POST", { expectedVersion: view.edition.version });
-            }}
+            onConfirm={() => mutate("prepare", "POST", { expectedVersion: view.edition.version })}
           >
             Ouvrir la préparation
-          </button>
+          </ConfirmAction>
         </section>
       )}
       <section className="goty-panel">

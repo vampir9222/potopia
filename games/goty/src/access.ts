@@ -1,9 +1,11 @@
 import { getUser, isAdmin } from "@app/core";
+import { isGotyEnabled } from "@app/config/features";
 import type { DbTx } from "@app/db";
 import { GotyError } from "./errors";
 
 /** L'appelant vérifie la session ; l'acteur provient de celle-ci, jamais du navigateur. */
 export async function resolveActor(userId: string) {
+  if (!isGotyEnabled()) throw new GotyError("NOT_FOUND", "Application indisponible.", 404);
   const user = await getUser(userId);
   if (!user) throw new GotyError("FORBIDDEN", "Membre introuvable.", 403);
   return { userId: user.id, admin: isAdmin(user.discordId) };

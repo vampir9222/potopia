@@ -2,11 +2,12 @@ import { getEdition, listEditions } from "@app/goty";
 import { GotyHome } from "@app/goty/ui";
 import type { Metadata } from "next";
 import { getCurrentMember } from "@/lib/session";
+import { gotyPageError } from "@/lib/goty-pages";
 
 export const metadata: Metadata = { title: "GOTY Party" };
 export default async function GotyPage() {
   const user = await getCurrentMember();
-  const editions = await listEditions(user.id);
+  const editions = await listEditions(user.id).catch(gotyPageError);
   const permissions = await Promise.all(
     editions.map((edition) => getEdition({ actorId: user.id, editionId: edition.id })),
   );

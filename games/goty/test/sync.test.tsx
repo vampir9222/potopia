@@ -109,14 +109,15 @@ describe("Synchronisation React GOTY", () => {
     expect(await state().mutate("top", "PUT", {})).toBe(false);
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
-  it("vide la vue quand la session ou l’inscription n’autorise plus la lecture", async () => {
-    fetcher.mockResolvedValue(
-      Response.json({ error: { message: "Accès refusé" } }, { status: 403 }),
-    );
-    await act(async () => root.render(<Harness />));
-    expect(state().snapshot).toBeNull();
-    expect(container.textContent).toContain("Accès refusé");
-  });
+  it.each([401, 403, 404])(
+    "vide la vue sur %s (session, inscription ou retrait du module)",
+    async (status) => {
+      fetcher.mockResolvedValue(Response.json({ error: { message: "Accès refusé" } }, { status }));
+      await act(async () => root.render(<Harness />));
+      expect(state().snapshot).toBeNull();
+      expect(container.textContent).toContain("Accès refusé");
+    },
+  );
   it("annule les requêtes de l’ancienne édition au changement de clé", async () => {
     const old = deferred<Response>();
     const next = {

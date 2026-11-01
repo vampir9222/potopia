@@ -8,6 +8,7 @@ la recette finale et la mise en service restent au lot 7.
 - [Plan des lots](../../docs/PLAN_INTEGRATION_GOTY_PARTY.md)
 - [Contrat fonctionnel et recette](../../docs/CONTRAT_FONCTIONNEL_GOTY_PARTY.md)
 - [Installation, sauvegardes, médias et diagnostic](../../docs/EXPLOITATION_GOTY_PARTY.md)
+- [Bilan de recette et portes de mise en service](../../docs/RECETTE_GOTY_PARTY.md)
 
 ## Données
 
@@ -306,9 +307,29 @@ script versionné ou objet SQL pour ce lot. Les tests DOM simulent YouTube sans 
 
 Validation du lot 6 : 123 tests GOTY, 156 tests web et 43 tests core réussis sur PostgreSQL 17
 avec stockage local simulé ; TypeScript, ESLint, frontières, formatage et build vérifiés.
-L’émulateur conserve la limite de signature S3 décrite au lot 5. Les outils clients PostgreSQL
-de sauvegarde/restauration ne sont pas installés sur l’environnement de recette : la procédure
-est documentée, sa répétition effective sur sauvegarde d’exploitation reste au lot 7.
+Le lot 7 a ensuite utilisé Docker Desktop avec PostgreSQL/RustFS réels : le test de signature
+S3 passe et les outils PostgreSQL du conteneur ont permis une restauration complète fictive,
+avec vérification des projections et d’un avatar privé dans un bucket distinct.
+
+## Recette et retrait temporaire (lot 7)
+
+`GOTY_ENABLED` est un réglage serveur relayé par Turbo : absent ou `true` active le module,
+toute autre valeur le désactive. Après redémarrage/redéploiement, la tuile et le lien admin
+disparaissent ; les accès aux données métier retournent 404 après authentification, pages
+comprises. Un client ouvert efface sa projection lors du prochain rafraîchissement 404.
+Réactivation sans perte de données, nouvelle notification ou modification de version. Les
+fonctions pures restent utilisables ; aucune migration ajoutée.
+
+Les confirmations de préparation, retrait de jeu, retour en préparation et clôture utilisent
+le dialogue du portail. La commande/version affichée à l’ouverture est conservée malgré les
+rafraîchissements : un changement concurrent reste un conflit serveur. Annulation et double clic
+sont testés. Une recette HTTP complète multi-session couvre les 14 rubriques et une catégorie
+adoptée jusqu’aux archives, puis la désactivation/réactivation et la reconnexion.
+
+Le [bilan](../../docs/RECETTE_GOTY_PARTY.md) trace les contrôles locaux, la sauvegarde fictive
+restaurée (33 tables, 70 lignes identiques) et l’objet privé restauré avec accès non signé refusé.
+La répétition visuelle/terrain, l’acceptation, la CI GitHub et l’autorisation de mise en service
+restent nécessaires : le lot 7 n’est pas déclaré clôturé.
 
 ## Règles pures
 

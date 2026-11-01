@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import type { MemberSnapshot, PresentationSnapshot } from "../src/snapshot";
 import { Cover, Standings, Trailer, YoutubePlayer } from "./common";
+import { ConfirmAction } from "./ConfirmAction";
 import type { Mutation } from "./useSnapshot";
 
 export function CeremonyView({
@@ -273,34 +274,25 @@ export function Ceremony({
                 </>
               )}
               {!active && !next && (
-                <button
-                  className="goty-button"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Clôturer l’édition ? Elle sera accessible à tous les membres en lecture seule.",
-                      )
-                    )
-                      void command({ action: "close" });
-                  }}
+                <ConfirmAction
+                  title="Clôturer et archiver"
+                  message="Clôturer l’édition ? Elle sera accessible à tous les membres en lecture seule."
+                  disabled={busy || !live}
+                  onConfirm={() => command({ action: "close" })}
                 >
                   Clôturer et archiver
-                </button>
+                </ConfirmAction>
               )}
-              <button
+              <ConfirmAction
+                title="Revenir en préparation"
+                message="Les révélations et les points seront remis à zéro. Les choix et pronostics seront conservés. Les spectateurs peuvent déjà avoir mémorisé les réponses."
                 className="goty-text-button danger"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Revenir en préparation ? Les révélations et les points seront remis à zéro. Les choix et pronostics seront conservés. Les spectateurs peuvent déjà avoir mémorisé les réponses.",
-                    )
-                  )
-                    void command({ action: "restart", confirmRestart: true });
-                }}
+                disabled={busy || !live}
+                onConfirm={() => command({ action: "restart", confirmRestart: true })}
               >
                 <RotateCcw size={14} />
                 Revenir en préparation
-              </button>
+              </ConfirmAction>
             </fieldset>
           )}
           {view.edition.phase === "closed" && (

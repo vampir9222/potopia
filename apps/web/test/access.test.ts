@@ -379,6 +379,21 @@ describe("server actions", () => {
 });
 
 describe("pages et layouts", () => {
+  it("renvoie 404 sur les pages GOTY désactivées après contrôle de session", async () => {
+    await signIn(ADMIN_ID);
+    try {
+      vi.stubEnv("GOTY_ENABLED", "false");
+      for (const render of [
+        () => GotyPage(),
+        () => GotyAdminPage(),
+        () => GotyEditionPage({ params: Promise.resolve({ editionId: "inconnue" }) }),
+        () => GotyTVPage({ params: Promise.resolve({ editionId: "inconnue" }) }),
+      ])
+        await expect(render()).rejects.toMatchObject({ kind: "notFound" });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   for (const [name, render] of Object.entries({ ...memberPages, ...adminPages })) {
     it(`${name} renvoie vers /login sans session`, async () => {
       await expect(render()).rejects.toMatchObject({ kind: "redirect", url: "/login" });
