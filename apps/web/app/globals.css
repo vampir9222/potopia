@@ -1234,6 +1234,308 @@ html.jojo-rushing * {
   }
 }
 
+/* Ouverture du thème Apothicaire (ApothicaireOpening) : rouleau horizontal du titre. */
+.apo-open {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  background: radial-gradient(ellipse at 50% 45%, rgb(16 46 38 / 0.7), rgb(3 10 8 / 0.94) 75%);
+  animation: mao-fade 0.5s ease-out;
+}
+.apo-open-leave {
+  animation: apo-open-out 0.7s ease-in forwards;
+}
+@keyframes apo-open-out {
+  to {
+    opacity: 0;
+  }
+}
+/* une pluie de pétales plus dense que celle de Mao Mao */
+.apo-open-petals span {
+  position: absolute;
+  top: -24px;
+  left: calc(var(--i) * 4.6% + 1%);
+  width: 12px;
+  height: 10px;
+  border-radius: 80% 0 80% 0;
+  background: linear-gradient(135deg, #ffe4ec, #f29ab4);
+  opacity: 0.9;
+  animation: mao-petal calc(4s + mod(var(--i), 5) * 0.5s) linear calc(var(--i) * -0.37s) infinite;
+}
+.apo-makimono {
+  position: relative;
+  max-width: min(760px, 94vw);
+  filter: drop-shadow(0 26px 34px rgb(0 0 0 / 0.6));
+}
+/* les deux tringles verticales, laque et embouts d'or, qui partent du centre vers les bords
+   pendant que le papier se découvre */
+.apo-makimono-rod {
+  position: absolute;
+  z-index: 1;
+  top: -18px;
+  bottom: -18px;
+  width: 18px;
+  border-radius: 9px;
+  background: linear-gradient(90deg, #7a2a18, #3a1009 55%, #1c0603);
+  box-shadow: inset 2px 0 0 rgb(255 255 255 / 0.18);
+  animation: 1.1s cubic-bezier(0.3, 0.7, 0.3, 1) 0.2s both;
+}
+.apo-makimono-rod-left {
+  left: -9px;
+  animation-name: apo-rod-left;
+}
+.apo-makimono-rod-right {
+  right: -9px;
+  animation-name: apo-rod-right;
+}
+@keyframes apo-rod-left {
+  from {
+    left: calc(50% - 18px);
+  }
+}
+@keyframes apo-rod-right {
+  from {
+    right: calc(50% - 18px);
+  }
+}
+.apo-makimono-rod::before,
+.apo-makimono-rod::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff1b8, #d8a526 45%, #7a5208 90%);
+}
+.apo-makimono-rod::before {
+  top: -8px;
+}
+.apo-makimono-rod::after {
+  bottom: -8px;
+}
+.apo-makimono-unroll {
+  animation: apo-unroll 1.1s cubic-bezier(0.3, 0.7, 0.3, 1) 0.2s both;
+}
+@keyframes apo-unroll {
+  from {
+    clip-path: inset(0 50%);
+  }
+  to {
+    clip-path: inset(0 0);
+  }
+}
+.apo-makimono-paper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(12px, 4vw, 36px);
+  overflow: hidden;
+  padding: 26px clamp(16px, 4vw, 40px);
+  border-block: 12px solid transparent;
+  background:
+    radial-gradient(circle at 70% 30%, rgb(255 255 255 / 0.4), transparent 55%) padding-box,
+    linear-gradient(#f6eedb, #e6d6b3) padding-box,
+    repeating-linear-gradient(-45deg, #1f5a4d 0 6px, #c9a24a 6px 8px, #1f5a4d 8px 14px) border-box;
+  box-shadow: inset 0 0 40px rgb(120 80 30 / 0.3);
+  white-space: nowrap;
+}
+.apo-open-portrait {
+  width: clamp(110px, 26vw, 220px);
+  flex-shrink: 0;
+  filter: drop-shadow(4px 6px 0 rgb(31 90 77 / 0.25));
+  opacity: 0;
+  animation: apo-portrait-in 0.8s cubic-bezier(0.3, 0.8, 0.3, 1) 1.1s forwards;
+}
+@keyframes apo-portrait-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* le titre, à la verticale, chaque caractère tracé à l'encre l'un après l'autre */
+.apo-open-title {
+  writing-mode: vertical-rl;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+  font-size: clamp(1.8rem, 6vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: #1a120c;
+}
+.apo-open-title span {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(6px);
+  animation: apo-ink 0.45s ease-out calc(1.2s + var(--i) * 0.16s) forwards;
+}
+@keyframes apo-ink {
+  to {
+    opacity: 1;
+    filter: none;
+  }
+}
+.apo-open-sub {
+  writing-mode: vertical-rl;
+  font-family: var(--font-apothicaire-face, "Zen Old Mincho"), Georgia, serif;
+  font-size: clamp(0.8rem, 2.2vw, 1.05rem);
+  letter-spacing: 0.12em;
+  color: #7d1c11;
+  opacity: 0;
+  animation: mao-fade-in 0.6s ease-out 2.6s forwards;
+}
+/* sceau 「猫猫」 (Mao Mao), qui s'imprime à la fin */
+.apo-open-seal {
+  position: absolute;
+  right: clamp(10px, 3vw, 24px);
+  bottom: 18px;
+  padding: 6px 4px;
+  border-radius: 4px;
+  background: #b5241a;
+  color: #fbeadb;
+  writing-mode: vertical-rl;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+  rotate: 6deg;
+  opacity: 0;
+  animation: mao-stamp 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) 3s forwards;
+}
+
+/* Réactions des personnages du thème Apothicaire (ApothicaireFx) : vignette de l'anime encadrée
+   de laque et d'or, réplique en japonais et sa traduction. */
+.apo-card {
+  position: fixed;
+  z-index: 90;
+  width: 240px;
+  translate: -50% 0;
+  padding: 6px 6px 8px;
+  border: 2px solid #8f2418;
+  outline: 1px solid #d8b25a;
+  outline-offset: -5px;
+  border-radius: 3px;
+  background: linear-gradient(#f6eedb, #e6d6b3);
+  color: #2b1a10;
+  box-shadow: 0 16px 30px -10px rgb(0 0 0 / 0.75);
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  animation: apo-card-in 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.apo-card-below {
+  transform-origin: 50% 0;
+}
+@keyframes apo-card-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+.apo-card-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border: 2px solid #1f5a4d;
+  background: #0b1a17;
+}
+.apo-card figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 4px 0;
+  text-align: center;
+}
+.apo-card-jp {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #7d1c11;
+}
+.apo-card-fr {
+  font-family: "Noto Serif", Georgia, serif;
+  font-size: 0.8rem;
+  font-style: italic;
+  line-height: 1.3;
+}
+/* la grande extase (mot secret « poison ») : la page rosit, la vignette en grand au centre */
+.apo-ecstasy {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  cursor: pointer;
+  background:
+    radial-gradient(circle at 50% 50%, rgb(255 150 200 / 0.35), transparent 60%),
+    radial-gradient(ellipse at center, rgb(60 10 50 / 0.55), rgb(10 2 12 / 0.88) 75%);
+  animation: mao-fade 0.4s ease-out;
+}
+.apo-ecstasy::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: repeating-conic-gradient(rgb(255 210 235 / 0.1) 0deg 6deg, transparent 6deg 18deg);
+  mask-image: radial-gradient(circle, #000 10%, transparent 55%);
+  animation: spin 40s linear infinite;
+}
+.apo-card-big {
+  position: relative;
+  width: min(560px, 92vw);
+  translate: none;
+  animation: apo-card-in 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
+  box-shadow:
+    0 0 60px 10px rgb(255 160 210 / 0.35),
+    0 24px 40px -10px rgb(0 0 0 / 0.8);
+}
+.apo-card-big .apo-card-jp {
+  font-size: 1.25rem;
+}
+.apo-card-big .apo-card-fr {
+  font-size: 0.95rem;
+}
+/* les étincelles de Jinshi */
+.apo-sparkle {
+  position: fixed;
+  z-index: 89;
+  width: var(--sparkle-size);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(circle, #fff 0 12%, transparent 13%), #fff6c9;
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  filter: drop-shadow(0 0 6px #ffe9a8);
+  pointer-events: none;
+  opacity: 0;
+  animation: apo-sparkle 1.1s ease-out forwards;
+}
+@keyframes apo-sparkle {
+  0% {
+    opacity: 0;
+    scale: 0.2;
+    rotate: 0deg;
+  }
+  30% {
+    opacity: 1;
+    scale: 1.1;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.4;
+    rotate: 90deg;
+  }
+}
+
 /* « ZA WARUDO » (ZaWarudo, thème JoJo) : onde qui inverse les couleurs, puis temps arrêté. */
 .za-wave {
   position: absolute;

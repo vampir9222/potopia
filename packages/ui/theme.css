@@ -43,6 +43,7 @@
   --fans: none;
   --jojo: none;
   --onepiece: none;
+  --apothicaire: none;
 }
 
 /* Classique (par défaut, voir DEFAULT_THEME) : bleu nuit et sobre, sans décors. */
@@ -199,6 +200,40 @@
   --ambient: 0.3;
   --fans: none;
   --onepiece: block;
+}
+
+/*
+ * Les Carnets de l'apothicaire : le Palais intérieur de nuit. Jade profond, or impérial, laque
+ * vermillon, soie ivoire ; cadres de laque rouge filetés d'or, treillis de fenêtre de palais en
+ * filigrane, nuages ruyi aux coins ; titres en Zen Old Mincho. Le cadre du compte devient le
+ * registre du palais du membre (PalaceRecord). Décor (ApothicaireDecor) : lune, toits du palais,
+ * lanternes qui se balancent, pétales, et les personnages. Choisir ce thème ouvre le rouleau
+ * du titre (Apothicaire).
+ */
+[data-theme="apothicaire"] {
+  --bg: #0b1412;
+  --surface: #12201c;
+  --surface-hover: #1a2d27;
+  --border: #2c473e;
+  --text: #f3ead6;
+  --muted: #a7b6ad;
+  --accent: #d8b25a;
+  --accent-hover: #ecc977;
+  --on-accent: #1c1205;
+  --arcane: #c8372a;
+  --danger: #e5533f;
+  --success: #6fcf97;
+
+  --radius: 0.2rem;
+  --font-display: var(--font-apothicaire-face, "Zen Old Mincho"), "Yu Mincho", Georgia, serif;
+
+  --accent-gradient: linear-gradient(135deg, #f6e3a4 0%, #d8b25a 45%, #9c7322 100%);
+  --frame: #8f2418;
+  --ornaments: block;
+  --embers: none;
+  --ambient: 0.4;
+  --fans: none;
+  --apothicaire: block;
 }
 
 @theme inline {
@@ -454,6 +489,210 @@
   [data-theme="onepiece"] :is(.theme-identity, .theme-balance) {
     /* !important : la classe flex de Tailwind (couche utilities) passerait devant */
     display: none !important;
+  }
+
+  /* Apothicaire : cadre de laque vermillon fileté d'or, comme les boiseries du palais ; jade
+     translucide dedans, tissé du brocart du site officiel de l'anime (losanges et fleurs, en or à
+     peine visible : brocade.webp), et ses coins en frise géométrique 回紋 (corner-*.svg, repris
+     du site officiel). Pas de flou d'arrière-plan : pétales et lanternes bougent derrière, il
+     faudrait le recalculer à chaque image. */
+  [data-theme="apothicaire"] .theme-frame {
+    border: 2px solid #8f2418;
+    outline: 1px solid color-mix(in oklab, #d8b25a 70%, transparent);
+    outline-offset: -6px;
+    background:
+      url(/apothicaire/brocade.webp) 0 0 / 119px auto,
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, color-mix(in oklab, var(--surface) 86%, #8f2418) 90%, transparent) 0%,
+        color-mix(in oklab, var(--surface) 82%, transparent) 40%
+      );
+    box-shadow:
+      inset 0 0 0 1px rgb(0 0 0 / 0.5),
+      0 0 0 1px rgb(0 0 0 / 0.55),
+      0 14px 30px -16px rgb(0 0 0 / 0.95);
+  }
+  [data-theme="apothicaire"] .theme-frame::before,
+  [data-theme="apothicaire"] .theme-frame::after {
+    width: 28px;
+    height: 28px;
+    transform: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    clip-path: none;
+    background: center / contain no-repeat;
+  }
+  [data-theme="apothicaire"] .theme-frame::before {
+    top: 3px;
+    left: 3px;
+    background-image: url(/apothicaire/corner-lt.svg);
+  }
+  [data-theme="apothicaire"] .theme-frame::after {
+    right: 3px;
+    bottom: 3px;
+    background-image: url(/apothicaire/corner-rb.svg);
+  }
+  /* titres : Zen Old Mincho, or sur jade, légère ombre d'encre */
+  [data-theme="apothicaire"] .font-display {
+    letter-spacing: 0.05em;
+    filter: drop-shadow(1px 1.5px 0 rgb(0 0 0 / 0.7));
+  }
+  [data-theme="apothicaire"] :is(.font-display.text-xs, .font-display.text-sm) {
+    letter-spacing: 0.08em;
+  }
+
+  /* Registre du Palais intérieur (PalaceRecord), dans le cadre du compte : affiché seulement par
+     le thème Apothicaire, à la place de la ligne du profil et du solde. Papier ivoire à treillis
+     du site officiel de l'anime (paper.webp), bandeau de laque vermillon, sceau rouge, barre de jade jusqu'au rang suivant. */
+  .apo-record {
+    display: none;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #5e160d;
+    border-radius: 3px;
+    background:
+      url(/apothicaire/paper.webp) center / cover,
+      linear-gradient(170deg, #f6eedb 0%, #ebdfc2 70%, #e0d0ad 100%);
+    color: #2b1a10;
+    box-shadow:
+      inset 0 0 22px rgb(120 80 30 / 0.25),
+      0 8px 18px -10px rgb(0 0 0 / 0.8);
+  }
+  [data-theme="apothicaire"] .apo-record {
+    display: block;
+  }
+  [data-theme="apothicaire"] :is(.theme-identity, .theme-balance) {
+    /* !important : la classe flex de Tailwind (couche utilities) passerait devant */
+    display: none !important;
+  }
+  .apo-record-head {
+    padding: 5px 10px 4px;
+    background: linear-gradient(#a8291b, #7d1c11);
+    border-bottom: 1px solid #d8b25a;
+    color: #f6e3a4;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    white-space: nowrap;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .apo-record-head span {
+    margin-right: 4px;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+  }
+  .apo-record-body {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px 4px;
+  }
+  .apo-record-photo {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 2px solid #1f5a4d;
+    outline: 1px solid #d8b25a;
+    outline-offset: 2px;
+    background: #cdbf9f;
+    font-weight: 700;
+  }
+  .apo-record-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .apo-record-who {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding-right: 34px;
+  }
+  .apo-record-rank {
+    color: #7d1c11;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .apo-record-rank span {
+    font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+    font-size: 0.8rem;
+  }
+  .apo-record-name {
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  /* sceau vermillon à l'initiale du membre, légèrement de travers */
+  .apo-record-seal {
+    position: absolute;
+    right: 10px;
+    top: 8px;
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 2px solid #b5241a;
+    border-radius: 4px;
+    color: #b5241a;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    rotate: 8deg;
+    opacity: 0.85;
+    box-shadow: inset 0 0 0 1px rgb(181 36 26 / 0.4);
+  }
+  .apo-record-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin: 6px 10px 0;
+    padding: 6px 0;
+    border-block: 1px solid rgb(125 28 17 / 0.25);
+    text-align: center;
+  }
+  .apo-record-stats dt {
+    color: #6d5a44;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .apo-record-stats dd {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .apo-record-next {
+    padding: 6px 10px 8px;
+  }
+  .apo-record-bar {
+    display: block;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: rgb(31 90 77 / 0.2);
+  }
+  .apo-record-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #1f5a4d, #3f9a7f);
+  }
+  .apo-record-goal {
+    display: block;
+    margin-top: 3px;
+    color: #6d5a44;
+    font-size: 0.62rem;
+    font-style: italic;
   }
 
   /* Texte en dégradé d'or (logo, titres importants). */
@@ -825,6 +1064,174 @@
     stroke-width: 2.5px;
   }
 
+  /* Décor du thème Apothicaire (composant ApothicaireDecor), affiché seulement par ce thème. */
+  .apo-decor {
+    display: var(--apothicaire);
+    background:
+      radial-gradient(ellipse 70% 55% at 78% 8%, #1d3a3a 0%, transparent 70%),
+      linear-gradient(180deg, #08110f 0%, #0b1714 55%, #0e1d18 100%);
+  }
+  /* le Palais intérieur de nuit sous la Voie lactée (image de l'anime : la danse de « fantôme »
+     sur le rempart), teintée de jade dans le fichier même (pas de filtre à calculer) */
+  .apo-palace {
+    position: absolute;
+    inset: 0;
+    background: url(/apothicaire/palace-night.webp) center bottom / cover no-repeat;
+    opacity: 0.55;
+  }
+  /* la pleine lune de l'anime (visuel officiel de la nuit à la fenêtre à treillis) et son halo de
+     jade, qui respire à peine (opacité seulement : rien à redessiner) ; un clic fait venir le chat
+     (ApothicaireFx) */
+  .apo-moon {
+    position: absolute;
+    right: 9vw;
+    top: 7vh;
+    width: min(14vw, 172px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: url(/apothicaire/moon.webp) center / contain no-repeat;
+    opacity: 0.9;
+  }
+  .apo-moon::before {
+    content: "";
+    position: absolute;
+    inset: -60%;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgb(190 240 225 / 0.35) 0%,
+      rgb(120 200 180 / 0.12) 40%,
+      transparent 70%
+    );
+    animation: apo-moon 9s ease-in-out infinite;
+  }
+  /* nuages qui passent devant la lune */
+  .apo-clouds {
+    position: absolute;
+    inset: 0 -40% auto -40%;
+    height: 40vh;
+    background:
+      radial-gradient(ellipse 14% 22% at 20% 40%, rgb(190 205 195 / 0.12), transparent 70%),
+      radial-gradient(ellipse 18% 18% at 45% 25%, rgb(190 205 195 / 0.1), transparent 70%),
+      radial-gradient(ellipse 12% 20% at 70% 45%, rgb(190 205 195 / 0.1), transparent 70%),
+      radial-gradient(ellipse 16% 16% at 92% 30%, rgb(190 205 195 / 0.08), transparent 70%);
+    animation: apo-clouds 120s linear infinite;
+  }
+  /* voile de nuit : bords sombres, le centre reste lisible */
+  .apo-veil {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 85% 80% at 55% 50%,
+      transparent 0%,
+      rgb(6 12 10 / 0.4) 65%,
+      rgb(6 12 10 / 0.85) 100%
+    );
+  }
+  /* les concubines, en grand et à peine visibles, estompées vers le bas : Gyokuyou à côté de la
+     colonne de gauche, Lihua au centre droit */
+  .apo-portrait {
+    position: absolute;
+    bottom: -8vh;
+    background: center bottom / contain no-repeat;
+    filter: drop-shadow(0 0 40px rgb(0 0 0 / 0.6));
+    mask-image: linear-gradient(to top, transparent 0, #000 35%);
+  }
+  .apo-portrait-gyokuyou {
+    left: max(19vw, 270px);
+    height: min(76vh, 740px);
+    aspect-ratio: 405 / 748;
+    background-image: url(/apothicaire/portrait-gyokuyou.webp);
+    opacity: 0.14;
+  }
+  .apo-portrait-lihua {
+    right: max(26vw, 330px);
+    height: min(70vh, 680px);
+    aspect-ratio: 300 / 744;
+    background-image: url(/apothicaire/portrait-lihua.webp);
+    opacity: 0.11;
+  }
+  /* Mao Mao et Jinshi en pied, en bas à droite : un clic les fait réagir (ApothicaireFx) */
+  .apo-maomao,
+  .apo-jinshi {
+    position: absolute;
+    bottom: 0;
+    background: center bottom / contain no-repeat;
+    filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.7)) brightness(0.92);
+    transform-origin: 50% 100%;
+  }
+  .apo-maomao {
+    right: calc(1vw + min(10vh, 92px));
+    height: min(30vh, 270px);
+    aspect-ratio: 310 / 753;
+    background-image: url(/apothicaire/maomao-stand.webp);
+    animation: op-breathe 6s ease-in-out infinite;
+  }
+  .apo-jinshi {
+    right: 1vw;
+    height: min(34vh, 305px);
+    aspect-ratio: 352 / 759;
+    background-image: url(/apothicaire/jinshi-stand.webp);
+    animation: op-breathe 7.5s ease-in-out -2s infinite;
+  }
+  /* lanternes rouges suspendues en haut, qui se balancent et luisent : la lanterne de la
+     couverture du manga (lantern.webp, détourée et rendue symétrique), au bout d'un cordon */
+  .apo-lantern {
+    --lantern-w: calc(44px * var(--lantern-size));
+    position: absolute;
+    top: 0;
+    width: var(--lantern-w);
+    height: calc(var(--lantern-drop) + var(--lantern-w) * 2.407);
+    background: url(/apothicaire/lantern.webp) center bottom / 100% auto no-repeat;
+    transform-origin: 50% 0;
+    animation: apo-sway ease-in-out infinite alternate;
+  }
+  /* le cordon */
+  .apo-lantern::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 1px;
+    height: var(--lantern-drop);
+    background: rgb(216 178 90 / 0.45);
+  }
+  /* la lueur autour du corps de la lanterne */
+  .apo-lantern-glow {
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: calc(var(--lantern-drop) + var(--lantern-w) * 0.72);
+    width: calc(var(--lantern-w) * 3.6);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(255 120 90 / 0.22), transparent 65%);
+    animation: apo-flicker 3.4s ease-in-out infinite;
+  }
+  /* remèdes et poisons du carnet, écrits à la verticale, qui montent lentement */
+  .apo-herb {
+    position: absolute;
+    bottom: -20vh;
+    writing-mode: vertical-rl;
+    font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+    font-weight: 700;
+    color: rgb(216 178 90 / 0.14);
+    letter-spacing: 0.3em;
+    animation: apo-herb linear infinite;
+  }
+  /* pétales de prunier qui tombent en tournoyant */
+  .apo-petal {
+    position: absolute;
+    top: -5vh;
+    width: var(--petal-size);
+    height: calc(var(--petal-size) * 0.8);
+    border-radius: 80% 0 80% 0;
+    background: linear-gradient(135deg, #fde3ea, #f2a6b8);
+    opacity: 0.55;
+    animation: apo-petal linear infinite;
+  }
   /* Décor du thème One Piece (composants OnePieceDecor, OnePieceHaki), affiché seulement par ce
      thème. */
   .op-decor {
@@ -1205,6 +1612,51 @@
     background-position: -3240px 0;
   }
 }
+@keyframes apo-moon {
+  50% {
+    opacity: 0.6;
+  }
+}
+@keyframes apo-clouds {
+  to {
+    transform: translateX(40%);
+  }
+}
+@keyframes apo-sway {
+  from {
+    rotate: -4deg;
+  }
+  to {
+    rotate: 4deg;
+  }
+}
+@keyframes apo-flicker {
+  50% {
+    opacity: 0.6;
+  }
+}
+@keyframes apo-herb {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-140vh);
+    opacity: 0;
+  }
+}
+@keyframes apo-petal {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0);
+  }
+  100% {
+    transform: translate3d(var(--petal-sway), 110vh, 0) rotate(var(--petal-spin));
+  }
+}
 @keyframes op-don {
   0%,
   72% {
@@ -1318,7 +1770,9 @@
   .jojo-menace,
   .jojo-star,
   .op-don,
-  .op-haki {
+  .op-haki,
+  .apo-herb,
+  .apo-petal {
     display: none;
   }
 }

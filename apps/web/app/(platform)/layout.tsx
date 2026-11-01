@@ -10,6 +10,7 @@ import {
   resolveTheme,
   THEME_COOKIE,
   ThemeSwitcher,
+  PalaceRecord,
   StandCard,
   VolumeControl,
   WantedPoster,
@@ -72,6 +73,12 @@ export default async function PlatformLayout({ children }: { children: ReactNode
         <WantedPoster name={profile.name} image={profile.image} bounty={balance} />
         {/* thème JoJo : la fiche de Stand du membre (elle remplace la ligne du profil) */}
         <StandCard userId={user.id} name={profile.name} image={profile.image} stats={standStats} />
+        {/* thème Apothicaire : le registre du Palais intérieur (il remplace le profil et le solde) */}
+        <PalaceRecord
+          name={profile.name}
+          image={profile.image}
+          stats={{ wordsFound: trois.wordsFound, agentsGames, balance }}
+        />
         <div className="theme-balance">
           <BalanceCard balance={balance} />
         </div>

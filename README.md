@@ -222,7 +222,11 @@ police des titres, décors) et une entrée dans `packages/ui/src/themes.ts`. Le 
 propose aussitôt. Une police de titres vient de `next/font/google` dans `apps/web/app/layout.tsx`
 (variable CSS, comme `--font-onepiece-face`) ; un décor animé est un composant de `packages/ui`
 monté dans ce layout et affiché par une variable du thème (exemples : `JojoDecor` et `--jojo`,
-`OnePieceDecor` et `--onepiece`).
+`OnePieceDecor` et `--onepiece`, `ApothicaireDecor` et `--apothicaire`). Le cadre du compte peut
+devenir une carte propre au thème (`StandCard`, `WantedPoster`, `PalaceRecord`), rendue par
+`apps/web/app/(platform)/layout.tsx` et masquée hors de son thème ; un effet au choix du thème
+passe par un événement de `@app/ui` écouté par un composant de `apps/web/components`
+(`zaWarudo()`, `don()`, `apothicaire()`).
 
 ### Ajouter ou modifier des cartes
 
