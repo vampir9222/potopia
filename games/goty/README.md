@@ -328,7 +328,10 @@ adoptée jusqu’aux archives, puis la désactivation/réactivation et la reconn
 
 Le [bilan](../../docs/RECETTE_GOTY_PARTY.md) trace les contrôles locaux, la sauvegarde fictive
 restaurée (33 tables, 70 lignes identiques) et l’objet privé restauré avec accès non signé refusé.
-La répétition visuelle/terrain, l’acceptation, la CI GitHub et l’autorisation de mise en service
+La répétition navigateur complète (deux comptes alternés, quinze rubriques, TV sans rechargement,
+vidéo réelle, archives et comparaison à 390 px) est validée. Propagation locale : annonce 903 ms,
+révélation 1 861 ms. La répétition terrain sur deux téléphones et une TV physiques, le plein écran,
+l’acceptation, la CI GitHub et l’autorisation de mise en service
 restent nécessaires : le lot 7 n’est pas déclaré clôturé.
 
 ## Règles pures

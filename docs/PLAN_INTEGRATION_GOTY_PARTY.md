@@ -228,7 +228,8 @@ et comportement des médias simulés ; la répétition sur sauvegarde réelle re
 État au 1er novembre 2026 : [bilan de recette](RECETTE_GOTY_PARTY.md), cycle HTTP complet,
 suite globale sur PostgreSQL/RustFS, restauration fictive et objet privé vérifiés. Retrait
 temporaire réversible par `GOTY_ENABLED`, avec fermeture des pages et services. Confirmations
-du portail conservant la version proposée. Répétition visuelle/terrain, acceptation utilisateur,
+du portail conservant la version proposée. Parcours navigateur jusqu’aux archives, lecture vidéo
+réelle et synchronisation TV vérifiés localement. Répétition terrain, acceptation utilisateur,
 check GitHub et autorisation de déploiement restent ouvertes ; ce lot n’est pas déclaré clôturé.
 
 - Jouer une édition fictive complète : catégories, préparation, pronostics, cérémonie, archives.

@@ -85,23 +85,39 @@ signalée aux lots 5 et 6 est levée pour cette recette.
 | `turbo run test --force --concurrency=1` | **514 tests réussis**, 13 packages testés, aucun résultat de test repris du cache |
 | `build`                                  | Réussi ; aucune migration de production exécutée                                  |
 
-La workflow `.github/workflows/ci.yml` exécute ces mêmes contrôles sur chaque PR vers `main`.
+Le workflow `.github/workflows/ci.yml` exécute ces mêmes contrôles sur chaque PR vers `main`.
 Une exécution locale verte n’est pas une check GitHub verte : celle de la PR reste à obtenir
 après autorisation de publication de la branche.
 
 ## Validation navigateur et portes de mise en service
 
-Votes exécutés dans le navigateur sur deux comptes fictifs : proposition sans voix implicite,
-vote de chaque compte et seuil atteint. La reprise de la répétition complète a été bloquée par
-un ancien onglet sur une confirmation native du navigateur intégré ; fermeture demandée.
-Les confirmations ont été corrigées et testées au niveau DOM, mais leur recette visuelle complète
-et le parcours final restent à terminer après déblocage.
+Après fermeture de l’ancien onglet bloqué, la répétition a été reprise sur les données fictives
+conservées. Parcours navigateur exécuté jusqu’à la clôture et aux archives : votes sur deux
+comptes, proposition adoptée, annulation puis confirmation de la préparation, deux tops,
+prix et bande-son, pronostic correct, quinze rubriques avec révélations et rubriques vides,
+classement temporaire/reprise, confirmation d’archivage et consultation par un non-participant.
+Le classement final donne un point au bon pronostic et les archives détaillent sa cible révélée.
+
+Deux onglets visibles (télécommande et TV) ont été utilisés sans rechargement de la TV pendant
+les mesures : annonce reçue en **903 ms**, révélation reçue en **1 861 ms**, sous cinq secondes
+dans cet environnement local. Ces mesures ponctuelles ne garantissent pas le réseau de la soirée.
+L’activation TV charge un lecteur YouTube réel ; lecture observée, arrêt distant = zéro iframe,
+relance = une seule iframe, récapitulatif = lecteur démonté. Le secours d’un trailer absent
+affiche son message et un lien de recherche YouTube. Aucune vidéo n’a été copiée dans le stockage du portail.
+
+Archives et comparaison vérifiées à **390 × 844 px**, sans débordement horizontal du document
+(375 px de contenu hors barre de défilement). Le plein écran n’a pas pu être confirmé dans le
+navigateur intégré : vérifier son activation, le rendu et l’audio sur la TV réelle. Les comptes
+ont été alternés dans le navigateur ; les deux téléphones physiques simultanés restent une
+validation distincte. Les captures fictives de recette restent dans `.cache`, hors Git.
 
 - [x] Cycle complet multi-session testé en HTTP, contrôles de confidentialité et concurrence.
 - [x] Restauration PostgreSQL et objet privé vérifiés sur environnement isolé fictif.
 - [x] Retrait/réactivation sans perte de données et confirmations testés.
-- [ ] Répétition visuelle complète, deux téléphones et une TV, synchronisation mesurée sous cinq
-      secondes, son réel et secours vidéo vérifiés sur le matériel de la soirée (R25/R26/R30).
+- [x] Répétition navigateur complète jusqu’aux archives, confirmations visuelles, lecture YouTube
+      réelle, secours vidéo, comparaison mobile et propagation TV mesurée sous cinq secondes.
+- [ ] Deux téléphones et une TV physiques simultanés, plein écran, rendu et son vérifiés sur
+      le matériel et le réseau de la soirée (complément terrain R25/R26/R30).
 - [ ] Acceptation utilisateur de cette recette et sauvegarde réelle de la cible confirmées.
 - [ ] Publication de branche/PR autorisée, check GitHub `ci` verte.
 - [ ] Fusion et déploiement explicitement autorisés, puis contrôle des accès et première édition.
