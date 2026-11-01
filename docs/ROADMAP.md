@@ -194,9 +194,9 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
       puis les hauts faits.
     - Défaite dans un jeu : arrêt sur image « To Be Continued » (JoJo), dès la défaite ; se coupe
       dans « Paramètres » (`/parametres`, menu de l'avatar), réglages gardés sur l'appareil.
-    - 3 défaites d'affilée : Mao Mao (Les Carnets de l'apothicaire) juge, sur un rouleau suspendu
-      (son regard, un sceau « 三連敗 ») ; à 6, son dégoût ; la victoire qui casse la série, son
-      sourire narquois. Se coupe dans « Paramètres ».
+    - TROIS, 3 essais ratés de suite sur un mot : Mao Mao (Les Carnets de l'apothicaire) juge,
+      sur un rouleau suspendu (son regard, un sceau « 三連続 ») ; à l'avant-dernier essai, son
+      dégoût ; le mot enfin trouvé, son sourire narquois. Se coupe dans « Paramètres ».
     - Thème JoJo (Stardust Crusaders) : décor manga, portraits, « ゴゴゴ » ; le choisir déclenche
       ZA WARUDO (de nouveau à chaque clic sur le thème), qui fige vraiment tout le site
       (animations, La Place, musiques) jusqu'à ce qu'on clique pour relancer le temps.

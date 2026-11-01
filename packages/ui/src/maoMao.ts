@@ -1,75 +1,51 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { toBeContinued } from "./toBeContinued";
 
 /** Événement écouté par Mao Mao (`apps/web/components/MaoMao`) ; `detail` : son humeur. */
 export const MAO_MAO_EVENT = "app:mao-mao";
-/** Une défaite de plus et Mao Mao juge : de quoi charger ses vidéos à l'avance. */
+/** Encore un essai raté et Mao Mao juge : de quoi charger ses vidéos à l'avance. */
 export const MAO_MAO_SOON_EVENT = "app:mao-mao-soon";
 
 /**
- * Humeur de Mao Mao (Les Carnets de l'apothicaire) : son regard de jugement à 3 défaites
- * d'affilée, son dégoût à 6 (et à chaque nouvelle série de 3), son sourire narquois à la victoire
- * qui casse une série de 3 défaites ou plus.
+ * Humeur de Mao Mao (Les Carnets de l'apothicaire) : son regard de jugement au 3e essai raté de
+ * suite sur un mot, son dégoût au 5e (le dernier essai approche), son sourire narquois quand le mot
+ * est enfin trouvé après au moins 3 ratés.
  */
 export type MaoMood = "judge" | "disgust" | "smug";
-export type MaoMaoDetail = { mood: MaoMood; streak: number };
+export type MaoMaoDetail = { mood: MaoMood; misses: number };
 
-// Défaites d'affilée et réglage, gardés sur l'appareil (page Paramètres pour le réglage).
-const STREAK_KEY = "potopia:defeat-streak";
+// Réglage gardé sur l'appareil (page Paramètres).
 const DISABLED_KEY = "potopia:mao-mao-disabled";
 const CHANGE_EVENT = "potopia:mao-mao-setting";
-const SERIES = 3;
 
-const read = (key: string) => {
+function readDisabled(): boolean {
   try {
-    return window.localStorage.getItem(key);
+    return window.localStorage.getItem(DISABLED_KEY) === "1";
   } catch {
-    return null;
+    return false;
   }
-};
-const write = (key: string, value: string | null) => {
-  try {
-    if (value === null) window.localStorage.removeItem(key);
-    else window.localStorage.setItem(key, value);
-  } catch {
-    /* navigation privée : la série repart de zéro au rechargement */
-  }
-};
-const readDisabled = () => read(DISABLED_KEY) === "1";
-const streak = () => Number(read(STREAK_KEY)) || 0;
-
-function show(mood: MaoMood, count: number) {
-  window.dispatchEvent(
-    new CustomEvent<MaoMaoDetail>(MAO_MAO_EVENT, { detail: { mood, streak: count } }),
-  );
 }
 
-/**
- * Une partie perdue (TROIS, Agents Doubles). D'habitude « To Be Continued » ; à la 3e défaite
- * d'affilée, Mao Mao juge à sa place (puis son dégoût à la 6e, la 9e…). Si le membre l'a coupée
- * dans ses paramètres, la série compte quand même, et « To Be Continued » reste.
- */
-export function defeat(): void {
-  if (typeof window === "undefined") return;
-  const count = streak() + 1;
-  write(STREAK_KEY, String(count));
-  if (count % SERIES === SERIES - 1) window.dispatchEvent(new Event(MAO_MAO_SOON_EVENT));
-  if (count % SERIES !== 0 || readDisabled()) return toBeContinued();
-  show(count === SERIES ? "judge" : "disgust", count);
+/** Mao Mao réagit (TROIS) ; rien si le membre l'a coupée dans ses paramètres. */
+export function maoMao(mood: MaoMood, misses: number): void {
+  if (typeof window === "undefined" || readDisabled()) return;
+  window.dispatchEvent(new CustomEvent<MaoMaoDetail>(MAO_MAO_EVENT, { detail: { mood, misses } }));
 }
 
-/** Une partie gagnée : la série s'arrête ; après 3 défaites ou plus, Mao Mao ricane. */
-export function victory(): void {
-  if (typeof window === "undefined") return;
-  const count = streak();
-  write(STREAK_KEY, null);
-  if (count >= SERIES && !readDisabled()) show("smug", count);
+/** Prévient Mao Mao qu'elle va sans doute juger bientôt : elle charge ses vidéos. */
+export function maoMaoSoon(): void {
+  if (typeof window === "undefined" || readDisabled()) return;
+  window.dispatchEvent(new Event(MAO_MAO_SOON_EVENT));
 }
 
 export function setMaoMaoDisabled(disabled: boolean): void {
-  write(DISABLED_KEY, disabled ? "1" : null);
+  try {
+    if (disabled) window.localStorage.setItem(DISABLED_KEY, "1");
+    else window.localStorage.removeItem(DISABLED_KEY);
+  } catch {
+    /* navigation privée : le réglage ne survivra pas au rechargement */
+  }
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 

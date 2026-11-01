@@ -68,7 +68,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         {/* passage au thème JoJo : arrêt du temps (zaWarudo() de @app/ui) */}
         <ZaWarudo />
         <JojoFx />
-        {/* 3 défaites d'affilée : Mao Mao juge (defeat() / victory() de @app/ui) */}
+        {/* 3 essais ratés de suite à TROIS : Mao Mao juge (maoMao() de @app/ui) */}
         <MaoMao />
         {/* passage au thème One Piece : « ドン!! » (don() de @app/ui) */}
         <Don />

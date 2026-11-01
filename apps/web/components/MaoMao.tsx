@@ -13,12 +13,12 @@ import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 /*
- * Mao Mao (Les Carnets de l'apothicaire) juge les mauvaises séries. À 3 défaites d'affilée, un
- * rouleau suspendu se déroule : son regard qui s'assombrit, main sur la bouche, un sceau vermillon
- * « 三連敗 » et une réplique ; à 6 (puis 9…), son dégoût, cachée derrière sa manche. La victoire
- * qui casse la série : elle surgit, détourée, du coin de l'écran, avec un sourire narquois.
- * Déclenché par `defeat()` / `victory()` de `@app/ui` (TROIS, Agents Doubles). Monté une fois,
- * layout racine.
+ * Mao Mao (Les Carnets de l'apothicaire) juge les essais ratés à TROIS. Au 3e raté de suite sur un
+ * mot, un rouleau suspendu se déroule : son regard qui s'assombrit, main sur la bouche, un sceau
+ * vermillon « 三連続 » (trois de suite) et une réplique ; à l'avant-dernier essai, son dégoût,
+ * cachée derrière sa manche. Le mot enfin trouvé après au moins 3 ratés : elle surgit, détourée, du
+ * coin de l'écran, avec un sourire narquois. Le rouleau est court et se ferme à la première touche
+ * (on continue de taper). Déclenché par `maoMao()` de `@app/ui`. Monté une fois, layout racine.
  */
 
 const MEDIA = {
@@ -31,16 +31,16 @@ const SMUG = "/apothicaire/mao-smug.webp";
 const LINES: Record<Exclude<MaoMood, "smug">, string[]> = {
   judge: [
     "Mao Mao te regarde comme une limace.",
-    "Trois défaites. Même au poison, on finit par s'habituer.",
+    "Trois ratés. Même au poison, on finit par s'habituer.",
     "Diagnostic : aucun antidote connu.",
     "Elle préférerait encore goûter un champignon inconnu.",
     "Trop de fard au plomb, sans doute.",
   ],
   disgust: [
     "Mao Mao ne veut même plus te regarder.",
-    "Là, c'est un cas pour le médecin des cadavres.",
+    "Dernier essai. Elle prépare déjà la décoction amère.",
     "Même Jinshi n'insiste pas autant.",
-    "Elle range ses herbes. Il n'y a plus rien à faire.",
+    "Là, c'est un cas pour le médecin des cadavres.",
   ],
 };
 const SMUG_LINES = [
@@ -90,8 +90,8 @@ const TUNES: Record<MaoMood, number[]> = {
   smug: [587.3, 880], // ré, la : petit « hm ! »
 };
 
-type Scene = { mood: MaoMood; streak: number; line: string; key: number };
-const SCROLL_MS = 6500;
+type Scene = { mood: MaoMood; misses: number; line: string; key: number };
+const SCROLL_MS = 4500;
 const SMUG_MS = 4200;
 
 export function MaoMao() {
@@ -113,11 +113,11 @@ export function MaoMao() {
       }
     };
     const onMood = (e: Event) => {
-      const { mood, streak } = (e as CustomEvent<MaoMaoDetail>).detail;
+      const { mood, misses } = (e as CustomEvent<MaoMaoDetail>).detail;
       window.clearTimeout(timer.current);
       setScene({
         mood,
-        streak,
+        misses,
         line: mood === "smug" ? pick(SMUG_LINES) : pick(LINES[mood]),
         key: Date.now(),
       });
@@ -127,9 +127,8 @@ export function MaoMao() {
         mood === "smug" ? SMUG_MS : SCROLL_MS,
       );
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setScene(null);
-    };
+    // n'importe quelle touche ferme le rouleau : on est en train de taper un mot
+    const onKey = () => setScene((s) => (s && s.mood !== "smug" ? null : s));
     window.addEventListener(MAO_MAO_SOON_EVENT, preload);
     window.addEventListener(MAO_MAO_EVENT, onMood);
     window.addEventListener("keydown", onKey);
@@ -159,7 +158,7 @@ export function MaoMao() {
       key={scene.key}
       className={cx("mao-layer", scene.mood === "disgust" && "mao-layer-disgust")}
       role="dialog"
-      aria-label={`${scene.streak} défaites d'affilée. ${scene.line}`}
+      aria-label={`${scene.misses} essais ratés de suite. ${scene.line}`}
       onClick={() => setScene(null)}
     >
       <div className="mao-petals" aria-hidden>
@@ -185,7 +184,7 @@ export function MaoMao() {
             </div>
             <p className="mao-line">{scene.line}</p>
             <span className="mao-seal" aria-hidden>
-              {`${kanji(scene.streak)}連敗`}
+              {`${kanji(scene.misses)}連続`}
             </span>
           </div>
         </div>

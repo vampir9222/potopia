@@ -1,6 +1,6 @@
 "use client";
 
-import { defeat, preloadImages, victory } from "@app/ui";
+import { maoMao, maoMaoSoon, preloadImages, toBeContinued } from "@app/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   dayStarted,
@@ -57,6 +57,23 @@ function practiceView(p: Practice, maxTries: number, answer?: string): WordView 
 }
 
 /** Mot trouvé : les cases sautent, une gerbe de confettis, et la grande fanfare pour un 3 sur 3. */
+/**
+ * Mao Mao (Les Carnets de l'apothicaire) réagit aux essais ratés de suite sur un mot : elle juge
+ * au 3e, se dégoûte à l'avant-dernier, ricane quand le mot tombe enfin après au moins 3 ratés.
+ * `row` : l'essai qui vient d'être joué (0 pour le premier).
+ */
+function maoReact(status: WordView["status"], row: number, maxTries: number) {
+  const misses = status === "won" ? row : row + 1;
+  if (status === "won") {
+    if (misses >= 3) maoMao("smug", misses);
+    return;
+  }
+  if (status !== "playing") return;
+  if (misses === 2) maoMaoSoon();
+  if (misses === 3) maoMao("judge", misses);
+  else if (misses === maxTries - 1 && misses > 3) maoMao("disgust", misses);
+}
+
 function celebrate(perfect: boolean) {
   if (perfect) {
     sfx.perfect();
@@ -165,7 +182,6 @@ export function Game({
           setRevealing(null);
           if (w.status === "won") {
             onOutcome?.("won");
-            victory();
             celebrate(false);
             dance(view, row);
             flash(PRAISE[row] ?? "Bravo !");
@@ -174,8 +190,9 @@ export function Game({
             onOutcome?.("lost");
             sfx.lose();
             flash(`C'était « ${w.answer?.toUpperCase()} »`, 2500);
-            defeat();
+            toBeContinued();
           }
+          maoReact(w.status, row, day.maxTries);
         }, REVEAL_MS);
         return;
       }
@@ -198,7 +215,6 @@ export function Game({
         setRevealing(null);
         if (w.status === "won") {
           onOutcome?.("won");
-          victory();
           celebrate(perfect);
           dance(r.slot, row);
           flash(perfect ? "Trois sur trois ! 🏆" : (PRAISE[row] ?? "Bravo !"));
@@ -207,8 +223,9 @@ export function Game({
           onOutcome?.("lost");
           sfx.lose();
           flash(`C'était « ${w.answer?.toUpperCase()} »`, 2500);
-          defeat();
+          toBeContinued();
         }
+        maoReact(w.status, row, day.maxTries);
         if (w.status !== "playing" && r.slot < r.day.words.length - 1)
           setTimeout(() => setView(r.slot + 1), 1200);
       }, REVEAL_MS);

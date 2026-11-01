@@ -15,14 +15,14 @@ export { AppLink, NavigationProvider, useNavigate, type LinkComponent } from "./
 export { imagesReady, preloadImages } from "./preload";
 export { RgbFans } from "./RgbFans";
 export {
-  defeat,
   MAO_MAO_EVENT,
   MAO_MAO_SOON_EVENT,
+  maoMao,
   type MaoMaoDetail,
+  maoMaoSoon,
   type MaoMood,
   setMaoMaoDisabled,
   useMaoMaoDisabled,
-  victory,
 } from "./maoMao";
 export { ThemeSwitcher } from "./ThemeSwitcher";
 export {

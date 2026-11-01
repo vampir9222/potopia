@@ -419,36 +419,34 @@ droite : Sonic, Luffy, la boule musicale, thème, cloche, volume, menu du profil
   liseré en SVG, déformé, avec le même dégradé.
 
 **To Be Continued** (`apps/web/components/ToBeContinued.tsx`, monté dans le layout racine).
-Les jeux signalent leurs parties avec `defeat()` et `victory()` de `@app/ui`
-(`src/maoMao.ts`) : un mot raté ou trouvé à TROIS (mode test compris), une mission perdue ou
-réussie sous les yeux du joueur à Agents Doubles. `defeat()` compte les défaites d'affilée
-(gardées sur l'appareil, clé `potopia:defeat-streak`, remises à zéro par `victory()`) et lance
-d'habitude `toBeContinued()`. Dès la défaite, la page se fige en sépia
+`toBeContinued()` de `@app/ui` le déclenche : un mot raté à TROIS (mode test compris), une mission perdue
+sous les yeux du joueur à Agents Doubles. Dès la défaite, la page se fige en sépia
 (`html.tbc-freeze`, animations en pause) et la flèche « To Be Continued »
 (`public/jojo/to-be-continued.png`) glisse en bas à gauche, sur Roundabout
 (`public/audio/roundabout.mp3`, 6,4 s découpées à la main, à 45 % du volume du site, fondu de
 0,9 s sur la fin). Un clic ou Échap écourte. L'effet se coupe pour de bon dans les paramètres
 (voir ci-dessous) : `toBeContinued()` ne fait alors plus rien.
 
-**Mao Mao** (Les Carnets de l'apothicaire, `apps/web/components/MaoMao.tsx`, layout racine). À la
-3e défaite d'affilée, elle juge à la place de « To Be Continued » : la page s'assombrit sous des
+**Mao Mao** (Les Carnets de l'apothicaire, `apps/web/components/MaoMao.tsx`, layout racine), à
+TROIS (`maoMao()` / `maoMaoSoon()` de `@app/ui`, appelés par `maoReact` de `games/trois/ui/Game.tsx`,
+mode test compris). Au 3e essai raté de suite sur un mot, elle juge : la page s'assombrit sous des
 pétales de prunier, un rouleau suspendu se déroule (tringles laquées, brocart), avec son regard
 qui s'assombrit, main sur la bouche (`public/apothicaire/mao-judge.mp4`), une réplique tirée au
-hasard (clins d'œil à l'anime) et un sceau vermillon « 三連敗 » qui s'imprime. À la 6e, la 9e…,
-son dégoût, cachée derrière sa manche (`mao-disgust.mp4`, « 六連敗 »…). La victoire qui casse une
-série de 3 défaites ou plus : elle surgit, détourée (`mao-smug.webp`), du coin de l'écran avec
-un sourire narquois. Petite phrase de cordes pincées synthétisée (Karplus-Strong, pas de
-fichier), au volume du site. Les vidéos se chargent à la 2e défaite d'affilée. Un clic ou Échap
-écourte ; l'effet se coupe dans les paramètres (la série compte quand même, et « To Be
-Continued » reste). Images et vidéos fournies par les membres (extraits de l'anime) ; Mao Mao
-détourée avec rembg (modèle isnet-anime), hors du dépôt.
+hasard (clins d'œil à l'anime) et un sceau vermillon « 三連続 » (trois de suite) qui s'imprime. À
+l'avant-dernier essai, son dégoût, cachée derrière sa manche (`mao-disgust.mp4`, « 五連続 »). Le
+mot enfin trouvé après au moins 3 ratés : elle surgit, détourée (`mao-smug.webp`), du coin de
+l'écran avec un sourire narquois. Petite phrase de cordes pincées synthétisée (Karplus-Strong,
+pas de fichier), au volume du site. Les vidéos se chargent au 2e raté. Le rouleau dure 4,5 s et
+se ferme au premier clic ou à la première touche (on continue de taper) ; le mot perdu garde «
+To Be Continued ». L'effet se coupe dans les paramètres. Images et vidéos fournies par les
+membres (extraits de l'anime) ; Mao Mao détourée avec rembg (modèle isnet-anime), hors du dépôt.
 
 **Paramètres** (`/parametres`, entrée « Paramètres » du menu de l'avatar du header,
 `ProfileMenu`). Réglages du membre, gardés sur l'appareil (`localStorage`) :
 `apps/web/components/SettingsView.tsx`. Réglages : « To Be Continued » quand on perd
 (`useToBeContinuedDisabled` / `setToBeContinuedDisabled` de `@app/ui`, clé
-`potopia:to-be-continued-disabled`), Mao Mao après 3 défaites d'affilée (`useMaoMaoDisabled` /
-`setMaoMaoDisabled`, clé `potopia:mao-mao-disabled`).
+`potopia:to-be-continued-disabled`), Mao Mao à TROIS (`useMaoMaoDisabled` / `setMaoMaoDisabled`,
+clé `potopia:mao-mao-disabled`).
 
 **Images préchargées** (`preloadImages` / `imagesReady` de `@app/ui`, `src/preload.ts`). Les
 planches de sprites et images d'effets (Sonic et Super Sonic, fruit, Luffy et combo, flèche « To

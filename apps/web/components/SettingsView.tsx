@@ -43,7 +43,7 @@ function Switch({
 
 /**
  * Paramètres du membre, gardés sur cet appareil : l'arrêt sur image « To Be Continued » quand on
- * perd une partie, et le regard de Mao Mao après 3 défaites d'affilée.
+ * perd une partie, et le regard de Mao Mao après 3 essais ratés de suite à TROIS.
  */
 export function SettingsView() {
   const tbcDisabled = useToBeContinuedDisabled();
@@ -66,14 +66,14 @@ export function SettingsView() {
         </li>
         <li className="flex items-center justify-between gap-4 py-2">
           <div>
-            <p className="text-text text-sm font-medium">Mao Mao après 3 défaites d'affilée</p>
+            <p className="text-text text-sm font-medium">Mao Mao à TROIS</p>
             <p className="text-muted text-xs">
-              Son regard de jugement (Les Carnets de l&apos;apothicaire), et son sourire narquois
-              quand tu gagnes enfin.
+              Son regard de jugement (Les Carnets de l&apos;apothicaire) au 3e essai raté de suite,
+              et son sourire narquois quand tu trouves enfin le mot.
             </p>
           </div>
           <Switch
-            label="Mao Mao après 3 défaites d'affilée"
+            label="Mao Mao à TROIS"
             on={!maoDisabled}
             onChange={(on) => setMaoMaoDisabled(!on)}
           />
