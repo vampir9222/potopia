@@ -1,17 +1,21 @@
+import { countGames } from "@app/agents";
 import { countUnread, listNotifications } from "@app/core";
 import { AccountPanel, ActivityFeed, Header, NotificationBell } from "@app/core/ui";
 import { getBalance } from "@app/economy";
 import { BalanceCard } from "@app/economy/ui";
-import { hasAllEmeralds, listItems } from "@app/inventory";
+import { countEmeralds, hasAllEmeralds, listItems } from "@app/inventory";
 import { EmeraldsProvider } from "@app/inventory/ui";
 import {
   Card,
   resolveTheme,
   THEME_COOKIE,
   ThemeSwitcher,
+  PalaceRecord,
+  StandCard,
   VolumeControl,
   WantedPoster,
 } from "@app/ui";
+import { getStats } from "@app/trois";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { signOut } from "@/app/actions/auth";
@@ -37,13 +41,27 @@ export default async function PlatformLayout({ children }: { children: ReactNode
   // client : pas d'email ni d'identifiant Discord dans le HTML ni le bundle).
   const profile = { name: user.name, image: user.image };
   const theme = resolveTheme((await cookies()).get(THEME_COOKIE)?.value);
-  const [notifications, unreadCount, balance, feed, items] = await Promise.all([
+  const [notifications, unreadCount, balance, feed, items, trois, agentsGames] = await Promise.all([
     listNotifications(user.id, 15),
     countUnread(user.id),
     getBalance(user.id),
     getActivityFeed(),
     listItems(user.id),
+    getStats(user.id),
+    countGames(user.id),
   ]);
+  // Fiche de Stand (thème JoJo) : ses six notes viennent des vraies données du membre.
+  const standStats = {
+    balance,
+    avgTries: trois.wordsFound
+      ? trois.dist.reduce((sum: number, n: number, i: number) => sum + n * (i + 1), 0) /
+        trois.wordsFound
+      : null,
+    agentsGames,
+    maxStreak: trois.maxStreak,
+    perfectDays: trois.perfectDays,
+    emeralds: countEmeralds(items),
+  };
 
   // Colonne de gauche (compte puis activité) : fixe sur grand écran, où l'activité prend la hauteur
   // restante de l'écran ; dans le menu latéral sur mobile, où elle garde ses 10 lignes.
@@ -53,6 +71,14 @@ export default async function PlatformLayout({ children }: { children: ReactNode
         {/* thème One Piece : l'avis de recherche du membre, sa prime = son solde (il remplace
             alors la ligne du profil et le solde, theme-identity / theme-balance) */}
         <WantedPoster name={profile.name} image={profile.image} bounty={balance} />
+        {/* thème JoJo : la fiche de Stand du membre (elle remplace la ligne du profil) */}
+        <StandCard userId={user.id} name={profile.name} image={profile.image} stats={standStats} />
+        {/* thème Apothicaire : le registre du Palais intérieur (il remplace le profil et le solde) */}
+        <PalaceRecord
+          name={profile.name}
+          image={profile.image}
+          stats={{ wordsFound: trois.wordsFound, agentsGames, balance }}
+        />
         <div className="theme-balance">
           <BalanceCard balance={balance} />
         </div>

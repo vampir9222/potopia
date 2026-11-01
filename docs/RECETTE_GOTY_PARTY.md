@@ -71,6 +71,14 @@ Le [guide d’exploitation](EXPLOITATION_GOTY_PARTY.md) donne les procédures à
 
 ## Contrôles du dépôt
 
+La branche intègre aussi `origin/main` au commit `fa6fb21` (thèmes JoJo/Apothicaire et cartes).
+Le conflit d’exports de `packages/ui/src/index.ts` a été résolu en conservant les nouveaux exports
+de `main`, dont `ROAD_ROLLER_EVENT`, et `claimMediaFocus` de GOTY. Les réglages des médias statiques
+et le mock des polices de `main` sont conservés avec les ajouts GOTY. Les contrôles sont exécutés
+sur ce résultat fusionné avant publication de la branche. Cette validation a aussi révélé que le
+tirage initial d’avatar pouvait sélectionner un élément verrouillé : il ne sélectionne désormais
+que les éléments libres, avec un test de régression couvrant les parties obligatoires et optionnelles.
+
 Contrôles locaux : formatage, ESLint, TypeScript, frontières, suite globale sans cache puis build
 de production sans migration (`VERCEL_ENV` absent). PostgreSQL et RustFS réels, aucune clé
 Discord/IGDB de production. Le test de signature S3 passe avec RustFS : la limitation S3rver
@@ -82,7 +90,7 @@ signalée aux lots 5 et 6 est levée pour cette recette.
 | `lint`                                   | 17 tâches réussies                                                                |
 | `typecheck`                              | 17 tâches réussies                                                                |
 | `check:boundaries`                       | 8 modules, frontières respectées                                                  |
-| `turbo run test --force --concurrency=1` | **514 tests réussis**, 13 packages testés, aucun résultat de test repris du cache |
+| `turbo run test --force --concurrency=1` | **516 tests réussis**, 13 packages testés, aucun résultat de test repris du cache |
 | `build`                                  | Réussi ; aucune migration de production exécutée                                  |
 
 Le workflow `.github/workflows/ci.yml` exécute ces mêmes contrôles sur chaque PR vers `main`.

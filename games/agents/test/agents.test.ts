@@ -6,6 +6,7 @@ import words from "../data/words.json";
 import { normalize, SUDDEN_TURN, type GameView } from "../src/game";
 import {
   AgentsError,
+  countGames,
   createGame,
   duoLeaderboard,
   getGame,
@@ -391,6 +392,13 @@ describe("partie", () => {
     expect((await duoLeaderboard(A, "all")).duos).toHaveLength(0);
     // une nouvelle partie peut alors être lancée
     expect((await createGame({ userId: A, partnerId: B })).created).toBe(true);
+  });
+
+  it("compte les parties de chaque joueur (fiche de Stand du thème JoJo)", async () => {
+    expect(await countGames(A)).toBe(0);
+    await newGame();
+    await createGame({ userId: C, partnerId: A });
+    expect([await countGames(A), await countGames(B), await countGames(C)]).toEqual([2, 1, 1]);
   });
 
   it("liste mes parties, celles où c'est à moi de jouer en premier", async () => {

@@ -1,11 +1,30 @@
 import { BRAND } from "@app/config/brand";
-import { Embers, JojoDecor, OnePieceDecor, resolveTheme, RgbFans, THEME_COOKIE } from "@app/ui";
+import {
+  ApothicaireDecor,
+  Embers,
+  JojoDecor,
+  OnePieceDecor,
+  resolveTheme,
+  RgbFans,
+  THEME_COOKIE,
+} from "@app/ui";
 import type { Metadata } from "next";
-import { Abril_Fatface, Anton, Cinzel, Luckiest_Guy, Orbitron } from "next/font/google";
+import {
+  Abril_Fatface,
+  Anton,
+  Cinzel,
+  Luckiest_Guy,
+  Orbitron,
+  Zen_Old_Mincho,
+} from "next/font/google";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { Don } from "@/components/Don";
 import { NextNavigation } from "@/components/NextNavigation";
+import { ApothicaireFx } from "@/components/ApothicaireFx";
+import { ApothicaireOpening } from "@/components/ApothicaireOpening";
+import { JojoFx } from "@/components/JojoFx";
+import { MaoMao } from "@/components/MaoMao";
 import { ToBeContinued } from "@/components/ToBeContinued";
 import { ZaWarudo } from "@/components/ZaWarudo";
 import "./globals.css";
@@ -33,6 +52,12 @@ const onePiece = Luckiest_Guy({
   weight: "400",
   variable: "--font-onepiece-face",
 });
+// Zen Old Mincho : un mincho élégant, comme les titres de l'anime, pour le thème Apothicaire.
+const apothicaire = Zen_Old_Mincho({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-apothicaire-face",
+});
 const wanted = Abril_Fatface({
   subsets: ["latin"],
   weight: "400",
@@ -52,21 +77,29 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html
       lang="fr"
       data-theme={theme}
-      className={`${display.variable} ${gaming.variable} ${jojo.variable} ${onePiece.variable} ${wanted.variable}`}
+      className={`${display.variable} ${gaming.variable} ${jojo.variable} ${onePiece.variable} ${wanted.variable} ${apothicaire.variable}`}
     >
       <body className="min-h-dvh antialiased">
         <Embers />
         <RgbFans />
         <JojoDecor />
         <OnePieceDecor />
+        <ApothicaireDecor />
         {/* liens des packages branchés sur Next : pas de rechargement entre deux pages */}
         <NextNavigation>{children}</NextNavigation>
         {/* défaite dans un jeu : arrêt sur image façon JoJo (toBeContinued() de @app/ui) */}
         <ToBeContinued />
         {/* passage au thème JoJo : arrêt du temps (zaWarudo() de @app/ui) */}
         <ZaWarudo />
+        <JojoFx />
+        {/* 3 essais ratés de suite à TROIS : Mao Mao juge (maoMao() de @app/ui) */}
+        <MaoMao />
         {/* passage au thème One Piece : « ドン!! » (don() de @app/ui) */}
         <Don />
+        {/* passage au thème Apothicaire : rouleau du titre (apothicaire() de @app/ui) */}
+        <ApothicaireOpening />
+        {/* thème Apothicaire : Mao Mao, Jinshi et la lune répondent au clic */}
+        <ApothicaireFx />
       </body>
     </html>
   );

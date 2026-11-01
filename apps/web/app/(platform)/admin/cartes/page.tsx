@@ -1,5 +1,5 @@
 import { CARD_RARITIES, CARD_RARITY_LABELS, listCards, listSets } from "@app/tcg";
-import { GameCard, GameCardDefs } from "@app/tcg/ui";
+import { CardFlip, GameCard, GameCardDefs } from "@app/tcg/ui";
 import { buttonClasses, Card, cx, EmptyState } from "@app/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -206,22 +206,26 @@ export default async function AdminCardsPage({
                   // Le navigateur ne dessine pas les cartes hors de l'écran (défilement fluide).
                   style={{ contentVisibility: "auto", containIntrinsicSize: "auto 585px" }}
                 >
-                  <Link
-                    href={`/admin/cartes/${card.id}`}
-                    aria-label={`Modifier ${card.name}`}
-                    className="flex flex-col items-center"
-                  >
-                    {/* Aperçu agrandi d'un tiers (400 × 560) : la carte fait 300 × 420. */}
-                    <div style={{ zoom: 4 / 3 }} className="pointer-events-none">
-                      <GameCard
-                        card={card}
-                        imageUrl={images.get(card.id) ?? null}
-                        setSize={card.setId ? setSizes.get(card.setId) : undefined}
-                        author={authors.get(card.id)}
-                        still
-                      />
-                    </div>
-                  </Link>
+                  {/* Glisser la carte à l'horizontale la retourne ; un clic ouvre sa fiche. */}
+                  <CardFlip still>
+                    <Link
+                      href={`/admin/cartes/${card.id}`}
+                      aria-label={`Modifier ${card.name}`}
+                      className="flex flex-col items-center"
+                      draggable={false}
+                    >
+                      {/* Aperçu agrandi d'un tiers (400 × 560) : la carte fait 300 × 420. */}
+                      <div style={{ zoom: 4 / 3 }} className="pointer-events-none">
+                        <GameCard
+                          card={card}
+                          imageUrl={images.get(card.id) ?? null}
+                          setSize={card.setId ? setSizes.get(card.setId) : undefined}
+                          author={authors.get(card.id)}
+                          still
+                        />
+                      </div>
+                    </Link>
+                  </CardFlip>
                   <label className="text-muted flex items-center gap-1.5 text-xs">
                     <input type="checkbox" name="ids" value={card.id} />
                     {card.number ?? "—"} · {CARD_RARITY_LABELS[card.rarity]}

@@ -9,6 +9,7 @@ import {
   Libre_Franklin,
   Nunito,
   Press_Start_2P,
+  Rajdhani,
   Space_Grotesk,
   Spectral,
   VT323,
@@ -56,6 +57,13 @@ const fantasyText = EB_Garamond({
 const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk", preload: false });
 const hand = Caveat({ subsets: ["latin"], variable: "--font-hand" });
 const round = Nunito({ subsets: ["latin"], variable: "--font-round", preload: false });
+// Mot « POTOMON » du dos des cartes (`CardBack`).
+const rajdhani = Rajdhani({
+  subsets: ["latin"],
+  weight: "700",
+  variable: "--font-rajdhani",
+  preload: false,
+});
 // Designs premium : Snap, textes, Arcanes, Poké.
 const snap = Anton({ subsets: ["latin"], weight: "400", variable: "--font-snap" });
 const franklin = Libre_Franklin({ subsets: ["latin"], variable: "--font-franklin" });
@@ -86,6 +94,7 @@ export const designFonts = [
   franklin,
   magic,
   poke,
+  rajdhani,
 ]
   .map((f) => f.variable)
   .join(" ");

@@ -555,6 +555,989 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
   }
 }
 
+/* Effets interactifs du thème JoJo (JojoFx) : rafales ORA / MUDA, rouleau compresseur, Jotaro. */
+.jojo-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  overflow: hidden;
+  pointer-events: none;
+  font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+}
+.jojo-fx > * {
+  position: absolute;
+}
+html.jojo-rushing,
+html.jojo-rushing * {
+  user-select: none;
+  cursor: crosshair;
+}
+
+/* mot d'une rafale : surgit en grand, se pose, s'efface */
+.jojo-fx-word {
+  translate: -50% -50%;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  -webkit-text-stroke: 2px #050308;
+  paint-order: stroke fill;
+  text-shadow: 3px 3px 0 #050308;
+  animation: jojo-fx-pop 0.45s ease-out forwards;
+}
+@keyframes jojo-fx-pop {
+  0% {
+    opacity: 0;
+    scale: 2.2;
+  }
+  15% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.15;
+    transform: translateY(-14px);
+  }
+}
+
+/* éclat d'impact : étoile blanche bordée d'or */
+.jojo-fx-impact {
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(circle, #fff 0 35%, #ffe27a 55%, transparent 72%);
+  clip-path: polygon(
+    50% 0,
+    58% 34%,
+    85% 15%,
+    66% 42%,
+    100% 50%,
+    66% 58%,
+    85% 85%,
+    58% 66%,
+    50% 100%,
+    42% 66%,
+    15% 85%,
+    34% 58%,
+    0 50%,
+    34% 42%,
+    15% 15%,
+    42% 34%
+  );
+  animation: jojo-fx-impact 0.25s ease-out forwards;
+}
+@keyframes jojo-fx-impact {
+  from {
+    opacity: 1;
+    scale: 0.3;
+  }
+  to {
+    opacity: 0;
+    scale: 1.4;
+  }
+}
+
+/* coup final : le mot écrase l'écran, puis s'efface */
+.jojo-fx-final {
+  translate: -50% -50%;
+  white-space: nowrap;
+  font-size: clamp(4rem, 12vw, 9rem);
+  letter-spacing: 0.05em;
+  -webkit-text-stroke: 5px #050308;
+  paint-order: stroke fill;
+  text-shadow: 7px 7px 0 #050308;
+  animation: jojo-fx-final 1s cubic-bezier(0.2, 0.9, 0.3, 1.3) forwards;
+}
+@keyframes jojo-fx-final {
+  0% {
+    opacity: 0;
+    scale: 3.5;
+    transform: skewX(-12deg);
+  }
+  18%,
+  70% {
+    opacity: 1;
+    scale: 1;
+    transform: skewX(-12deg);
+  }
+  100% {
+    opacity: 0;
+    scale: 1.08;
+    transform: skewX(-12deg);
+  }
+}
+
+/* onde de choc */
+.jojo-fx-ring {
+  width: 40px;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border: 6px solid #f4c430;
+  border-radius: 50%;
+  box-shadow:
+    0 0 24px #f4c430,
+    inset 0 0 18px #c78cff;
+  animation: jojo-fx-ring 0.6s ease-out forwards;
+}
+@keyframes jojo-fx-ring {
+  to {
+    width: 70vmax;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* « ドン » rose, en biais */
+.jojo-fx-don {
+  translate: -50% -50%;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: #ff4fa3;
+  -webkit-text-stroke: 3px #050308;
+  paint-order: stroke fill;
+  text-shadow: 4px 4px 0 #050308;
+  rotate: -14deg;
+  animation: jojo-fx-final 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.3) forwards;
+}
+
+/* ── Sprites du jeu de Capcom (bandes d'images, animées en steps()) ── */
+.jojo-fx-sprite {
+  --s: 2;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 14px color-mix(in oklab, #7a4cff 75%, transparent));
+}
+/* Star Platinum : 24 images de 148 × 124, dessiné frappant vers la gauche ; ses poings arrivent
+   sur la souris */
+.jojo-fx-star {
+  --s: 2.2;
+  width: calc(148px * var(--s));
+  height: calc(124px * var(--s));
+  translate: -20% -55%;
+  background-image: url(/jojo/star-platinum-ora-strip.png);
+  background-size: calc(3552px * var(--s)) 100%;
+  animation:
+    jojo-fx-fade-in 0.15s ease-out,
+    jojo-fx-star 1.1s steps(24) infinite;
+}
+@keyframes jojo-fx-star {
+  to {
+    background-position-x: calc(-3552px * var(--s));
+  }
+}
+/* The World : 18 images de 220 × 140, retourné pour faire face à Star Platinum */
+.jojo-fx-world {
+  width: calc(220px * var(--s));
+  height: calc(140px * var(--s));
+  translate: -50% -60%;
+  background-image: url(/jojo/the-world-muda-strip.png);
+  background-size: calc(3960px * var(--s)) 100%;
+  filter: drop-shadow(0 0 14px color-mix(in oklab, #f4c430 70%, transparent));
+  animation:
+    jojo-fx-fade-in 0.15s ease-out,
+    jojo-fx-world 0.75s steps(18) infinite;
+}
+@keyframes jojo-fx-world {
+  to {
+    background-position-x: calc(-3960px * var(--s));
+  }
+}
+/* Star Platinum invoqué, en attente (21 images de 104 × 133) : il flotte près de la souris */
+.jojo-fx-floater {
+  --s: 1.5;
+  width: calc(104px * var(--s));
+  height: calc(133px * var(--s));
+  translate: -50% -50%;
+  opacity: 0.92;
+  background-image: url(/jojo/star-platinum-idle-strip.png);
+  background-size: calc(2184px * var(--s)) 100%;
+  transition: opacity 0.15s;
+  animation:
+    jojo-fx-fade-in 0.45s ease-out,
+    jojo-fx-floater 2.1s steps(21) infinite,
+    jojo-fx-bob 2.4s ease-in-out infinite;
+}
+@keyframes jojo-fx-floater {
+  to {
+    background-position-x: calc(-2184px * var(--s));
+  }
+}
+@keyframes jojo-fx-bob {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.jojo-fx-hidden {
+  opacity: 0;
+}
+/* écrasé par le rouleau compresseur : éclair blanc */
+.jojo-fx-flash {
+  inset: 0;
+  background: #fff;
+  animation: jojo-fx-flash 0.6s ease-out forwards;
+}
+@keyframes jojo-fx-flash {
+  to {
+    opacity: 0;
+  }
+}
+/* apparition en fondu (le glissement vers la droite vient du suivi de la souris) */
+@keyframes jojo-fx-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+/* DIO sur le rouleau compresseur : 44 images de 350 × 202 ; il tombe du ciel, puis martèle */
+.jojo-fx-roller {
+  width: calc(350px * var(--s));
+  height: calc(202px * var(--s));
+  translate: -50% -82%;
+  /* planche en grille (11 × 4 images) : une bande de 44 images dépasserait la taille de texture
+     des cartes graphiques et serait repeinte à chaque image */
+  background-image: url(/jojo/dio-road-roller-grid.png);
+  background-size: calc(3850px * var(--s)) calc(808px * var(--s));
+  /* pas d'ombre floue : recalculée à chaque image d'un sprite aussi grand, elle saccade */
+  filter: none;
+  will-change: transform;
+  animation:
+    jojo-fx-fall 0.52s cubic-bezier(0.55, 0, 1, 0.45) both,
+    jojo-fx-roller-x 0.77s steps(11) infinite,
+    jojo-fx-roller-y 3.08s steps(4) infinite;
+}
+@keyframes jojo-fx-fall {
+  from {
+    transform: translateY(-130vh);
+  }
+}
+@keyframes jojo-fx-roller-x {
+  to {
+    background-position-x: calc(-3850px * var(--s));
+  }
+}
+@keyframes jojo-fx-roller-y {
+  to {
+    background-position-y: calc(-808px * var(--s));
+  }
+}
+/* « ORA ! » final : le rouleau repart dans les airs en tournoyant */
+.jojo-fx-roller-out {
+  animation: jojo-fx-fly 0.9s cubic-bezier(0.3, 0.6, 0.6, 1) forwards;
+}
+@keyframes jojo-fx-fly {
+  to {
+    opacity: 0;
+    transform: translate(40vw, -110vh) rotate(540deg);
+  }
+}
+/* le Stand rappelé s'efface en fondu */
+.jojo-fx-leave {
+  animation: jojo-fx-leave 0.5s ease-in forwards;
+}
+@keyframes jojo-fx-leave {
+  to {
+    opacity: 0;
+  }
+}
+
+.jojo-fx-shout {
+  left: 50%;
+  top: 16%;
+  translate: -50% -50%;
+  white-space: nowrap;
+  font-size: clamp(2.6rem, 8vw, 6.5rem);
+  letter-spacing: 0.04em;
+  color: #f4c430;
+  -webkit-text-stroke: 5px #050308;
+  paint-order: stroke fill;
+  text-shadow:
+    6px 6px 0 #050308,
+    0 0 30px #c78cff;
+  animation: jojo-fx-shout 2.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+}
+@keyframes jojo-fx-shout {
+  0% {
+    opacity: 0;
+    scale: 2.6;
+    transform: skewX(-14deg);
+  }
+  12%,
+  85% {
+    opacity: 1;
+    scale: 1;
+    transform: skewX(-14deg);
+  }
+  100% {
+    opacity: 0;
+    transform: skewX(-14deg) translateY(-20px);
+  }
+}
+
+/* bulle qui explique une capacité de la fiche de Stand (clic sur « Puissance »…) */
+.jojo-fx-tip {
+  position: fixed;
+  z-index: 92;
+  display: flex;
+  max-width: min(260px, calc(100vw - 16px));
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 2px solid #050308;
+  border-radius: 10px;
+  background: #f6efdc;
+  color: #1a1203;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  box-shadow: 4px 4px 0 #050308;
+  animation: jojo-fx-fade-in 0.15s ease-out;
+}
+.jojo-fx-tip strong {
+  font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  color: #7a4cff;
+}
+
+/* bulle d'aide des secrets du thème (une fois par appareil) */
+.jojo-fx-hint {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 91;
+  display: flex;
+  max-width: min(420px, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 3px solid #050308;
+  border-radius: 14px;
+  background: #f6efdc;
+  color: #1a1203;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  box-shadow: 5px 5px 0 #050308;
+  cursor: pointer;
+  animation: jojo-fx-yare 12s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+.jojo-fx-hint strong {
+  font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+  color: #7a4cff;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+}
+
+/* ── Bulle d'un personnage du décor (Jotaro : « やれやれだぜ… », DIO : « WRYYYYY ! ») ── */
+.jojo-fx-bubble {
+  translate: -50% calc(-100% - 12px);
+  padding: 8px 16px;
+  border: 3px solid #050308;
+  border-radius: 18px;
+  background: #f6efdc;
+  color: #050308;
+  white-space: nowrap;
+  font-size: clamp(1.1rem, 2.4vw, 1.7rem);
+  box-shadow: 4px 4px 0 #050308;
+  animation: jojo-fx-bubble 2.2s cubic-bezier(0.2, 0.9, 0.3, 1.3) forwards;
+}
+.jojo-fx-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  border: 10px solid transparent;
+  border-top-color: #050308;
+  translate: -50% 0;
+}
+.jojo-fx-bubble-dio {
+  background: #ffe27a;
+  color: #4a1d8f;
+  transform: skewX(-10deg);
+}
+@keyframes jojo-fx-bubble {
+  0% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  10%,
+  85% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* ゴゴ violets animés qui montent autour de DIO */
+.jojo-fx-gogo {
+  width: 81px;
+  height: 141px;
+  translate: -50% -50%;
+  background: url(/jojo/menacing-gogo-strip.png) 0 0 / 648px 141px no-repeat;
+  animation:
+    jojo-fx-gogo-rise 1.6s ease-out forwards,
+    jojo-fx-gogo 0.8s steps(8) infinite;
+}
+@keyframes jojo-fx-gogo {
+  to {
+    background-position-x: -648px;
+  }
+}
+@keyframes jojo-fx-gogo-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.6);
+  }
+  20%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-90px) scale(1.1);
+  }
+}
+
+@keyframes jojo-fx-yare {
+  0% {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+  12%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+/* Mao Mao (MaoMao, Les Carnets de l'apothicaire) : rouleau suspendu du jugement après 3 défaites
+   d'affilée, et son sourire narquois à la victoire qui casse la série. */
+.mao-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  background: radial-gradient(ellipse at 50% 40%, rgb(16 46 38 / 0.62), rgb(3 10 8 / 0.9) 75%);
+  animation: mao-fade 0.4s ease-out;
+}
+/* le dégoût : la pièce s'assombrit dans le bleu de l'ombre qui lui tombe sur le visage */
+.mao-layer-disgust {
+  background: radial-gradient(ellipse at 50% 40%, rgb(30 30 70 / 0.62), rgb(5 5 16 / 0.92) 75%);
+}
+@keyframes mao-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* pétales de prunier qui tombent doucement */
+.mao-petals span {
+  position: absolute;
+  top: -24px;
+  left: calc(var(--i) * 10% + 3%);
+  width: 11px;
+  height: 11px;
+  border-radius: 70% 0 70% 0;
+  background: linear-gradient(135deg, #ffd9e4, #f39bb8);
+  opacity: 0.85;
+  animation: mao-petal calc(5.5s + var(--i) * 0.35s) linear calc(var(--i) * -0.6s) infinite;
+}
+@keyframes mao-petal {
+  to {
+    transform: translate(calc(40px - var(--i) * 6px), 110vh) rotate(540deg);
+  }
+}
+
+/* le rouleau : tringles laquées aux embouts dorés, papier de soie bordé de brocart */
+.mao-scroll {
+  position: relative;
+  width: min(340px, 82vw);
+  filter: drop-shadow(0 22px 30px rgb(0 0 0 / 0.55));
+  animation: mao-sway 5s ease-in-out 1s infinite;
+  transform-origin: 50% -40px;
+}
+@keyframes mao-sway {
+  50% {
+    rotate: 0.6deg;
+  }
+}
+.mao-rod {
+  position: relative;
+  z-index: 1;
+  display: block;
+  height: 16px;
+  margin: 0 -16px;
+  border-radius: 8px;
+  background: linear-gradient(#7a2a18, #3a1009 55%, #1c0603);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.18);
+}
+.mao-rod::before,
+.mao-rod::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff1b8, #d8a526 45%, #7a5208 90%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+}
+.mao-rod::before {
+  left: -8px;
+}
+.mao-rod::after {
+  right: -8px;
+}
+/* la cordelette qui le suspend */
+.mao-rod-top {
+  border-top: 0;
+}
+.mao-rod-top > * {
+  display: none;
+}
+.mao-scroll::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -46px;
+  width: 120px;
+  height: 52px;
+  translate: -50% 0;
+  border: 2px solid #c9a24a;
+  border-bottom: 0;
+  border-radius: 60px 60px 0 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.mao-unroll {
+  display: grid;
+  grid-template-rows: 0fr;
+  animation: mao-unroll 0.9s cubic-bezier(0.3, 0.7, 0.3, 1) 0.15s forwards;
+}
+@keyframes mao-unroll {
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+.mao-paper {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  padding: 18px 20px 22px;
+  border-inline: 12px solid transparent;
+  background:
+    linear-gradient(#f4ead4, #eadcbd) padding-box,
+    repeating-linear-gradient(45deg, #1f5a4d 0 6px, #c9a24a 6px 8px, #1f5a4d 8px 14px) border-box;
+  box-shadow: inset 0 0 30px rgb(120 80 30 / 0.25);
+}
+.mao-frame {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 3px solid #8a1d12;
+  outline: 1px solid #c9a24a;
+  outline-offset: 3px;
+  background: #0b1a17;
+}
+.mao-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mao-line {
+  margin-top: 14px;
+  text-align: center;
+  font-family: "Noto Serif", Georgia, serif;
+  font-size: 1.02rem;
+  font-style: italic;
+  line-height: 1.35;
+  color: #2b1a10;
+  opacity: 0;
+  animation: mao-fade-in 0.6s ease-out 1.1s forwards;
+}
+@keyframes mao-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+/* le sceau vermillon, qui s'imprime d'un coup */
+.mao-seal {
+  position: absolute;
+  right: 6px;
+  top: 58%;
+  padding: 7px 5px;
+  border: 2px solid rgb(255 230 210 / 0.55);
+  border-radius: 4px;
+  background: #b5241a;
+  color: #fbeadb;
+  writing-mode: vertical-rl;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+  rotate: -7deg;
+  opacity: 0;
+  animation: mao-stamp 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) 1.5s forwards;
+}
+@keyframes mao-stamp {
+  from {
+    opacity: 0;
+    scale: 2.2;
+  }
+  to {
+    opacity: 0.95;
+    scale: 1;
+  }
+}
+
+/* la victoire qui casse la série : Mao Mao surgit du coin, narquoise */
+.mao-smug {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 95;
+  display: flex;
+  align-items: flex-start;
+  pointer-events: none;
+  animation: mao-smug 4.2s cubic-bezier(0.3, 0.8, 0.3, 1) forwards;
+}
+.mao-smug-face {
+  width: min(250px, 42vw);
+  filter: drop-shadow(-6px 0 18px rgb(0 0 0 / 0.45));
+}
+.mao-smug-bubble {
+  margin-top: 18px;
+  margin-right: -18px;
+  padding: 8px 14px;
+  border: 2px solid #1f5a4d;
+  border-radius: 14px 14px 2px 14px;
+  background: #f4ead4;
+  color: #2b1a10;
+  font-family: "Noto Serif", Georgia, serif;
+  font-style: italic;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 #1f5a4d;
+  opacity: 0;
+  animation: mao-fade-in 0.4s ease-out 0.5s forwards;
+}
+@keyframes mao-smug {
+  0% {
+    transform: translateY(100%);
+  }
+  14%,
+  86% {
+    transform: none;
+  }
+  100% {
+    transform: translateY(105%);
+  }
+}
+
+/* Ouverture du thème Apothicaire (ApothicaireOpening) : rouleau horizontal du titre. */
+.apo-open {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  background: radial-gradient(ellipse at 50% 45%, rgb(16 46 38 / 0.7), rgb(3 10 8 / 0.94) 75%);
+  animation: mao-fade 0.5s ease-out;
+}
+.apo-open-leave {
+  animation: apo-open-out 0.7s ease-in forwards;
+}
+@keyframes apo-open-out {
+  to {
+    opacity: 0;
+  }
+}
+/* une pluie de pétales plus dense que celle de Mao Mao */
+.apo-open-petals span {
+  position: absolute;
+  top: -24px;
+  left: calc(var(--i) * 4.6% + 1%);
+  width: 12px;
+  height: 10px;
+  border-radius: 80% 0 80% 0;
+  background: linear-gradient(135deg, #ffe4ec, #f29ab4);
+  opacity: 0.9;
+  animation: mao-petal calc(4s + mod(var(--i), 5) * 0.5s) linear calc(var(--i) * -0.37s) infinite;
+}
+.apo-makimono {
+  position: relative;
+  max-width: min(760px, 94vw);
+  filter: drop-shadow(0 26px 34px rgb(0 0 0 / 0.6));
+}
+/* les deux tringles verticales, laque et embouts d'or, qui partent du centre vers les bords
+   pendant que le papier se découvre */
+.apo-makimono-rod {
+  position: absolute;
+  z-index: 1;
+  top: -18px;
+  bottom: -18px;
+  width: 18px;
+  border-radius: 9px;
+  background: linear-gradient(90deg, #7a2a18, #3a1009 55%, #1c0603);
+  box-shadow: inset 2px 0 0 rgb(255 255 255 / 0.18);
+  animation: 1.1s cubic-bezier(0.3, 0.7, 0.3, 1) 0.2s both;
+}
+.apo-makimono-rod-left {
+  left: -9px;
+  animation-name: apo-rod-left;
+}
+.apo-makimono-rod-right {
+  right: -9px;
+  animation-name: apo-rod-right;
+}
+@keyframes apo-rod-left {
+  from {
+    left: calc(50% - 18px);
+  }
+}
+@keyframes apo-rod-right {
+  from {
+    right: calc(50% - 18px);
+  }
+}
+.apo-makimono-rod::before,
+.apo-makimono-rod::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff1b8, #d8a526 45%, #7a5208 90%);
+}
+.apo-makimono-rod::before {
+  top: -8px;
+}
+.apo-makimono-rod::after {
+  bottom: -8px;
+}
+.apo-makimono-unroll {
+  animation: apo-unroll 1.1s cubic-bezier(0.3, 0.7, 0.3, 1) 0.2s both;
+}
+@keyframes apo-unroll {
+  from {
+    clip-path: inset(0 50%);
+  }
+  to {
+    clip-path: inset(0 0);
+  }
+}
+.apo-makimono-paper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(12px, 4vw, 36px);
+  overflow: hidden;
+  padding: 26px clamp(16px, 4vw, 40px);
+  border-block: 12px solid transparent;
+  background:
+    radial-gradient(circle at 70% 30%, rgb(255 255 255 / 0.4), transparent 55%) padding-box,
+    linear-gradient(#f6eedb, #e6d6b3) padding-box,
+    repeating-linear-gradient(-45deg, #1f5a4d 0 6px, #c9a24a 6px 8px, #1f5a4d 8px 14px) border-box;
+  box-shadow: inset 0 0 40px rgb(120 80 30 / 0.3);
+  white-space: nowrap;
+}
+.apo-open-portrait {
+  width: clamp(110px, 26vw, 220px);
+  flex-shrink: 0;
+  filter: drop-shadow(4px 6px 0 rgb(31 90 77 / 0.25));
+  opacity: 0;
+  animation: apo-portrait-in 0.8s cubic-bezier(0.3, 0.8, 0.3, 1) 1.1s forwards;
+}
+@keyframes apo-portrait-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* le titre, à la verticale, chaque caractère tracé à l'encre l'un après l'autre */
+.apo-open-title {
+  writing-mode: vertical-rl;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+  font-size: clamp(1.8rem, 6vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: #1a120c;
+}
+.apo-open-title span {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(6px);
+  animation: apo-ink 0.45s ease-out calc(1.2s + var(--i) * 0.16s) forwards;
+}
+@keyframes apo-ink {
+  to {
+    opacity: 1;
+    filter: none;
+  }
+}
+.apo-open-sub {
+  writing-mode: vertical-rl;
+  font-family: var(--font-apothicaire-face, "Zen Old Mincho"), Georgia, serif;
+  font-size: clamp(0.8rem, 2.2vw, 1.05rem);
+  letter-spacing: 0.12em;
+  color: #7d1c11;
+  opacity: 0;
+  animation: mao-fade-in 0.6s ease-out 2.6s forwards;
+}
+/* sceau 「猫猫」 (Mao Mao), qui s'imprime à la fin */
+.apo-open-seal {
+  position: absolute;
+  right: clamp(10px, 3vw, 24px);
+  bottom: 18px;
+  padding: 6px 4px;
+  border-radius: 4px;
+  background: #b5241a;
+  color: #fbeadb;
+  writing-mode: vertical-rl;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+  rotate: 6deg;
+  opacity: 0;
+  animation: mao-stamp 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) 3s forwards;
+}
+
+/* Réactions des personnages du thème Apothicaire (ApothicaireFx) : vignette de l'anime encadrée
+   de laque et d'or, réplique en japonais et sa traduction. */
+.apo-card {
+  position: fixed;
+  z-index: 90;
+  width: 240px;
+  translate: -50% 0;
+  padding: 6px 6px 8px;
+  border: 2px solid #8f2418;
+  outline: 1px solid #d8b25a;
+  outline-offset: -5px;
+  border-radius: 3px;
+  background: linear-gradient(#f6eedb, #e6d6b3);
+  color: #2b1a10;
+  box-shadow: 0 16px 30px -10px rgb(0 0 0 / 0.75);
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  animation: apo-card-in 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.apo-card-below {
+  transform-origin: 50% 0;
+}
+@keyframes apo-card-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+.apo-card-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border: 2px solid #1f5a4d;
+  background: #0b1a17;
+}
+.apo-card figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 4px 0;
+  text-align: center;
+}
+.apo-card-jp {
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #7d1c11;
+}
+.apo-card-fr {
+  font-family: "Noto Serif", Georgia, serif;
+  font-size: 0.8rem;
+  font-style: italic;
+  line-height: 1.3;
+}
+/* la grande extase (mot secret « poison ») : la page rosit, la vignette en grand au centre */
+.apo-ecstasy {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  cursor: pointer;
+  background:
+    radial-gradient(circle at 50% 50%, rgb(255 150 200 / 0.35), transparent 60%),
+    radial-gradient(ellipse at center, rgb(60 10 50 / 0.55), rgb(10 2 12 / 0.88) 75%);
+  animation: mao-fade 0.4s ease-out;
+}
+.apo-ecstasy::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: repeating-conic-gradient(rgb(255 210 235 / 0.1) 0deg 6deg, transparent 6deg 18deg);
+  mask-image: radial-gradient(circle, #000 10%, transparent 55%);
+  animation: spin 40s linear infinite;
+}
+.apo-card-big {
+  position: relative;
+  width: min(560px, 92vw);
+  translate: none;
+  animation: apo-card-in 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
+  box-shadow:
+    0 0 60px 10px rgb(255 160 210 / 0.35),
+    0 24px 40px -10px rgb(0 0 0 / 0.8);
+}
+.apo-card-big .apo-card-jp {
+  font-size: 1.25rem;
+}
+.apo-card-big .apo-card-fr {
+  font-size: 0.95rem;
+}
+/* les étincelles de Jinshi */
+.apo-sparkle {
+  position: fixed;
+  z-index: 89;
+  width: var(--sparkle-size);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(circle, #fff 0 12%, transparent 13%), #fff6c9;
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  filter: drop-shadow(0 0 6px #ffe9a8);
+  pointer-events: none;
+  opacity: 0;
+  animation: apo-sparkle 1.1s ease-out forwards;
+}
+@keyframes apo-sparkle {
+  0% {
+    opacity: 0;
+    scale: 0.2;
+    rotate: 0deg;
+  }
+  30% {
+    opacity: 1;
+    scale: 1.1;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.4;
+    rotate: 90deg;
+  }
+}
+
 /* « ZA WARUDO » (ZaWarudo, thème JoJo) : onde qui inverse les couleurs, puis temps arrêté. */
 .za-wave {
   position: absolute;
@@ -823,14 +1806,15 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
 }
 
 /* temps arrêté : tout se fige dans une teinte délavée, vert-gris */
-html.time-stop body > :not(.za-layer) {
+/* les effets JoJo (.jojo-fx) échappent à l'arrêt du temps, comme Star Platinum */
+html.time-stop body > :not(.za-layer, .jojo-fx) {
   filter: grayscale(0.85) sepia(0.25) hue-rotate(70deg) brightness(0.8) contrast(1.15);
   transition: filter 0.2s;
 }
 
-html.time-stop body > :not(.za-layer) *,
-html.time-stop body > :not(.za-layer) *::before,
-html.time-stop body > :not(.za-layer) *::after {
+html.time-stop body > :not(.za-layer, .jojo-fx) *,
+html.time-stop body > :not(.za-layer, .jojo-fx) *::before,
+html.time-stop body > :not(.za-layer, .jojo-fx) *::after {
   animation-play-state: paused !important;
 }
 

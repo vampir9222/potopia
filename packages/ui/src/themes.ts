@@ -17,6 +17,11 @@ export const THEMES = [
     label: "One Piece",
     swatch: "linear-gradient(135deg, #f6c544 0%, #e63a2e 48%, #0b3a5a 100%)",
   },
+  {
+    id: "apothicaire",
+    label: "Apothicaire",
+    swatch: "linear-gradient(135deg, #d8b25a 0%, #8f2418 50%, #0f3b30 100%)",
+  },
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]["id"];

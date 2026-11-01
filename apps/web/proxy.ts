@@ -16,8 +16,11 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
+// Hors du contrôle : connexion, fichiers de Next, et les médias décoratifs de public/ (logo,
+// sprites d'avatar, images, sons et sprites des thèmes et du header) : rien de privé, et le proxy
+// n'a pas à s'exécuter pour chacun d'eux (le cache du navigateur les garde, next.config.ts).
 export const config = {
   matcher: [
-    "/((?!login|refused|api/auth|_next/static|_next/image|favicon.ico|brand/|avatar-assets/).*)",
+    "/((?!login|refused|api/auth|_next/static|_next/image|favicon.ico|brand/|avatar-assets/|apothicaire/|audio/|emeralds/|jojo/|luffy/|onepiece/|orb/|sonic/).*)",
   ],
 };

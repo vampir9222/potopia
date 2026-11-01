@@ -17,9 +17,10 @@ const PORTRAITS = [
 ];
 
 /**
- * Décor du thème JoJo (Stardust Crusaders), en fond : trame manga, rayons dorés qui tournent
- * lentement, portraits des deux camps, « ゴゴゴ » qui montent, étoiles Joestar qui scintillent, et
- * Jotaro qui prend la pose dans un coin. Affiché seulement par ce thème (--jojo), décoratif
+ * Décor du thème JoJo (Stardust Crusaders), en fond : trame manga, rayons dorés qui partent de DIO
+ * et tournent lentement, portraits des deux camps, « ゴゴ » animés qui montent, étoiles Joestar qui
+ * scintillent, et en bas à droite DIO et The World face à Jotaro qui prend la pose (sprites du jeu
+ * de Capcom ; un clic sur l'un ou l'autre les fait parler, `JojoFx` de l'app). Affiché seulement par ce thème (--jojo), décoratif
  * (aria-hidden, aucun clic), figé si l'appareil demande moins d'animations.
  */
 export function JojoDecor() {
@@ -37,9 +38,9 @@ export function JojoDecor() {
           style={
             {
               left: `${6 + seeded(i, 1) * 88}%`,
-              height: `${54 + seeded(i, 2) * 56}px`,
-              animationDuration: `${16 + seeded(i, 3) * 14}s`,
-              animationDelay: `${-seeded(i, 4) * 30}s`,
+              height: `${70 + seeded(i, 2) * 70}px`,
+              "--menace-time": `${16 + seeded(i, 3) * 14}s`,
+              "--menace-delay": `${-seeded(i, 4) * 30}s`,
               "--menace-sway": `${(seeded(i, 5) - 0.5) * 120}px`,
               "--menace-tilt": `${(seeded(i, 6) - 0.5) * 30}deg`,
             } as CSSProperties
@@ -60,6 +61,7 @@ export function JojoDecor() {
           }}
         />
       ))}
+      <span className="jojo-dio" />
       <span className="jojo-pose" />
     </div>
   );

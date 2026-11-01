@@ -49,7 +49,7 @@ vi.mock("next/font/google", () => {
   const font = () => ({ className: "", variable: "", style: { fontFamily: "" } });
   const names = ["Anton", "Bangers", "Caveat", "Cinzel", "Comic_Neue", "EB_Garamond", "Lato"];
   names.push("Libre_Franklin", "Nunito", "Orbitron", "Press_Start_2P", "Space_Grotesk");
-  names.push("Spectral", "VT323");
+  names.push("Rajdhani", "Spectral", "VT323");
   return Object.fromEntries(names.map((name) => [name, font]));
 });
 

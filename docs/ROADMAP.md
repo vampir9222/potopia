@@ -194,14 +194,28 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
       puis les hauts faits.
     - Défaite dans un jeu : arrêt sur image « To Be Continued » (JoJo), dès la défaite ; se coupe
       dans « Paramètres » (`/parametres`, menu de l'avatar), réglages gardés sur l'appareil.
+    - TROIS, 3 essais ratés de suite sur un mot : Mao Mao (Les Carnets de l'apothicaire) juge,
+      sur un rouleau suspendu (son regard, un sceau « 三連続 ») ; à l'avant-dernier essai, son
+      dégoût ; le mot enfin trouvé, son sourire narquois. Se coupe dans « Paramètres ».
     - Thème JoJo (Stardust Crusaders) : décor manga, portraits, « ゴゴゴ » ; le choisir déclenche
       ZA WARUDO (de nouveau à chaque clic sur le thème), qui fige vraiment tout le site
       (animations, La Place, musiques) jusqu'à ce qu'on clique pour relancer le temps.
+      Refonte : fiche de Stand du membre (nom en jeu de mots sur son pseudo, capacités tirées de
+      ses vraies données), Star Platinum à invoquer qui suit la souris et enchaîne les « ORA » au
+      clic maintenu (sprites du jeu de Capcom, voix et thème de Jotaro), choc avec The World près
+      de DIO, rouleau compresseur secret pendant ZA WARUDO, Jotaro et DIO qui parlent au clic.
     - Thème One Piece : la Grand Line de nuit (carte du monde en fond, Gear 5, Zoro et Luffy,
       « ドン!! », Haki des rois qui crépite de temps en temps), cadres de carte marine ancienne
       avec le Jolly Roger, titres façon logo ; le cadre du compte devient l'avis de recherche du
       membre (sa prime = son solde, chapeau de paille au coin) ; le choisir déclenche « ドン!! »
       avec Gear 5 et les Tambours de la Libération.
+    - Thème Apothicaire (Les Carnets de l'apothicaire) : le Palais intérieur de nuit (Voie lactée,
+      vraie lune de l'anime, lanternes, pétales, poisons du carnet de Mao Mao), cadres de laque
+      vermillon filetés d'or ; le cadre du compte devient le registre du Palais (rang de
+      servante à concubine de haut rang selon TROIS et Agents Doubles, sceau à son initiale) ;
+      le choisir déroule le rouleau du titre sur l'opening ; Mao Mao, Jinshi et la lune
+      répondent au clic avec des extraits de l'anime (voix d'Aoi Yuuki) ; « poison » tapé au
+      clavier : sa grande extase.
     - Navigation sans rechargement entre les pages (tuiles, logo, notifications, jeux : `AppLink`
       et `useNavigate` de `@app/ui`) : la musique du header continue d'une page à l'autre.
     - Sur mobile, la colonne gauche passe dans un menu.
@@ -511,6 +525,9 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
       `tcg_card_image_frame` (ajout d'une colonne).
 - [x] Une carte par idée de la boîte à idées, générée hors du dépôt et importée par l'admin ;
       illustrations libres (Wikimedia Commons, crédits notés) pour les idées sans image.
+- [x] Dos des cartes (`CardBack`, portail du logo dont la galaxie tourne) ; la carte se retourne
+      en la faisant tourner à la souris ou au doigt, un demi-tour par geste (`CardFlip`), sur la planche de l'admin et
+      dans la fiche d'une carte (bouton « Voir le dos » en plus).
 - [ ] Lieux, boosters (stock par set, journal en ajout seul, achat et gains), collection et
       Potodex, revente des doublons.
 - [ ] Decks, défis, moteur de résolution des tours, page de partie.

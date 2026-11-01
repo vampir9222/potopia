@@ -137,7 +137,12 @@ passe d'une partie à l'autre sans rechargement.
   - Le champ `role` en base est un simple miroir, mis à jour à chaque connexion.
 - **Contrôles côté serveur** : chaque layout, server action et route handler appelle
   `requireMember()` ou `requireAdmin()`. `proxy.ts` ne fait qu'un contrôle optimiste du cookie
-  (redirection vers `/login`, ou 401 JSON pour `/api/*`).
+  (redirection vers `/login`, ou 401 JSON pour `/api/*`). Il ne s'exécute pas pour les fichiers
+  de Next ni pour les médias décoratifs de `public/` (`brand/`, `avatar-assets/`, et les images,
+  sons et sprites des thèmes et du header : `apothicaire/`, `audio/`, `emeralds/`, `jojo/`,
+  `luffy/`, `onepiece/`, `orb/`, `sonic/`), qui n'ont rien de privé. Ces derniers sont gardés un
+  jour par le navigateur puis revalidés en fond (`headers()` de `next.config.ts`) : un fichier
+  remplacé sous le même nom peut rester un jour à l'ancienne version.
   - Dans `apps/web`, les layouts et pages passent par `getCurrentMember()` / `getCurrentAdmin()`
     (`lib/session.ts`) : redirection vers `/login` sans session, vers `/refused` si la session
     vient d'être révoquée, `forbidden()` (403, `app/forbidden.tsx`) pour un non-admin. Les server
@@ -361,7 +366,7 @@ vers une URL GET présignée valable 5 min. Toute autre personne reçoit un 403.
 décors.
 
 - Un thème est un bloc `[data-theme="…"]` de variables CSS, déclaré aussi dans
-  `packages/ui/src/themes.ts`. Cinq thèmes : **Classique**, le thème par défaut (bleu sobre, sans
+  `packages/ui/src/themes.ts`. Six thèmes : **Classique**, le thème par défaut (bleu sobre, sans
   décors), **Fantasy** (or, pourpre, cadres ornés, braises, titres en Cinzel), **RGB** (néon gaming :
   la teinte de l'accent tourne en continu via une propriété CSS animée, cadres à bordure arc-en-ciel,
   boucle de watercooling animée en fond, titres en Orbitron), **JoJo** (Stardust Crusaders : nuit
@@ -369,12 +374,42 @@ décors.
   petits textes en capitales pleines pour rester lisibles) et **One Piece** (la Grand Line de
   nuit : bleu nuit de la mer, jaune du chapeau de paille, rouge de Luffy ; cadres translucides
   bordés comme une carte marine ancienne, trait or et graduation entre deux filets, Jolly Roger
-  de l'équipage au coin ; titres en Luckiest Guy cerclés de brun comme le logo de la série).
+  de l'équipage au coin ; titres en Luckiest Guy cerclés de brun comme le logo de la série) et
+  **Apothicaire** (Les Carnets de l'apothicaire : le Palais intérieur de nuit, jade profond, or
+  impérial, laque vermillon ; cadres de laque rouge filetés d'or, tissés en filigrane du brocart du
+  site officiel de l'anime (`brocade.webp`, une tuile de 12 Ko), avec ses coins en frise
+  géométrique 回紋 (`corner-*.svg`) ; titres en Zen Old Mincho).
 - Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`, `--jojo`,
-  `--onepiece`) :
-  un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons,
+  `--onepiece`, `--apothicaire`) :
+  un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons
+  qui partent de DIO (un carré de 300vmax centré sur lui, qui tourne sans jamais montrer de bord),
   portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.png` : Jotaro, Star Platinum, DIO,
-  The World), « ゴゴゴ » qui montent, étoiles, Jotaro qui prend la pose (`jotaro-pose.png`).
+  The World), « ゴゴ » animés qui montent (`menacing-gogo-strip.png`), étoiles, et en bas DIO en
+  attente (`dio-idle-strip.png`) face à Jotaro qui prend la pose (`jotaro-pose.png`).
+  Le cadre du compte devient la **fiche de Stand** du membre (`StandCard` de `@app/ui`, rendue
+  pour tous les thèmes, affichée par celui-ci seulement, à la place de `theme-identity`) : le nom
+  de son Stand, jeu de mots sur son pseudo calqué sur un vrai Stand des parties 3 à 6 (108 noms ;
+  un clic en tire un autre au hasard, gardé sur l'appareil, `StandName` ; les 7 émeraudes
+  débloquent les deux Requiem), « Manieur », son avatar dans une aura, et l'hexagone des six
+  capacités notées de A à E d'après ses vraies données (calculées par le layout) : Puissance =
+  solde, Vitesse = essais moyens à TROIS, Portée = parties d'Agents Doubles (`countGames`),
+  Endurance = plus longue série TROIS, Précision = journées TROIS parfaites (`getStats` de
+  `@app/trois`), Potentiel = émeraudes ; un clic sur une capacité ouvre une bulle qui l'explique.
+  Son bouton « STAND » invoque Star Platinum.
+  **Effets JoJo** (`apps/web/components/JojoFx.tsx`, composant client monté par le layout racine,
+  actif seulement avec ce thème) : Star Platinum invoqué flotte près de la souris (gardé sur
+  l'appareil, sons d'apparition et de disparition) ; clic maintenu dans le vide : rafale « ORA ORA »
+  sur le thème de Jotaro, le contenu de la case que frappent ses poings tremble (jamais la case ni
+  une zone qui défile : les barres de défilement ne bougent pas) ; près de DIO, il sort The World
+  qui répond en « MUDA MUDA ». Secret : pendant ZA WARUDO, un clic sur DIO lâche le rouleau
+  compresseur dans le temps arrêté (`ROAD_ROLLER_EVENT`) ; 5 s de rafale le renvoient, sinon « To
+  Be Continued ». Clic sur Jotaro : « Yare yare daze » ; sur DIO : « WRYYY ». Sprites du jeu de
+  Capcom en bandes animées en `steps()` (`public/jojo/*-strip.png` ; le rouleau en grille 11 × 4,
+  `dio-road-roller-grid.png`, une bande de 44 images dépassant la taille de texture des cartes
+  graphiques), voix et musiques (`public/audio/jojo-*.mp3`, tirés de vidéos du jeu et de
+  l'anime) ; tout est préchargé et décodé dès que le thème est affiché. Sécurités : une rafale
+  s'arrête si l'onglet passe en arrière-plan et au bout de 30 s ; rien pendant l'arrêt du temps,
+  sauf le rouleau (la couche `.jojo-fx` échappe au gel, comme Star Platinum).
   Décor One Piece (`OnePieceDecor`) : la carte du monde (Red Line, Grand Line, les quatre
   Blues : `public/onepiece/world-map.webp`) en fond, rendue en luminosité seulement sur le bleu de
   la nuit (une vieille carte marine), qui dérive très lentement ; Gear 5 qui rit en haut, devant
@@ -393,6 +428,39 @@ décors.
   la ligne du profil et le solde, marqués `theme-identity` (`AccountPanel`) et `theme-balance`
   (layout). Les images viennent du web (wiki One Piece, illustrations officielles, carte du
   monde d'un fan), réduites en WebP.
+  Décor Apothicaire (`ApothicaireDecor`) : le Palais intérieur de nuit sous la Voie lactée, avec
+  la danse du « fantôme » sur le rempart (`palace-night.webp`), la pleine lune de l'anime
+  (`moon.webp`, découpée dans le visuel officiel de la nuit à la fenêtre à treillis), des nuages
+  qui passent, des lanternes rouges qui se balancent (`lantern.webp` : la lanterne de la
+  couverture française du manga, détourée et rendue symétrique), des pétales de prunier, les noms de poisons et de
+  remèdes du carnet de Mao Mao (附子, 曼陀羅華, 毒…) écrits à la verticale qui montent ; Gyokuyou
+  et Lihua en grand, à peine visibles, et en bas à droite Mao Mao et Jinshi en pied
+  (`*-stand.webp`). Images dans `public/apothicaire/` : visuels officiels de l'anime (site
+  officiel, PV et fonds d'écran), réduits en WebP (environ 250 Ko au chargement du thème ; vidéos
+  et voix seulement au clic). Pour rester léger, rien n'y oblige à redessiner à chaque image :
+  animations en `transform` et `opacity` seulement (le halo de la lune est un calque dont seule
+  l'opacité change), pas de flou animé, teinte du fond cuite dans l'image, et pas de
+  `backdrop-filter` sur les cadres (il serait recalculé à chaque image avec les pétales qui
+  passent derrière).
+  Le cadre du compte devient le **registre du Palais intérieur** (`PalaceRecord` de `@app/ui`,
+  rendu pour tous les thèmes, affiché par celui-ci seulement, à la place de `theme-identity` et
+  `theme-balance`) : papier ivoire à treillis du site officiel (`paper.webp`) et bandeau de laque « 後宮 Registre du Palais », le rang du
+  membre au palais (下女 Servante, 侍女 Dame de compagnie à 10 points, 女官 Dame du palais à 30,
+  中級妃 Concubine de rang moyen à 75, 上級妃 Concubine de haut rang à 150 ; points = mots trouvés
+  à TROIS + parties d'Agents Doubles), son nom, un sceau vermillon à son initiale, trois chiffres
+  (poisons goûtés = mots trouvés à TROIS, remèdes préparés = parties d'Agents Doubles, taels
+  d'argent = solde) et la barre de jade jusqu'au rang suivant.
+  **Effets Apothicaire** (`apps/web/components/ApothicaireFx.tsx`, layout racine, actif seulement
+  avec ce thème) : un clic sur un personnage du décor ouvre au-dessus de lui une vignette de
+  l'anime (GIF converti en MP4 sans son, `public/apothicaire/*.mp4` et leur image d'attente
+  `*.jpg`) avec la réplique en japonais, sa traduction et la voix d'Aoi Yuuki
+  (`public/audio/apothicaire-*.mp3`, extraits officiels Crunchyroll et d'une compilation). Mao
+  Mao : une de ses extases devant un poison (« これ…毒です », « ああ…この苦みが… », le fugu, les
+  serpents), jamais deux fois de suite la même ; Jinshi : il scintille (étincelles kirakira), puis
+  Mao Mao le regarde comme une limace (« はあ ») ; la lune : 毛毛, le chat. Secret : taper
+  « poison » hors d'un champ ouvre la grande extase au centre, sur son monologue du fugu (clic
+  pour fermer). Le clic est écouté en phase de capture (le jeu TROIS arrête la propagation) ;
+  la voix s'arrête si l'onglet passe en arrière-plan.
 - Passer au thème JoJo, ou cliquer de nouveau dessus dans le sélecteur, déclenche **ZA WARUDO**
   (`apps/web/components/ZaWarudo.tsx`, `zaWarudo()` de `@app/ui`) : la voix
   (`public/audio/za-warudo.mp3`), une onde qui inverse les couleurs, puis la page figée et délavée
@@ -409,6 +477,13 @@ décors.
   manga qui convergent vers le centre, « ドン!! » qui tombe de haut, s'écrase et tremble sous le
   choc, et Luffy en Gear 5 qui surgit derrière en riant, rebondit comme du caoutchouc dans une
   couronne de nuages de vapeur (1,9 s).
+- Passer au thème Apothicaire ouvre le **rouleau du titre** (`apps/web/components/
+ApothicaireOpening.tsx`, `apothicaire()` de `@app/ui`) : la page s'assombrit sous une pluie de
+  pétales, un rouleau horizontal se déroule depuis le centre (tringles laquées qui s'écartent,
+  papier découvert par un `clip-path`), 「薬屋のひとりごと」 s'écrit à l'encre caractère par
+  caractère, Mao Mao apparaît et le sceau 「猫猫」 s'imprime, sur les premières mesures de
+  l'opening « Hana ni Natte » (`apothicaire-opening.mp3`, 7,5 s avec fondu). Un clic ferme ;
+  la musique s'éteint en fondu, et s'arrête si l'onglet passe en arrière-plan.
 - Le choix se fait avec le bouton palette du header (`ThemeSwitcher`). Il est mémorisé par appareil
   dans le cookie `theme`, que le layout racine lit pour poser `data-theme` dès le rendu serveur, sans
   flash.
@@ -474,11 +549,26 @@ sous les yeux du joueur à Agents Doubles. Dès la défaite, la page se fige en 
 0,9 s sur la fin). Un clic ou Échap écourte. L'effet se coupe pour de bon dans les paramètres
 (voir ci-dessous) : `toBeContinued()` ne fait alors plus rien.
 
+**Mao Mao** (Les Carnets de l'apothicaire, `apps/web/components/MaoMao.tsx`, layout racine), à
+TROIS (`maoMao()` / `maoMaoSoon()` de `@app/ui`, appelés par `maoReact` de `games/trois/ui/Game.tsx`,
+mode test compris). Au 3e essai raté de suite sur un mot, elle juge : la page s'assombrit sous des
+pétales de prunier, un rouleau suspendu se déroule (tringles laquées, brocart), avec son regard
+qui s'assombrit, main sur la bouche (`public/apothicaire/mao-judge.mp4`), une réplique tirée au
+hasard (clins d'œil à l'anime) et un sceau vermillon « 三連続 » (trois de suite) qui s'imprime. À
+l'avant-dernier essai, son dégoût, cachée derrière sa manche (`mao-disgust.mp4`, « 五連続 »). Le
+mot enfin trouvé après au moins 3 ratés : elle surgit, détourée (`mao-smug.webp`), du coin de
+l'écran avec un sourire narquois. Petite phrase de cordes pincées synthétisée (Karplus-Strong,
+pas de fichier), au volume du site. Les vidéos se chargent au 2e raté. Le rouleau dure 4,5 s et
+se ferme au premier clic ou à la première touche (on continue de taper) ; le mot perdu garde «
+To Be Continued ». L'effet se coupe dans les paramètres. Images et vidéos fournies par les
+membres (extraits de l'anime) ; Mao Mao détourée avec rembg (modèle isnet-anime), hors du dépôt.
+
 **Paramètres** (`/parametres`, entrée « Paramètres » du menu de l'avatar du header,
 `ProfileMenu`). Réglages du membre, gardés sur l'appareil (`localStorage`) :
-`apps/web/components/SettingsView.tsx`. Premier réglage : « To Be Continued » quand on perd
+`apps/web/components/SettingsView.tsx`. Réglages : « To Be Continued » quand on perd
 (`useToBeContinuedDisabled` / `setToBeContinuedDisabled` de `@app/ui`, clé
-`potopia:to-be-continued-disabled`).
+`potopia:to-be-continued-disabled`), Mao Mao à TROIS (`useMaoMaoDisabled` / `setMaoMaoDisabled`,
+clé `potopia:mao-mao-disabled`).
 
 **Images préchargées** (`preloadImages` / `imagesReady` de `@app/ui`, `src/preload.ts`). Les
 planches de sprites et images d'effets (Sonic et Super Sonic, fruit, Luffy et combo, flèche « To
@@ -685,6 +775,17 @@ power?, effectKey?, effectParams?, effectText? }] }`. Chaque carte de base est r
   règle de la boîte noire). Sur la planche, les cartes sont figées (`GameCard still`, classe
   `tcg-still`) : sans 3D, animation, reflet ni grande ombre floue, pour un défilement fluide ;
   l'éditeur garde la carte vivante.
+- Dos des cartes (`CardBack`, le même pour toutes) : cadre SVG tout en or, mot « POTOMON »
+  (police Rajdhani, `--font-rajdhani` dans `cartes/fonts.ts`) et portail du logo en deux
+  calques, `apps/web/public/tcg/portal-frame.webp` (la porte, transparente) et
+  `portal-galaxy.webp` (la galaxie qui tourne derrière, 40 s par tour, figée avec
+  `prefers-reduced-motion`). `CardFlip` retourne une carte : glisser à l'horizontale (souris ou
+  doigt) la fait tourner, une largeur de carte valant un demi-tour, jamais plus d'un demi-tour par
+  geste ; au lâcher, passé 45° elle finit de se retourner, sinon elle revient ; un clic sans
+  glisser passe au contenu. Le dos n'est dessiné
+  qu'au premier retournement. Sur la planche (`CardFlip still` : dos sans inclinaison, galaxie
+  figée) un clic ouvre toujours la fiche ; dans l'éditeur, le dos s'incline au survol comme la
+  face et un bouton « Voir le dos » / « Voir la face » retourne la carte (clavier).
 - Illustrations réduites dans le navigateur avant l'envoi (`shrinkImage` : WebP, 1 200 px au plus
   de côté ; une image déjà petite part telle quelle), dans l'éditeur comme dans l'envoi en masse.
   Titre (`FitTitle`) : la taille baisse avec la longueur jusqu'à 13 px, puis le titre passe sur
