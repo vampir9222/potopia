@@ -519,7 +519,7 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 - [x] Une carte par idée de la boîte à idées, générée hors du dépôt et importée par l'admin ;
       illustrations libres (Wikimedia Commons, crédits notés) pour les idées sans image.
 - [x] Dos des cartes (`CardBack`, portail du logo dont la galaxie tourne) ; la carte se retourne
-      en la faisant tourner à la souris ou au doigt (`CardFlip`), sur la planche de l'admin et
+      en la faisant tourner à la souris ou au doigt, un demi-tour par geste (`CardFlip`), sur la planche de l'admin et
       dans la fiche d'une carte (bouton « Voir le dos » en plus).
 - [ ] Lieux, boosters (stock par set, journal en ajout seul, achat et gains), collection et
       Potodex, revente des doublons.

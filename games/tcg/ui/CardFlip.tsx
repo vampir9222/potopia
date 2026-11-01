@@ -6,11 +6,14 @@ import { Tilt } from "./Tilt";
 
 /** Déplacement (px) au-delà duquel un appui devient un glisser : en dessous, c'est un clic. */
 const DRAG_THRESHOLD = 6;
+/** Angle (°) au-delà duquel, au lâcher, la carte finit de se retourner. */
+const FLIP_AT = 45;
 
 /**
  * Carte qu'on retourne en la faisant tourner : glisser à l'horizontale (souris ou doigt) la fait
- * pivoter, et au lâcher elle se pose sur la face la plus proche. Un clic sans glisser passe au
- * contenu (lien de la planche). Le dos n'est dessiné qu'au premier retournement.
+ * pivoter d'un demi-tour au plus ; au lâcher, passé 45° elle finit de se retourner,
+ * sinon elle revient. Un clic sans glisser passe au contenu (lien de la planche). Le dos n'est
+ * dessiné qu'au premier retournement.
  */
 export function CardFlip({
   children,
@@ -48,16 +51,21 @@ export function CardFlip({
       setDragging(true);
       setBackShown(true);
     }
-    // Toute la largeur de la carte = un demi-tour.
+    // Toute la largeur de la carte = un demi-tour, et jamais plus d'un demi-tour par geste.
     const width = e.currentTarget.getBoundingClientRect().width || 300;
-    setAngle(s.angle + (dx / width) * 180);
+    setAngle(s.angle + Math.max(-180, Math.min(180, (dx / width) * 180)));
   }
 
   function up() {
+    const s = start.current;
     start.current = null;
-    if (!dragging) return;
+    if (!dragging || !s) return;
     setDragging(false);
-    setAngle((a) => Math.round(a / 180) * 180);
+    // Passé 45°, la carte finit de se retourner ; sinon elle revient.
+    setAngle((a) => {
+      const turn = a - s.angle;
+      return Math.abs(turn) > FLIP_AT ? s.angle + Math.sign(turn) * 180 : s.angle;
+    });
   }
 
   // Un glisser ne doit pas ouvrir le lien de la carte.

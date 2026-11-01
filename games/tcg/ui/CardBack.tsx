@@ -1,7 +1,7 @@
 import { useId } from "react";
 
 /**
- * Dos des cartes (variante A : métal et or), le même pour toutes les cartes.
+ * Dos des cartes (variante A, cadre tout en or), le même pour toutes les cartes.
  * SVG vectoriel + portail du logo en deux calques (images de apps/web/public/tcg) ; seule la
  * galaxie tourne. Ratio 360/504, comme la face : la largeur suit le parent.
  */
@@ -95,13 +95,14 @@ export function CardBack({
             <stop offset="0.5" stopColor="#a855f7" stopOpacity={0.18} />
             <stop offset="1" stopColor="#a855f7" stopOpacity={0} />
           </radialGradient>
-          <linearGradient id={id("metal")} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#9ea4bb" />
-            <stop offset="0.18" stopColor="#3a3f58" />
-            <stop offset="0.42" stopColor="#d9dcea" />
-            <stop offset="0.6" stopColor="#2b2f45" />
-            <stop offset="0.82" stopColor="#8f96ad" />
-            <stop offset="1" stopColor="#1c1f30" />
+          {/* Or poli du cadre : reflets clairs et creux sombres en diagonale. */}
+          <linearGradient id={id("frame")} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#fde68a" />
+            <stop offset="0.18" stopColor="#9a6418" />
+            <stop offset="0.42" stopColor="#fff3c4" />
+            <stop offset="0.6" stopColor="#8a5a14" />
+            <stop offset="0.82" stopColor="#e0a93a" />
+            <stop offset="1" stopColor="#5c3a0a" />
           </linearGradient>
           <linearGradient id={id("gold")} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#fde68a" />
@@ -172,10 +173,10 @@ export function CardBack({
           strokeOpacity={0.6}
         />
 
-        {/* Cadre métallique */}
+        {/* Cadre doré */}
         <path
           fillRule="evenodd"
-          fill={url("metal")}
+          fill={url("frame")}
           d="M26 4 H334 A22 22 0 0 1 356 26 V478 A22 22 0 0 1 334 500 H26 A22 22 0 0 1 4 478 V26 A22 22 0 0 1 26 4 Z M25 11 H335 A14 14 0 0 1 349 25 V479 A14 14 0 0 1 335 493 H25 A14 14 0 0 1 11 479 V25 A14 14 0 0 1 25 11 Z"
         />
         <rect
@@ -243,7 +244,7 @@ export function CardBack({
         {/* Plaque du haut */}
         <polygon
           points="134,4 226,4 216,19 144,19"
-          fill={url("metal")}
+          fill={url("frame")}
           stroke={url("gold")}
           strokeWidth={1.5}
         />
