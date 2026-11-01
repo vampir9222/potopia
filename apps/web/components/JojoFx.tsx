@@ -6,7 +6,7 @@ import { useEffect } from "react";
 /*
  * Effets interactifs du thème JoJo, actifs seulement quand ce thème est affiché. Sprites du jeu de
  * Capcom (public/jojo/*-strip.png), voix et thème de Jotaro (public/audio/jojo-*.mp3).
- * - Un clic sur la fiche de Stand (`data-stand-toggle`) invoque Star Platinum, qui flotte alors
+ * - Le bouton « STAND » de la fiche (`data-stand-toggle`) invoque Star Platinum, qui flotte alors
  *   autour de la souris (gardé sur l'appareil). Re-clic : il est rappelé.
  * - Stand invoqué, clic maintenu dans le vide : rafale « ORA ORA ORA » sur le thème de Jotaro ; la
  *   case de la page que frappent les poings tremble. Rafale près de DIO (en bas de l'écran) : il
@@ -27,6 +27,7 @@ const DIO_RANGE = 260; // distance à laquelle DIO sort The World
 const ROLLER_ESCAPE_MS = 4500; // temps pour commencer à repousser le rouleau
 const ROLLER_PUSH_MS = 1800; // durée de rafale qui le renvoie
 const ROLLER_RETRY_MS = 2500; // rafale trop courte : temps avant qu'il retombe
+const RUSH_MAX_MS = 30000; // sécurité : une rafale s'arrête d'elle-même
 const STAND_KEY = "potopia:jojo-stand"; // Stand invoqué, gardé sur l'appareil
 const HINT_KEY = "potopia:jojo-hint-seen"; // bulle d'aide déjà vue sur cet appareil
 // Éléments où un clic maintenu garde son sens habituel.
@@ -50,11 +51,14 @@ const center = (el: Element) => {
   const r = el.getBoundingClientRect();
   return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 };
-const within = (el: Element | null, x: number, y: number) => {
+/** Le point (x, y) est-il dans la boîte de `el`, élargie de `pad` pixels de chaque côté ? */
+const within = (el: Element | null, x: number, y: number, pad = 0) => {
   if (!el) return false;
   const r = el.getBoundingClientRect();
-  return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  return x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad;
 };
+// hitbox large autour des personnages du décor : tout le corps, et un peu plus
+const CHARACTER_PAD = 24;
 const readStand = () => {
   try {
     return window.localStorage.getItem(STAND_KEY) === "1";
@@ -210,13 +214,17 @@ export function JojoFx() {
     const setStand = (on: boolean, { announce = true } = {}) => {
       standOn = on && isJojo();
       root().classList.toggle("jojo-stand-on", standOn);
+      document
+        .querySelectorAll("[data-stand-toggle]")
+        .forEach((b) => b.setAttribute("aria-pressed", String(standOn)));
       try {
         window.localStorage.setItem(STAND_KEY, standOn ? "1" : "0");
       } catch {
         /* navigation privée : le Stand ne survivra pas au rechargement */
       }
       if (standOn && !floater) {
-        pos = { x: mouse.x + 70, y: mouse.y - 50 };
+        // il sort de la souris et glisse vers la droite en apparaissant, comme dans l'anime
+        pos = { x: mouse.x, y: mouse.y - 50 };
         floater = spawn("jojo-fx-sprite jojo-fx-floater");
         if (announce) {
           play(SOUNDS.menacing, { volume: 0.7 });
@@ -290,6 +298,7 @@ export function JojoFx() {
         word(x, y, "ORA", "#f4c430", r.world ? 60 : 80);
         shake(struck(x, y), 4, 120);
         if (roller) jolt([roller.el], 6, 120);
+        if (performance.now() - r.startedAt > RUSH_MAX_MS) endRush(true);
       }, HIT_EVERY_MS);
     };
 
@@ -392,14 +401,13 @@ export function JojoFx() {
       if (e.button !== 0 || !isJojo()) return;
       // sous le rouleau compresseur, on peut riposter n'importe où
       if (!roller && e.target instanceof Element && e.target.closest(INTERACTIVE)) return;
-      // les personnages du décor ne parlent que si on les voit : pas à travers une carte
-      const visible = !(e.target instanceof Element && e.target.closest(".theme-frame"));
+      // les personnages du décor : tout le corps répond (même sous une carte translucide)
       const jotaro = document.querySelector(".jojo-pose");
       const dio = document.querySelector(".jojo-dio");
-      if (visible && !standOn && jotaro && within(jotaro, e.clientX, e.clientY)) {
+      if (!roller && jotaro && within(jotaro, e.clientX, e.clientY, CHARACTER_PAD)) {
         return talking || yareYare(jotaro);
       }
-      if (visible && !standOn && dio && within(dio, e.clientX, e.clientY)) {
+      if (!roller && dio && within(dio, e.clientX, e.clientY, CHARACTER_PAD)) {
         return talking || menacing(dio);
       }
       if (!standOn) return;
@@ -414,6 +422,10 @@ export function JojoFx() {
     };
     const onUp = () => endRush(true);
     const onCancel = () => endRush(false);
+    // page en arrière-plan : plus de rafale ni de son
+    const onHidden = () => {
+      if (document.hidden) endRush(false);
+    };
     const onClick = (e: MouseEvent) => {
       if (!(e.target instanceof Element) || !e.target.closest("[data-stand-toggle]")) return;
       if (isJojo()) setStand(!standOn);
@@ -442,7 +454,7 @@ export function JojoFx() {
       const hint = document.createElement("div");
       hint.className = "jojo-fx-hint";
       hint.innerHTML =
-        "<strong>ゴゴゴゴ…</strong><span>Clique sur ta <b>fiche de Stand</b> pour l'invoquer, puis maintiens le clic : <b>ORA ORA ORA</b> ! Va donc chercher DIO, en bas de l'écran… Et quand il arrête le temps, garde un œil sur lui.</span>";
+        "<strong>ゴゴゴゴ…</strong><span>Allume le bouton <b>STAND</b> de ta fiche pour l'invoquer, puis maintiens le clic : <b>ORA ORA ORA</b> ! Va donc chercher DIO, en bas de l'écran… Et quand il arrête le temps, garde un œil sur lui.</span>";
       const close = () => hint.remove();
       hint.addEventListener("click", close);
       document.body.append(hint);
@@ -460,7 +472,9 @@ export function JojoFx() {
     window.addEventListener("click", onClick);
     window.addEventListener("contextmenu", onContext);
     window.addEventListener(ROAD_ROLLER_EVENT, roadRoller);
+    document.addEventListener("visibilitychange", onHidden);
     return () => {
+      document.removeEventListener("visibilitychange", onHidden);
       endRush(false);
       cancelAnimationFrame(frame);
       themeWatch.disconnect();

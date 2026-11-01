@@ -15,9 +15,8 @@ const PUNS: ((n: string) => string)[] = [
   (n) => `${n} in Heaven`, // Made in Heaven
 ];
 
-// Les six capacités, dans l'ordre de l'hexagone (en partant du haut).
-const STATS = ["破壊力", "スピード", "射程距離", "持続力", "精密動作性", "成長性"] as const;
-const STAT_LABELS = ["Puissance", "Vitesse", "Portée", "Endurance", "Précision", "Potentiel"];
+// Les six capacités des fiches de l'anime, dans l'ordre de l'hexagone (en partant du haut).
+const STATS = ["Puissance", "Vitesse", "Portée", "Endurance", "Précision", "Potentiel"] as const;
 const GRADES = ["E", "D", "C", "B", "A"] as const;
 
 /** Les vraies données du membre dont viennent les notes. */
@@ -77,8 +76,8 @@ type Props = {
 /**
  * Fiche de Stand du membre (thème JoJo), comme les fiches de l'anime : nom du Stand (jeu de mots
  * sur son pseudo, « Requiem » avec les 7 émeraudes), « Manieur », avatar dans son aura, et
- * l'hexagone des six capacités notées de A à E d'après ses vraies données. Un clic l'invoque :
- * Star Platinum flotte alors autour de la souris (`JojoFx` de l'app). Rendue pour tous les thèmes
+ * l'hexagone des six capacités notées de A à E d'après ses vraies données. Le bouton « STAND »
+ * l'invoque : Star Platinum flotte alors autour de la souris (`JojoFx` de l'app). Rendue pour tous les thèmes
  * mais affichée seulement par celui-ci (theme.css), où elle remplace la ligne du profil.
  */
 export function StandCard({ userId, name, image, stats }: Props) {
@@ -88,18 +87,21 @@ export function StandCard({ userId, name, image, stats }: Props) {
   const notes = grades(stats);
   const R = 62;
   const shape = notes.map((g, i) => vertex(i, (R * (g + 1)) / GRADES.length).join(",")).join(" ");
-  const summary = STAT_LABELS.map((l, i) => `${l} ${GRADES[notes[i] ?? 0]}`).join(", ");
+  const summary = STATS.map((l, i) => `${l} ${GRADES[notes[i] ?? 0]}`).join(", ");
 
   return (
-    <button
-      type="button"
-      className="jojo-stand"
-      data-stand-toggle
-      aria-label={`Stand : ${stand}, manieur ${name}. ${summary}. Invoquer ou rappeler le Stand.`}
-    >
-      <span className="jojo-stand-kind">「スタンド」</span>
-      <span className="jojo-stand-name">{stand}</span>
-      <span className="jojo-stand-user">
+    <div className="jojo-stand">
+      <span className="sr-only">{`Stand : ${stand}, manieur ${name}. ${summary}.`}</span>
+      <button type="button" className="jojo-stand-toggle" data-stand-toggle aria-pressed="false">
+        STAND
+      </button>
+      <span className="jojo-stand-kind" aria-hidden>
+        「スタンド」
+      </span>
+      <span className="jojo-stand-name" aria-hidden>
+        {stand}
+      </span>
+      <span className="jojo-stand-user" aria-hidden>
         <span className="jojo-stand-photo">
           {image ? <img src={image} alt="" /> : name.slice(0, 1).toUpperCase()}
         </span>
@@ -136,10 +138,6 @@ export function StandCard({ userId, name, image, stats }: Props) {
           );
         })}
       </svg>
-      <span className="jojo-stand-call">
-        <span className="jojo-stand-call-off">Clic : invoquer ton Stand</span>
-        <span className="jojo-stand-call-on">Stand invoqué · clic : le rappeler</span>
-      </span>
-    </button>
+    </div>
   );
 }

@@ -664,11 +664,7 @@
   .jojo-stand {
     display: none;
     position: relative;
-    width: 100%;
     padding: 10px 10px 6px;
-    text-align: left;
-    cursor: pointer;
-    transition: box-shadow 0.25s;
     border: 2px solid #050308;
     background:
       radial-gradient(circle, rgb(255 255 255 / 0.06) 1px, transparent 1.6px) 0 0 / 6px 6px,
@@ -681,35 +677,42 @@
   [data-theme="jojo"] .jojo-stand {
     display: block;
   }
-  .jojo-stand:hover,
-  .jojo-stand:focus-visible {
+  /* bouton « STAND » (police JoJo) : il s'allume quand le Stand est sorti (classe posée par
+     JojoFx) */
+  .jojo-stand-toggle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 9px 1px;
+    border: 2px solid #050308;
+    background: #2a1c5c;
+    color: var(--muted);
+    font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    transform: skewX(-10deg);
+    box-shadow: 3px 3px 0 #050308;
+    cursor: pointer;
+    transition:
+      color 0.2s,
+      background 0.2s,
+      box-shadow 0.2s;
+  }
+  .jojo-stand-toggle:hover,
+  .jojo-stand-toggle:focus-visible {
     outline: none;
+    color: var(--accent);
+  }
+  html.jojo-stand-on .jojo-stand-toggle {
+    background: var(--accent-gradient);
+    color: #1a1203;
     box-shadow:
-      inset 0 0 0 1px var(--accent),
-      4px 4px 0 #050308,
-      0 0 22px -4px var(--arcane);
+      3px 3px 0 #050308,
+      0 0 16px 2px color-mix(in oklab, var(--arcane) 80%, transparent);
   }
   .jojo-stand-kind,
   .jojo-stand-name {
     display: block;
-  }
-  /* « Clic : invoquer ton Stand » / « Stand invoqué » selon l'état (classe posée par JojoFx) */
-  .jojo-stand-call {
-    display: block;
-    margin-top: 2px;
-    text-align: center;
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .jojo-stand-call-on,
-  html.jojo-stand-on .jojo-stand-call-off {
-    display: none;
-  }
-  html.jojo-stand-on .jojo-stand-call-on {
-    display: inline;
-    color: var(--accent);
   }
   [data-theme="jojo"] .theme-identity {
     /* !important : la classe flex de Tailwind (couche utilities) passerait devant */
@@ -795,7 +798,7 @@
     filter: drop-shadow(0 0 4px color-mix(in oklab, var(--accent) 70%, transparent));
   }
   .jojo-stand-label {
-    font-size: 9px;
+    font-size: 10px;
     fill: var(--muted);
     text-anchor: middle;
     dominant-baseline: middle;
