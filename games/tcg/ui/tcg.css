@@ -567,3 +567,93 @@
 .tcg-still .tcg-glare {
   display: none;
 }
+
+/* Carte retournable (`CardFlip`) : on la fait tourner en glissant à l'horizontale. Les faces sont
+   à plat (leur 3D interne s'y aplatit) pour que `backface-visibility` cache celle de derrière. */
+.tcg-flip {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Le glisser horizontal tourne la carte ; le défilement vertical reste au navigateur. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.tcg-flip[data-dragging] {
+  transition: none;
+  cursor: grabbing;
+}
+.tcg-flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.tcg-flip-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+
+/* Dos des cartes (`CardBack`) : ratio 360/504 comme la face, la largeur suit le parent. */
+.tcg-back {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 360 / 504;
+  border-radius: 6.1% / 4.4%;
+  overflow: hidden;
+}
+.tcg-back-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* Portail : 300x300 à (30, 74) sur une carte de 360x504 */
+.tcg-back-portal {
+  position: absolute;
+  left: 8.333%;
+  top: 14.683%;
+  width: 83.333%;
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+.tcg-back-door {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+/* Galaxie : 176x176 à (62, 76) dans le portail de 300x300 */
+.tcg-back-galaxy {
+  position: absolute;
+  left: 20.667%;
+  top: 25.333%;
+  width: 58.667%;
+  height: 58.667%;
+}
+.tcg-back-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.tcg-back-spin {
+  animation: tcg-galaxy-spin 40s linear infinite;
+  transform-origin: 50% 50%;
+}
+@keyframes tcg-galaxy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tcg-back-spin {
+    animation: none;
+  }
+  .tcg-flip {
+    transition: none;
+  }
+}
+.tcg-flip-back .tcg-tilt {
+  box-shadow: 0 24px 46px rgb(0 0 0 / 0.55);
+}

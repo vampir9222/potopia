@@ -21,6 +21,7 @@ import {
   getEffect,
   TRIGGER_LABELS,
 } from "../src/effects";
+import { CardFlip } from "./CardFlip";
 import { GameCard, GameCardDefs } from "./GameCard";
 import { ImageFramer } from "./ImageFramer";
 import { shrinkImage } from "./shrinkImage";
@@ -419,13 +420,15 @@ export function CardEditor({
 
       <div className="flex flex-col items-center gap-3">
         <GameCardDefs />
-        <GameCard
-          card={preview}
-          imageUrl={image}
-          layout={layout}
-          setSize={setSize}
-          author={author}
-        />
+        <CardFlip button>
+          <GameCard
+            card={preview}
+            imageUrl={image}
+            layout={layout}
+            setSize={setSize}
+            author={author}
+          />
+        </CardFlip>
         <div className="flex gap-2 text-sm">
           {(["normal", "fullart"] as const).map((l) => (
             <button
