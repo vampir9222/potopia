@@ -5,6 +5,7 @@ export { Card } from "./Card";
 export { cx } from "./cx";
 export { Embers } from "./Embers";
 export { JojoDecor } from "./JojoDecor";
+export { StandCard } from "./StandCard";
 export { DON_EVENT, don } from "./don";
 export { EmptyState } from "./EmptyState";
 export { Input, Label, Select, Textarea } from "./fields";

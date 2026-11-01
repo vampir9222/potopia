@@ -9,6 +9,7 @@ import {
   resolveTheme,
   THEME_COOKIE,
   ThemeSwitcher,
+  StandCard,
   VolumeControl,
   WantedPoster,
 } from "@app/ui";
@@ -53,6 +54,8 @@ export default async function PlatformLayout({ children }: { children: ReactNode
         {/* thème One Piece : l'avis de recherche du membre, sa prime = son solde (il remplace
             alors la ligne du profil et le solde, theme-identity / theme-balance) */}
         <WantedPoster name={profile.name} image={profile.image} bounty={balance} />
+        {/* thème JoJo : la fiche de Stand du membre (elle remplace la ligne du profil) */}
+        <StandCard userId={user.id} name={profile.name} image={profile.image} />
         <div className="theme-balance">
           <BalanceCard balance={balance} />
         </div>

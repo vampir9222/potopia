@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { Don } from "@/components/Don";
 import { NextNavigation } from "@/components/NextNavigation";
+import { JojoFx } from "@/components/JojoFx";
 import { ToBeContinued } from "@/components/ToBeContinued";
 import { ZaWarudo } from "@/components/ZaWarudo";
 import "./globals.css";
@@ -65,6 +66,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <ToBeContinued />
         {/* passage au thème JoJo : arrêt du temps (zaWarudo() de @app/ui) */}
         <ZaWarudo />
+        <JojoFx />
         {/* passage au thème One Piece : « ドン!! » (don() de @app/ui) */}
         <Don />
       </body>
