@@ -13,17 +13,50 @@ const listeners = new Set<(stopped: boolean) => void>();
 const playing = new Set<HTMLMediaElement>();
 let suspended: HTMLMediaElement[] = [];
 let patched = false;
+let mediaFocus = 0;
+const focusPaused = new Set<HTMLMediaElement>();
 
 /** Suit les sons qui jouent (pour pouvoir les mettre en pause). Appelé une fois, au montage. */
 export function trackMedia(): void {
   if (patched || typeof HTMLMediaElement === "undefined") return;
   patched = true;
   const play = HTMLMediaElement.prototype.play;
+  const pause = HTMLMediaElement.prototype.pause;
+  HTMLMediaElement.prototype.pause = function (this: HTMLMediaElement) {
+    focusPaused.delete(this);
+    return pause.call(this);
+  };
   HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+    if (mediaFocus > 0 && !this.dataset.mediaFocusProof) {
+      if (this.loop) focusPaused.add(this);
+      return Promise.resolve();
+    }
     playing.add(this);
     this.addEventListener("pause", () => playing.delete(this), { once: true });
     this.addEventListener("ended", () => playing.delete(this), { once: true });
     return play.call(this);
+  };
+}
+
+/** Réserve le son à un lecteur externe (GOTY/YouTube), sans arrêter les animations du portail. */
+export function claimMediaFocus(): () => void {
+  trackMedia();
+  if (mediaFocus++ === 0) {
+    for (const media of [...playing])
+      if (!media.dataset.mediaFocusProof) {
+        media.pause();
+        if (media.loop) focusPaused.add(media);
+      }
+  }
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    if (--mediaFocus !== 0) return;
+    const resume = [...focusPaused];
+    focusPaused.clear();
+    if (isTimeStopped()) suspended.push(...resume.filter((media) => !suspended.includes(media)));
+    else resume.forEach((media) => media.play().catch(() => {}));
   };
 }
 

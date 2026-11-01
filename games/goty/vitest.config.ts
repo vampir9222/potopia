@@ -8,6 +8,7 @@ try {
 }
 
 export default defineConfig({
+  oxc: { jsx: { runtime: "automatic" } },
   test: {
     globalSetup: ["./test/global-setup.ts"],
     fileParallelism: false,

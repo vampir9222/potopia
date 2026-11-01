@@ -18,6 +18,7 @@ const controlSchema = z.discriminatedUnion("action", [
 ]);
 export type ControlInput = z.input<typeof controlSchema>;
 export type ControlAction = ControlInput["action"];
+export { controlSchema as controlInputSchema };
 
 function conflict(condition: unknown, message: string): asserts condition {
   if (!condition) throw new GotyError("CONFLICT", message, 409);

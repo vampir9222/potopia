@@ -27,9 +27,9 @@ export function Header({ user, signOut, menuButton, actions }: Props) {
         }}
       />
       {menuButton}
-      <AppLink href="/" className="flex items-center gap-2">
+      <AppLink href="/" aria-label={BRAND.name} className="flex min-w-0 items-center gap-2">
         <img src={BRAND.logo} alt="" className="size-11 shrink-0" />
-        <span className="font-display text-gradient text-xl font-bold tracking-[0.12em]">
+        <span className="font-display text-gradient hidden text-xl font-bold tracking-[0.12em] min-[440px]:inline">
           {BRAND.name}
         </span>
       </AppLink>

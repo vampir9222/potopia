@@ -1,5 +1,13 @@
 import { AppLink } from "@app/ui";
-import { Grid3x3, Lightbulb, Palette, Shield, VenetianMask, type LucideIcon } from "lucide-react";
+import {
+  Grid3x3,
+  Lightbulb,
+  Palette,
+  Shield,
+  Trophy,
+  VenetianMask,
+  type LucideIcon,
+} from "lucide-react";
 import type { AppEntry, AppIconName } from "../src/apps/registry";
 
 // Import explicite de chaque icône : importer tout lucide alourdirait le bundle client.
@@ -9,6 +17,7 @@ const ICONS: Record<AppIconName, LucideIcon> = {
   mask: VenetianMask,
   palette: Palette,
   shield: Shield,
+  trophy: Trophy,
 };
 
 type Props = {

@@ -2,13 +2,19 @@ import Link from "next/link";
 import { BRAND } from "@app/config/brand";
 import { Card } from "@app/ui";
 import { countIdeas } from "@app/ideas";
-import { Coins, Layers, Lightbulb, Smile } from "lucide-react";
+import { Coins, Layers, Lightbulb, Smile, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import { getCurrentAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Administration" };
 
 const SECTIONS = (ideasCount: number) => [
+  {
+    href: "/admin/goty",
+    title: "GOTY Party",
+    description: "Éditions annuelles, participants et organisation de la soirée.",
+    icon: Trophy,
+  },
   {
     href: "/admin/economy",
     title: "Monnaie",

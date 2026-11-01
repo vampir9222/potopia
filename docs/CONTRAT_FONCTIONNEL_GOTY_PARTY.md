@@ -135,7 +135,7 @@ signifient vrai, sans distinction de casse ni espaces autour. Les lignes vides s
 
 Précisions du lot 3 : fichier limité à 5 Mo, CSV en UTF-8 ou première feuille d’un XLSX.
 L’aperçu indique les lignes et champs invalides ; la confirmation revalide le lot et les droits
-avant écriture. Les dates XLSX sont converties en date ISO. Les formulaires restent au lot 5.
+avant écriture. Les dates XLSX sont converties en date ISO. Les formulaires sont intégrés au lot 5.
 
 Recherche IGDB facultative, côté serveur ; saisie manuelle toujours possible. Trailer intégré
 si connu, recherche YouTube de secours sinon ; fermer le lecteur arrête la lecture. Aucun fichier
@@ -233,7 +233,7 @@ remplacements concurrents silencieux. Une lecture retourne un état cohérent d�
 
 ## 6. Contrats HTTP et données visibles
 
-Contrat cible, avec identifiants opaques de type chaîne ; noms JSON en camelCase. Les services
+Contrat implémenté au lot 5, avec identifiants opaques de type chaîne ; noms JSON en camelCase. Les services
 métier restent indépendants de Next et acceptent `{ tx }` pour leurs écritures.
 
 | Route sous `/api/goty`                             | Entrée principale                                                  | Sortie                                                   |
@@ -265,8 +265,15 @@ Précisions du lot 4 : `restart` exige aussi `confirmRestart: true`. Les command
 `announce`, `lock`, `reopen`, `reveal`, `recap` exigent `roundId` ; `play` exige `targetId`.
 `resume` est réservé au classement temporaire ; `play` exige un écran de rubrique ou de
 récapitulatif. Les types serveur `ControlInput` décrivent ces variantes. Les deux snapshots sont
-implémentés côté serveur ; leur exposition HTTP, `no-store` et les contrôles de session par
-route seront intégrés au lot 5.
+implémentés côté serveur et exposés via des routes authentifiées `private, no-store`.
+Les mutations vérifient l’origine et refusent les requêtes cross-site. Le 304 revérifie session
+et droits ; son ETag est propre à l’acteur, à ses permissions, à la projection et à la version.
+
+Compléments du lot 5 : `GET /editions/:id/eligible-members` pour les organisateurs,
+`POST /editions/:id/import-preview?format=csv|xlsx&mapping=JSON` (octets, 5 Mio maximum) et
+`PUT /editions/:id/top` (`{ gameIds: Id[] }`). Le top est remplacé atomiquement, conserve les
+précisions des jeux déplacés et interdit de modifier une place figée. Les entrées JSON sont
+limitées à 2 Mio. L’aperçu n’écrit rien ; la confirmation utilise le contrat `POST games`.
 
 `GameInput` : `title`, `platform?`, `period?`, `completed?`, `platinum?`, `igdbId?`, `cover?`,
 `trailerYoutubeId?`, avec les limites de la section 4. Chaînes facultatives par défaut vides,

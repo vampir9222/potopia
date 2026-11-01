@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
     "@app/core",
     "@app/db",
     "@app/economy",
+    "@app/goty",
     "@app/ideas",
     "@app/inventory",
     "@app/storage",

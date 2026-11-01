@@ -1,6 +1,6 @@
 # Plan d’intégration de GOTY Party dans Potopia
 
-Statut : lots 1 à 4 terminés ; interface et routes à partir du lot 5. Analyse des dépôts le
+Statut : lots 1 à 5 terminés ; exploitation et recette finale aux lots 6 et 7. Analyse des dépôts le
 31 octobre 2026. Ce document ne déclenche ni migration ni déploiement.
 
 Le [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) détaille les droits, transitions,
@@ -169,7 +169,7 @@ Livré côté serveur : pronostics, score dérivé avec ex æquo, commandes vers
 lues sous un verrou partagé cohérent avec les écritures. Le cycle complet et les courses sont
 testés sur PostgreSQL. Aucune migration nouvelle ; interfaces et handlers restent au lot 5.
 
-### Lot 5 — Intégrer l’interface au portail
+### Lot 5 — Intégrer l’interface au portail ✅
 
 - Refaire en React l’accueil, la sélection d’édition, les jeux, les catégories, le palmarès,
   les pronostics, l’organisation, la cérémonie et les archives.
@@ -189,6 +189,15 @@ testés sur PostgreSQL. Aucune migration nouvelle ; interfaces et handlers reste
 
 **Fini quand :** un essai sur deux comptes et un écran TV permet d’animer la soirée, sur mobile
 et grand écran, sans révélation anticipée ni conflit de navigation ou de musique.
+
+Livré : tuile membre, administration, pages React de préparation, pronostics, cérémonie et
+archives, API authentifiée avec contrôle d’origine et écran TV séparé. Polling à trois secondes,
+réponses conditionnelles privées, protection contre les réponses tardives et changements de
+compte, top atomique et conducteur réordonnables au clavier. Médias avec activation TV manuelle
+et suspension de la musique du portail. Recette locale sur comptes fictifs, top, pronostic,
+télécommande et TV, avec contrôle mobile à 390 px. Les tests métier, HTTP et DOM complètent
+cette recette ; la recette exhaustive de production reste au lot 7. Voir les limites de
+validation dans le [README du module](../games/goty/README.md).
 
 ### Lot 6 — Relier les services communs et préparer l’exploitation
 

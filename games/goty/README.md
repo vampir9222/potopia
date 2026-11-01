@@ -1,8 +1,8 @@
 # GOTY Party dans Potopia
 
-Les lots 2 à 4 livrent le serveur de `@app/goty` : éditions, préparation, pronostics, cérémonie
-et archives. Ils n’ajoutent encore ni page, ni route HTTP, ni tuile au portail. Les interfaces
-React, la synchronisation navigateur et l’écran TV viennent au lot 5.
+Les lots 2 à 5 livrent `@app/goty` : éditions, préparation, pronostics, cérémonie, archives,
+interface React et écran TV. La tuile membre ouvre `/goty` ; `/admin/goty` permet aux admins
+de créer les éditions. Notifications, exploitation et recette finale restent aux lots 6 et 7.
 
 - [Plan des lots](../../docs/PLAN_INTEGRATION_GOTY_PARTY.md)
 - [Contrat fonctionnel et recette](../../docs/CONTRAT_FONCTIONNEL_GOTY_PARTY.md)
@@ -219,14 +219,62 @@ Les deux projections utilisent un JSON d’écran validé avec champs autorisés
 ne peut référencer qu’un choix révélé ; chaque lancement porte un nonce, conservé lors d’une
 simple reconnexion et renouvelé lors d’une nouvelle lecture. Les changements d’écran arrêtent
 l’audio, sauf une révélation de bande-son qui remplace la lecture précédente. Les lecteurs,
-leurs contrôles de son et la suspension de la musique du portail seront intégrés au lot 5.
+leurs contrôles de son et la suspension de la musique du portail sont intégrés à l’interface.
 
 Toutes les lectures GOTY d’un snapshot s’exécutent sous le verrou partagé de l’édition, qui
 reste détenu jusqu’à la fin de la transaction. Les écritures métier prennent le verrou exclusif
 sur cette même ligne ; cela stabilise les données même en isolation PostgreSQL READ COMMITTED,
 y compris dans une transaction fournie via `{ tx }`. Les services `core` fournissent séparément
-les noms et images publics. Les futurs handlers devront vérifier la session, renvoyer `no-store`
-et ne pas mettre en cache les projections entre acteurs.
+les noms et images publics. Les handlers vérifient la session, renvoient `private, no-store`
+et ne mettent pas en cache les projections entre acteurs.
+
+## Interface et HTTP (lot 5)
+
+L’export `@app/goty/ui` contient les composants React sans dépendance à Next ; les liens
+passent par `AppLink`. Les pages web contrôlent la session et transmettent les projections
+serveur. `/goty/:editionId` propose les onglets jeux, palmarès, catégories, pronostics,
+organisation, cérémonie et archives. L’organisation exige les droits correspondants.
+`/goty/:editionId/tv` utilise un layout sans colonne de portail et uniquement la projection TV.
+
+Le handler `/api/goty/[...path]` expose les services décrits dans le contrat fonctionnel.
+Il ajoute `GET /editions/:id/eligible-members`, `POST /editions/:id/import-preview` et
+`PUT /editions/:id/top` (`{ gameIds }`). Le top est remplacé atomiquement : permutation de
+ses jeux, précisions conservées et places figées inchangées. L’aperçu reçoit les octets CSV/XLSX
+avec `format` et une correspondance JSON `mapping` facultative en paramètres ; aucune écriture
+avant confirmation via `POST games`. Limites : 5 Mio pour l’aperçu, 2 Mio pour le JSON.
+
+Chaque requête vérifie l’appartenance au portail, puis les services vérifient les droits de
+l’édition. L’acteur vient exclusivement de la session. Les mutations exigent une origine
+identique à `BETTER_AUTH_URL` et refusent `Sec-Fetch-Site: cross-site`. Les réponses privées,
+erreurs comprises, portent `Cache-Control: private, no-store`. Les lectures conditionnelles
+revérifient la session et les droits avant tout 304 ; leur ETag inclut version, projection,
+identité et permissions. `x-goty-viewer` permet au client de détecter un changement de compte.
+
+Le polling ne chevauche pas les requêtes et fonctionne toutes les trois secondes, seulement
+quand l’onglet est visible ; retour au premier plan = actualisation immédiate. Une génération
+de requête ignore les réponses obsolètes même si l’annulation réseau est ignorée. Les mutations
+ne sont jamais rejouées automatiquement et rechargent l’état après conflit. Un changement de
+compte ou une révocation efface la vue privée ; la navigation d’édition remonte les composants.
+Le top et le conducteur se déplacent par poignée tactile/souris, flèches clavier ou boutons.
+
+Les lecteurs YouTube utilisent le domaine nocookie ; leur démontage arrête la lecture. Les
+bandes-son nécessitent une activation sur chaque TV et suivent le nonce de la commande, sans
+redémarrer à chaque poll. Un arrêt local, une nouvelle lecture distante, le volume commun et le
+plein écran sont disponibles. `claimMediaFocus` suspend les médias du portail et reprend les
+boucles après fermeture du dernier lecteur. Sans trailer, une recherche YouTube est proposée.
+La lecture effective dépend du navigateur et des restrictions YouTube ; le lien externe reste
+accessible. Aucune vidéo ni jaquette externe n’est recopiée dans le stockage du portail.
+
+La recette locale a utilisé des comptes et jeux fictifs dans une base séparée : top, second
+compte, pronostic, télécommande, rubrique vide et révélation TV. Vue mobile contrôlée à 390 px.
+Les tests DOM couvrent réponses tardives, navigation, compte changé, révocation, onglet masqué
+et priorité média. Les tests web couvrent les sessions, origines, tailles et projections/304.
+Validation locale du lot 5 : 114 tests GOTY, 156 tests web et 43 tests core réussis ;
+TypeScript, ESLint, formatage, frontières et build de production vérifiés. Les tests DOM ont
+également été relancés après la correction de l’arrêt volontaire d’une musique suspendue.
+La suite globale nécessite le stockage S3 du projet : l’émulateur S3rver utilisé pour la recette
+ne vérifie pas le Content-Type d’un PUT présigné comme RustFS/R2 et échoue sur ce test existant.
+La recette exhaustive, les fournisseurs réels et l’exploitation restent aux lots 6 et 7.
 
 ## Règles pures
 

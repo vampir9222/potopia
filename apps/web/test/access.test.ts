@@ -93,6 +93,12 @@ const { saveAvatarAction } = await import("@/app/(platform)/avatar/actions");
 const { sprites } = await import("@/lib/avatar");
 const avatarSheetRoute = await import("@/app/api/avatars/[userId]/[hash]/route");
 const placeRoute = await import("@/app/api/place/route");
+const { default: GotyPage } = await import("@/app/(platform)/goty/page");
+const { default: GotyEditionPage } =
+  await import("@/app/(platform)/goty/[editionId]/[[...view]]/page");
+const { default: GotyTVPage } = await import("@/app/(goty-tv)/goty/[editionId]/tv/page");
+const { default: GotyTVLayout } = await import("@/app/(goty-tv)/goty/[editionId]/tv/layout");
+const { default: GotyAdminPage } = await import("@/app/(platform)/admin/goty/page");
 
 const ADMIN_ID = "100000000000000001";
 const MEMBER_ID = "100000000000000002";
@@ -206,6 +212,12 @@ function withCookie(path: string, body?: unknown): Request {
 /** Pages et layouts protégés. */
 const children = null;
 const memberPages: Record<string, () => Promise<unknown>> = {
+  "goty/page": () => GotyPage(),
+  "goty/[editionId]/page": () =>
+    GotyEditionPage({ params: Promise.resolve({ editionId: "inconnue" }) }),
+  "goty/[editionId]/tv/page": () =>
+    GotyTVPage({ params: Promise.resolve({ editionId: "inconnue" }) }),
+  "goty/tv/layout": () => GotyTVLayout({ children: "Écran TV" }),
   "(platform)/layout": () => PlatformLayout({ children }),
   "(platform)/page": () => DashboardPage(),
   "ideas/page": () => IdeasPage(),
@@ -220,6 +232,7 @@ const memberPages: Record<string, () => Promise<unknown>> = {
   "credits/page": () => CreditsPage(),
 };
 const adminPages: Record<string, () => Promise<unknown>> = {
+  "admin/goty/page": () => GotyAdminPage(),
   "admin/layout": () => AdminLayout({ children }),
   "admin/page": () => AdminPage(),
   "admin/economy/page": () => AdminEconomyPage({ searchParams: Promise.resolve({}) }),
@@ -391,7 +404,11 @@ describe("pages et layouts", () => {
 
   it("le dashboard s'affiche pour un membre", async () => {
     await signIn(MEMBER_ID);
-    for (const render of Object.values(memberPages)) await expect(render()).resolves.toBeTruthy();
+    for (const [name, render] of Object.entries(memberPages)) {
+      if (name.startsWith("goty/[editionId]"))
+        await expect(render()).rejects.toMatchObject({ kind: "notFound" });
+      else await expect(render()).resolves.toBeTruthy();
+    }
   });
 });
 

@@ -39,7 +39,7 @@ Pourquoi Better Auth plutôt qu'Auth.js :
 apps/web/            app Next mince : routes, layouts, server actions, route handlers
 games/
   agents/            Agents Doubles, jeu d'espions coopératif à deux (règles de Codenames Duet)
-  goty/              GOTY Party : socle et préparation serveur, imports, IGDB ; UI à venir
+  goty/              GOTY Party : services, imports, IGDB, UI React, cérémonie et TV
   tcg/               futur jeu de cartes : pour l'instant, le vote du design des cartes (/cartes)
   trois/             Wordle français à 3 mots par jour (premier jeu intégré)
 packages/
@@ -233,7 +233,17 @@ une commande concurrente devient un conflit sans deuxième effet. L’échange d
 deux passes pour respecter leur unicité. Le retour en préparation exige `confirmRestart: true`,
 garde les choix et pronostics, efface les tirages et remet les points dérivés à zéro. Les archives
 sont immuables. Aucun nouvel objet SQL ni variable d’environnement pour ce lot ; voir le
-[README du module](../games/goty/README.md). Interfaces et routes restent au lot 5.
+[README du module](../games/goty/README.md).
+
+Le lot 5 ajoute les exports React `@app/goty/ui` et ses styles, la tuile du portail,
+`/goty`, `/admin/goty`, les onglets d’édition et le layout TV séparé. Les handlers
+`/api/goty/[...path]` contrôlent session, origine des mutations et tailles d’entrée avant
+d’appeler les services publics ; aucun accès direct aux tables. Les réponses sont privées et
+`no-store`. Le polling à trois secondes s’arrête hors écran et utilise un ETag lié à l’acteur,
+aux droits et à la version. Les réponses périmées sont ignorées ; compte changé ou accès révoqué
+efface la projection. Le top dispose d’un remplacement atomique préservant les places figées.
+Les lecteurs utilisent le volume commun et `claimMediaFocus` pour suspendre la musique du portail.
+L’audio TV est activé explicitement, les commandes ne sont pas rejouées automatiquement.
 
 ### trois et agents
 
@@ -839,8 +849,8 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
 L’intégration native de GOTY Party est définie dans le
 [plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) et le
 [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Le serveur couvre préparation,
-pronostics, cérémonie et snapshots ; interface, synchronisation navigateur et routes HTTP
-restent à implémenter.
+pronostics, cérémonie et snapshots ; l’interface, la synchronisation navigateur et les routes
+HTTP sont intégrées. Notifications, exploitation et recette finale restent à réaliser.
 
 Côté cartes : boosters, collection, decks et parties (étape 13, à venir). Pas de récompense en
 monnaie dans TROIS pour l'instant.

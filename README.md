@@ -8,11 +8,12 @@ et celui de la monnaie viennent de `packages/config/brand.ts`.
 
 - Choix techniques et règles d'architecture : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Étapes de réalisation : [docs/ROADMAP.md](docs/ROADMAP.md)
-- Intégration de GOTY Party (planifiée, pas encore disponible) :
+- Intégration de GOTY Party (lots 1 à 5 réalisés) :
   [plan d’action](docs/PLAN_INTEGRATION_GOTY_PARTY.md) et
   [contrat fonctionnel](docs/CONTRAT_FONCTIONNEL_GOTY_PARTY.md).
-  Le [serveur GOTY](games/goty/README.md) couvre préparation, imports CSV/XLSX, IGDB facultatif,
-  pronostics, cérémonie et archives, sans page ni route HTTP pour l’instant.
+  Le [module GOTY](games/goty/README.md) propose l’interface `/goty`, la préparation,
+  les imports CSV/XLSX, IGDB facultatif, les pronostics, la télécommande et l’écran TV.
+  Notifications, exploitation et recette de mise en service restent aux lots 6 et 7.
 
 **Stack** : monorepo pnpm + Turborepo, TypeScript strict, Next.js 16 (App Router), Tailwind v4,
 PostgreSQL + Prisma 7, Better Auth (Discord), stockage S3 (Cloudflare R2 en prod, RustFS en
@@ -142,7 +143,7 @@ packages/
   ui/            thèmes et composants de base
 games/
   agents/        Agents Doubles, le jeu d'espions coopératif à deux
-  goty/          GOTY Party : préparation, pronostics, cérémonie et archives serveur ; UI à venir
+  goty/          GOTY Party : préparation, pronostics, cérémonie, archives et interface React/TV
   tcg/           jeu de cartes : vote du design (/cartes), cartes et effets (admin /admin/cartes)
   trois/         TROIS, le Wordle à 3 mots par jour
 ```
