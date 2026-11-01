@@ -823,13 +823,13 @@ html.jojo-rushing * {
     transform: translate(40vw, -110vh) rotate(540deg);
   }
 }
+/* le Stand rappelé s'efface en fondu */
 .jojo-fx-leave {
-  animation: jojo-fx-leave 0.35s ease-in forwards;
+  animation: jojo-fx-leave 0.5s ease-in forwards;
 }
 @keyframes jojo-fx-leave {
   to {
     opacity: 0;
-    scale: 0.8;
   }
 }
 

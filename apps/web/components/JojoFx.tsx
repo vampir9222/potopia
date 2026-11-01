@@ -36,6 +36,7 @@ const INTERACTIVE =
 
 const SOUNDS = {
   stand: "/audio/jojo-stand.mp3",
+  standOut: "/audio/jojo-stand-out.mp3",
   ora: "/audio/jojo-ora.mp3",
   theme: "/audio/jojo-theme-jotaro.mp3",
   muda: "/audio/jojo-muda.mp3",
@@ -244,6 +245,7 @@ export function JojoFx() {
         }
       }
       if (!standOn && floater) {
+        if (announce) play(SOUNDS.standOut, { volume: 0.9 });
         const f = floater;
         floater = null;
         f.classList.add("jojo-fx-leave");
