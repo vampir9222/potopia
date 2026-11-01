@@ -299,9 +299,35 @@ décors.
   de l'équipage au coin ; titres en Luckiest Guy cerclés de brun comme le logo de la série).
 - Les décors s'activent par variables (`--ornaments`, `--embers`, `--ambient`, `--fans`, `--jojo`,
   `--onepiece`) :
-  un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons,
+  un thème sobre les coupe sans toucher aux composants. Décor JoJo (`JojoDecor`) : trame, rayons
+  qui partent de DIO (un carré de 300vmax centré sur lui, qui tourne sans jamais montrer de bord),
   portraits pixel art du jeu de Capcom (`public/jojo/portrait-*.png` : Jotaro, Star Platinum, DIO,
-  The World), « ゴゴゴ » qui montent, étoiles, Jotaro qui prend la pose (`jotaro-pose.png`).
+  The World), « ゴゴ » animés qui montent (`menacing-gogo-strip.png`), étoiles, et en bas DIO en
+  attente (`dio-idle-strip.png`) face à Jotaro qui prend la pose (`jotaro-pose.png`).
+  Le cadre du compte devient la **fiche de Stand** du membre (`StandCard` de `@app/ui`, rendue
+  pour tous les thèmes, affichée par celui-ci seulement, à la place de `theme-identity`) : le nom
+  de son Stand, jeu de mots sur son pseudo calqué sur un vrai Stand des parties 3 à 6 (108 noms ;
+  un clic en tire un autre au hasard, gardé sur l'appareil, `StandName` ; les 7 émeraudes
+  débloquent les deux Requiem), « Manieur », son avatar dans une aura, et l'hexagone des six
+  capacités notées de A à E d'après ses vraies données (calculées par le layout) : Puissance =
+  solde, Vitesse = essais moyens à TROIS, Portée = parties d'Agents Doubles (`countGames`),
+  Endurance = plus longue série TROIS, Précision = journées TROIS parfaites (`getStats` de
+  `@app/trois`), Potentiel = émeraudes ; un clic sur une capacité ouvre une bulle qui l'explique.
+  Son bouton « STAND » invoque Star Platinum.
+  **Effets JoJo** (`apps/web/components/JojoFx.tsx`, composant client monté par le layout racine,
+  actif seulement avec ce thème) : Star Platinum invoqué flotte près de la souris (gardé sur
+  l'appareil, sons d'apparition et de disparition) ; clic maintenu dans le vide : rafale « ORA ORA »
+  sur le thème de Jotaro, le contenu de la case que frappent ses poings tremble (jamais la case ni
+  une zone qui défile : les barres de défilement ne bougent pas) ; près de DIO, il sort The World
+  qui répond en « MUDA MUDA ». Secret : pendant ZA WARUDO, un clic sur DIO lâche le rouleau
+  compresseur dans le temps arrêté (`ROAD_ROLLER_EVENT`) ; 5 s de rafale le renvoient, sinon « To
+  Be Continued ». Clic sur Jotaro : « Yare yare daze » ; sur DIO : « WRYYY ». Sprites du jeu de
+  Capcom en bandes animées en `steps()` (`public/jojo/*-strip.png` ; le rouleau en grille 11 × 4,
+  `dio-road-roller-grid.png`, une bande de 44 images dépassant la taille de texture des cartes
+  graphiques), voix et musiques (`public/audio/jojo-*.mp3`, tirés de vidéos du jeu et de
+  l'anime) ; tout est préchargé et décodé dès que le thème est affiché. Sécurités : une rafale
+  s'arrête si l'onglet passe en arrière-plan et au bout de 30 s ; rien pendant l'arrêt du temps,
+  sauf le rouleau (la couche `.jojo-fx` échappe au gel, comme Star Platinum).
   Décor One Piece (`OnePieceDecor`) : la carte du monde (Red Line, Grand Line, les quatre
   Blues : `public/onepiece/world-map.webp`) en fond, rendue en luminosité seulement sur le bleu de
   la nuit (une vieille carte marine), qui dérive très lentement ; Gear 5 qui rit en haut, devant

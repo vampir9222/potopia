@@ -197,6 +197,10 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
     - Thème JoJo (Stardust Crusaders) : décor manga, portraits, « ゴゴゴ » ; le choisir déclenche
       ZA WARUDO (de nouveau à chaque clic sur le thème), qui fige vraiment tout le site
       (animations, La Place, musiques) jusqu'à ce qu'on clique pour relancer le temps.
+      Refonte : fiche de Stand du membre (nom en jeu de mots sur son pseudo, capacités tirées de
+      ses vraies données), Star Platinum à invoquer qui suit la souris et enchaîne les « ORA » au
+      clic maintenu (sprites du jeu de Capcom, voix et thème de Jotaro), choc avec The World près
+      de DIO, rouleau compresseur secret pendant ZA WARUDO, Jotaro et DIO qui parlent au clic.
     - Thème One Piece : la Grand Line de nuit (carte du monde en fond, Gear 5, Zoro et Luffy,
       « ドン!! », Haki des rois qui crépite de temps en temps), cadres de carte marine ancienne
       avec le Jolly Roger, titres façon logo ; le cadre du compte devient l'avis de recherche du
