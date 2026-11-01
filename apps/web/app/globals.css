@@ -1007,6 +1007,233 @@ html.jojo-rushing * {
   }
 }
 
+/* Mao Mao (MaoMao, Les Carnets de l'apothicaire) : rouleau suspendu du jugement après 3 défaites
+   d'affilée, et son sourire narquois à la victoire qui casse la série. */
+.mao-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  background: radial-gradient(ellipse at 50% 40%, rgb(16 46 38 / 0.62), rgb(3 10 8 / 0.9) 75%);
+  animation: mao-fade 0.4s ease-out;
+}
+/* le dégoût : la pièce s'assombrit dans le bleu de l'ombre qui lui tombe sur le visage */
+.mao-layer-disgust {
+  background: radial-gradient(ellipse at 50% 40%, rgb(30 30 70 / 0.62), rgb(5 5 16 / 0.92) 75%);
+}
+@keyframes mao-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* pétales de prunier qui tombent doucement */
+.mao-petals span {
+  position: absolute;
+  top: -24px;
+  left: calc(var(--i) * 10% + 3%);
+  width: 11px;
+  height: 11px;
+  border-radius: 70% 0 70% 0;
+  background: linear-gradient(135deg, #ffd9e4, #f39bb8);
+  opacity: 0.85;
+  animation: mao-petal calc(5.5s + var(--i) * 0.35s) linear calc(var(--i) * -0.6s) infinite;
+}
+@keyframes mao-petal {
+  to {
+    transform: translate(calc(40px - var(--i) * 6px), 110vh) rotate(540deg);
+  }
+}
+
+/* le rouleau : tringles laquées aux embouts dorés, papier de soie bordé de brocart */
+.mao-scroll {
+  position: relative;
+  width: min(340px, 82vw);
+  filter: drop-shadow(0 22px 30px rgb(0 0 0 / 0.55));
+  animation: mao-sway 5s ease-in-out 1s infinite;
+  transform-origin: 50% -40px;
+}
+@keyframes mao-sway {
+  50% {
+    rotate: 0.6deg;
+  }
+}
+.mao-rod {
+  position: relative;
+  z-index: 1;
+  display: block;
+  height: 16px;
+  margin: 0 -16px;
+  border-radius: 8px;
+  background: linear-gradient(#7a2a18, #3a1009 55%, #1c0603);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.18);
+}
+.mao-rod::before,
+.mao-rod::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff1b8, #d8a526 45%, #7a5208 90%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+}
+.mao-rod::before {
+  left: -8px;
+}
+.mao-rod::after {
+  right: -8px;
+}
+/* la cordelette qui le suspend */
+.mao-rod-top {
+  border-top: 0;
+}
+.mao-rod-top > * {
+  display: none;
+}
+.mao-scroll::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -46px;
+  width: 120px;
+  height: 52px;
+  translate: -50% 0;
+  border: 2px solid #c9a24a;
+  border-bottom: 0;
+  border-radius: 60px 60px 0 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.mao-unroll {
+  display: grid;
+  grid-template-rows: 0fr;
+  animation: mao-unroll 0.9s cubic-bezier(0.3, 0.7, 0.3, 1) 0.15s forwards;
+}
+@keyframes mao-unroll {
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+.mao-paper {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  padding: 18px 20px 22px;
+  border-inline: 12px solid transparent;
+  background:
+    linear-gradient(#f4ead4, #eadcbd) padding-box,
+    repeating-linear-gradient(45deg, #1f5a4d 0 6px, #c9a24a 6px 8px, #1f5a4d 8px 14px) border-box;
+  box-shadow: inset 0 0 30px rgb(120 80 30 / 0.25);
+}
+.mao-frame {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 3px solid #8a1d12;
+  outline: 1px solid #c9a24a;
+  outline-offset: 3px;
+  background: #0b1a17;
+}
+.mao-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mao-line {
+  margin-top: 14px;
+  text-align: center;
+  font-family: "Noto Serif", Georgia, serif;
+  font-size: 1.02rem;
+  font-style: italic;
+  line-height: 1.35;
+  color: #2b1a10;
+  opacity: 0;
+  animation: mao-fade-in 0.6s ease-out 1.1s forwards;
+}
+@keyframes mao-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+/* le sceau vermillon, qui s'imprime d'un coup */
+.mao-seal {
+  position: absolute;
+  right: 6px;
+  top: 58%;
+  padding: 7px 5px;
+  border: 2px solid rgb(255 230 210 / 0.55);
+  border-radius: 4px;
+  background: #b5241a;
+  color: #fbeadb;
+  writing-mode: vertical-rl;
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "SimSun", serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+  rotate: -7deg;
+  opacity: 0;
+  animation: mao-stamp 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) 1.5s forwards;
+}
+@keyframes mao-stamp {
+  from {
+    opacity: 0;
+    scale: 2.2;
+  }
+  to {
+    opacity: 0.95;
+    scale: 1;
+  }
+}
+
+/* la victoire qui casse la série : Mao Mao surgit du coin, narquoise */
+.mao-smug {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 95;
+  display: flex;
+  align-items: flex-start;
+  pointer-events: none;
+  animation: mao-smug 4.2s cubic-bezier(0.3, 0.8, 0.3, 1) forwards;
+}
+.mao-smug-face {
+  width: min(250px, 42vw);
+  filter: drop-shadow(-6px 0 18px rgb(0 0 0 / 0.45));
+}
+.mao-smug-bubble {
+  margin-top: 18px;
+  margin-right: -18px;
+  padding: 8px 14px;
+  border: 2px solid #1f5a4d;
+  border-radius: 14px 14px 2px 14px;
+  background: #f4ead4;
+  color: #2b1a10;
+  font-family: "Noto Serif", Georgia, serif;
+  font-style: italic;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 #1f5a4d;
+  opacity: 0;
+  animation: mao-fade-in 0.4s ease-out 0.5s forwards;
+}
+@keyframes mao-smug {
+  0% {
+    transform: translateY(100%);
+  }
+  14%,
+  86% {
+    transform: none;
+  }
+  100% {
+    transform: translateY(105%);
+  }
+}
+
 /* « ZA WARUDO » (ZaWarudo, thème JoJo) : onde qui inverse les couleurs, puis temps arrêté. */
 .za-wave {
   position: absolute;

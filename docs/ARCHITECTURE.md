@@ -427,11 +427,26 @@ sous les yeux du joueur à Agents Doubles. Dès la défaite, la page se fige en 
 0,9 s sur la fin). Un clic ou Échap écourte. L'effet se coupe pour de bon dans les paramètres
 (voir ci-dessous) : `toBeContinued()` ne fait alors plus rien.
 
+**Mao Mao** (Les Carnets de l'apothicaire, `apps/web/components/MaoMao.tsx`, layout racine), à
+TROIS (`maoMao()` / `maoMaoSoon()` de `@app/ui`, appelés par `maoReact` de `games/trois/ui/Game.tsx`,
+mode test compris). Au 3e essai raté de suite sur un mot, elle juge : la page s'assombrit sous des
+pétales de prunier, un rouleau suspendu se déroule (tringles laquées, brocart), avec son regard
+qui s'assombrit, main sur la bouche (`public/apothicaire/mao-judge.mp4`), une réplique tirée au
+hasard (clins d'œil à l'anime) et un sceau vermillon « 三連続 » (trois de suite) qui s'imprime. À
+l'avant-dernier essai, son dégoût, cachée derrière sa manche (`mao-disgust.mp4`, « 五連続 »). Le
+mot enfin trouvé après au moins 3 ratés : elle surgit, détourée (`mao-smug.webp`), du coin de
+l'écran avec un sourire narquois. Petite phrase de cordes pincées synthétisée (Karplus-Strong,
+pas de fichier), au volume du site. Les vidéos se chargent au 2e raté. Le rouleau dure 4,5 s et
+se ferme au premier clic ou à la première touche (on continue de taper) ; le mot perdu garde «
+To Be Continued ». L'effet se coupe dans les paramètres. Images et vidéos fournies par les
+membres (extraits de l'anime) ; Mao Mao détourée avec rembg (modèle isnet-anime), hors du dépôt.
+
 **Paramètres** (`/parametres`, entrée « Paramètres » du menu de l'avatar du header,
 `ProfileMenu`). Réglages du membre, gardés sur l'appareil (`localStorage`) :
-`apps/web/components/SettingsView.tsx`. Premier réglage : « To Be Continued » quand on perd
+`apps/web/components/SettingsView.tsx`. Réglages : « To Be Continued » quand on perd
 (`useToBeContinuedDisabled` / `setToBeContinuedDisabled` de `@app/ui`, clé
-`potopia:to-be-continued-disabled`).
+`potopia:to-be-continued-disabled`), Mao Mao à TROIS (`useMaoMaoDisabled` / `setMaoMaoDisabled`,
+clé `potopia:mao-mao-disabled`).
 
 **Images préchargées** (`preloadImages` / `imagesReady` de `@app/ui`, `src/preload.ts`). Les
 planches de sprites et images d'effets (Sonic et Super Sonic, fruit, Luffy et combo, flèche « To
