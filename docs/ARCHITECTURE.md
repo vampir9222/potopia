@@ -653,6 +653,17 @@ power?, effectKey?, effectParams?, effectText? }] }`. Chaque carte de base est r
   règle de la boîte noire). Sur la planche, les cartes sont figées (`GameCard still`, classe
   `tcg-still`) : sans 3D, animation, reflet ni grande ombre floue, pour un défilement fluide ;
   l'éditeur garde la carte vivante.
+- Dos des cartes (`CardBack`, le même pour toutes) : cadre SVG tout en or, mot « POTOMON »
+  (police Rajdhani, `--font-rajdhani` dans `cartes/fonts.ts`) et portail du logo en deux
+  calques, `apps/web/public/tcg/portal-frame.webp` (la porte, transparente) et
+  `portal-galaxy.webp` (la galaxie qui tourne derrière, 40 s par tour, figée avec
+  `prefers-reduced-motion`). `CardFlip` retourne une carte : glisser à l'horizontale (souris ou
+  doigt) la fait tourner, une largeur de carte valant un demi-tour, jamais plus d'un demi-tour par
+  geste ; au lâcher, passé 45° elle finit de se retourner, sinon elle revient ; un clic sans
+  glisser passe au contenu. Le dos n'est dessiné
+  qu'au premier retournement. Sur la planche (`CardFlip still` : dos sans inclinaison, galaxie
+  figée) un clic ouvre toujours la fiche ; dans l'éditeur, le dos s'incline au survol comme la
+  face et un bouton « Voir le dos » / « Voir la face » retourne la carte (clavier).
 - Illustrations réduites dans le navigateur avant l'envoi (`shrinkImage` : WebP, 1 200 px au plus
   de côté ; une image déjà petite part telle quelle), dans l'éditeur comme dans l'envoi en masse.
   Titre (`FitTitle`) : la taille baisse avec la longueur jusqu'à 13 px, puis le titre passe sur
