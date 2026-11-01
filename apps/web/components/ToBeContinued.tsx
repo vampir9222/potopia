@@ -7,7 +7,7 @@ import { createPortal } from "react-dom";
 // Roundabout découpé à la main (public/audio/roundabout.mp3, 6,4 s) : il part directement sur le
 // passage de la guitare, l'image se fige dès la défaite. Discret, avec un petit fondu sur la fin.
 const MUSIC = "/audio/roundabout.mp3";
-const ARROW = "/jojo/to-be-continued.png"; // la même image que la classe de fond de la flèche
+const ARROW = "/jojo/to-be-continued.webp"; // la même image que la classe de fond de la flèche
 const VOLUME = 0.45;
 const END_MS = 6300;
 const FADE_MS = 900;
@@ -96,7 +96,7 @@ export function ToBeContinued() {
       <span
         role="img"
         aria-label="To Be Continued"
-        className="tbc-arrow absolute bottom-6 left-4 block aspect-[874/184] w-[min(70vw,520px)] bg-[url(/jojo/to-be-continued.png)] bg-contain bg-no-repeat drop-shadow-xl"
+        className="tbc-arrow absolute bottom-6 left-4 block aspect-[874/184] w-[min(70vw,520px)] bg-[url(/jojo/to-be-continued.webp)] bg-contain bg-no-repeat drop-shadow-xl"
       />
     </div>,
     document.body,

@@ -1,10 +1,12 @@
 "use client";
 
-import { DON_EVENT, effectiveVolume, preloadImages } from "@app/ui";
+import { DON_EVENT, effectiveVolume } from "@app/ui";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const DON_MS = 1900;
+// préchargé à l'ouverture du menu des thèmes (ThemeSwitcher de @app/ui) : il surgit au coup de
+// tambour
 const GEAR5 = "/onepiece/portrait-gear5.webp";
 // nuages de vapeur de Gear 5, en couronne autour de lui (en % de l'écran), qui éclatent l'un
 // après l'autre
@@ -79,9 +81,6 @@ function drums(volume: number) {
 export function Don() {
   const [on, setOn] = useState(false);
   const onRef = useRef(false);
-
-  // Gear 5 est chargé d'avance : il doit surgir au moment du coup de tambour
-  useEffect(() => void preloadImages([GEAR5]), []);
 
   useEffect(() => {
     let timer = 0;

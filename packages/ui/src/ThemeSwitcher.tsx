@@ -6,9 +6,13 @@ import { cx } from "./cx";
 import { THEME_COOKIE, THEMES, type ThemeId } from "./themes";
 import { apothicaire } from "./apothicaire";
 import { don } from "./don";
+import { preloadImages } from "./preload";
 import { zaWarudo } from "./zaWarudo";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
+// Images qu'un effet de changement de thème affiche dès le clic (Gear 5 du « ドン!! », composant
+// Don de l'app) : chargées à l'ouverture du menu, plutôt qu'à chaque page pour tout le monde.
+const EFFECT_IMAGES = ["/onepiece/portrait-gear5.webp"];
 
 /**
  * Bouton palette (header) qui ouvre la liste des thèmes. Le changement est immédiat (attribut
@@ -21,6 +25,7 @@ export function ThemeSwitcher({ current }: { current: ThemeId }) {
 
   useEffect(() => {
     if (!open) return;
+    void preloadImages(EFFECT_IMAGES);
     const close = (e: MouseEvent | KeyboardEvent) => {
       if (
         e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node)

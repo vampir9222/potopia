@@ -246,7 +246,7 @@ export function LuffyCombo({
           width: RUN_SIZE,
           height: RUN_SIZE,
           transformOrigin: `50% ${(RUN_GROUND / RUN_SIZE) * 100}%`,
-          backgroundImage: "url(/luffy/luffy-run-sheet.png)",
+          backgroundImage: "url(/luffy/luffy-run-sheet.webp)",
           backgroundSize: `${RUN_FRAMES * RUN_SIZE}px ${RUN_SIZE}px`,
         }}
       />
