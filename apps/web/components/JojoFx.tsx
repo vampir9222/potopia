@@ -25,7 +25,7 @@ const MOVE_TOLERANCE = 12; // au-delà, c'est une sélection ou un glisser
 const HIT_EVERY_MS = 85;
 const DIO_RANGE = 260; // distance à laquelle DIO sort The World
 const ROLLER_ESCAPE_MS = 4500; // temps pour commencer à repousser le rouleau
-const ROLLER_PUSH_MS = 1800; // durée de rafale qui le renvoie
+const ROLLER_PUSH_MS = 5000; // rafale sous le rouleau qui le renvoie dans les airs
 const ROLLER_RETRY_MS = 2500; // rafale trop courte : temps avant qu'il retombe
 const RUSH_MAX_MS = 30000; // sécurité : une rafale s'arrête d'elle-même
 const STAND_KEY = "potopia:jojo-stand"; // Stand invoqué, gardé sur l'appareil
@@ -35,6 +35,7 @@ const INTERACTIVE =
   "a, button, input, textarea, select, label, summary, canvas, [role='button'], [contenteditable], [data-no-ora]";
 
 const SOUNDS = {
+  stand: "/audio/jojo-stand.mp3",
   ora: "/audio/jojo-ora.mp3",
   theme: "/audio/jojo-theme-jotaro.mp3",
   muda: "/audio/jojo-muda.mp3",
@@ -42,6 +43,16 @@ const SOUNDS = {
   yare: "/audio/jojo-yare-yare.mp3",
   menacing: "/audio/jojo-menacing.mp3",
 } as const;
+
+// Sprites du thème, préchargés et décodés dès que le thème est affiché : rien ne se télécharge au
+// moment d'un effet.
+const SPRITES = [
+  "/jojo/star-platinum-idle-strip.png",
+  "/jojo/star-platinum-ora-strip.png",
+  "/jojo/the-world-muda-strip.png",
+  "/jojo/dio-road-roller-grid.png",
+  "/jojo/menacing-gogo-strip.png",
+];
 
 const root = () => document.documentElement;
 const isJojo = () => root().dataset.theme === "jojo" && !root().classList.contains("time-stop");
@@ -191,6 +202,8 @@ export function JojoFx() {
       muda?: HTMLAudioElement;
       ticker: number;
       startedAt: number;
+      /** Début de la rafale sous le rouleau compresseur. */
+      pushedSince?: number;
     };
     let rush: Rush | null = null;
     let roller: { el: HTMLElement; escape: number } | null = null;
@@ -227,8 +240,7 @@ export function JojoFx() {
         pos = { x: mouse.x, y: mouse.y - 50 };
         floater = spawn("jojo-fx-sprite jojo-fx-floater");
         if (announce) {
-          play(SOUNDS.menacing, { volume: 0.7 });
-          transient("jojo-fx-ring", { left: `${mouse.x}px`, top: `${mouse.y}px` });
+          play(SOUNDS.stand, { volume: 0.9 });
         }
       }
       if (!standOn && floater) {
@@ -297,7 +309,22 @@ export function JojoFx() {
         }
         word(x, y, "ORA", "#f4c430", r.world ? 60 : 80);
         shake(struck(x, y), 4, 120);
-        if (roller) jolt([roller.el], 6, 120);
+        if (roller) {
+          jolt([roller.el], 6, 120);
+          // 5 s de rafale sous le rouleau : il valse, sans attendre qu'on relâche
+          r.pushedSince ??= performance.now();
+          if (performance.now() - r.pushedSince >= ROLLER_PUSH_MS) {
+            r.pushedSince = undefined;
+            launchRoller();
+            transient(
+              "jojo-fx-final",
+              { left: `${x}px`, top: `${y}px`, color: "#f4c430" },
+              "ORA !",
+            );
+            transient("jojo-fx-ring", { left: `${x}px`, top: `${y}px` });
+            quake(16, 500);
+          }
+        }
         if (performance.now() - r.startedAt > RUSH_MAX_MS) endRush(true);
       }, HIT_EVERY_MS);
     };
@@ -330,9 +357,8 @@ export function JojoFx() {
       transient("jojo-fx-ring", { left: `${x}px`, top: `${y}px` });
       transient("jojo-fx-don", { left: `${x - 70}px`, top: `${y - 80}px` }, "ドン");
       shake(struck(x, y), 8, 420);
-      // le rouleau : renvoyé après une rafale assez longue, sinon il retombe bientôt
-      if (roller && performance.now() - r.startedAt >= ROLLER_PUSH_MS) launchRoller();
-      else if (roller) {
+      // rafale lâchée trop tôt sous le rouleau : il retombe bientôt
+      if (roller) {
         window.clearTimeout(roller.escape);
         roller.escape = later(ROLLER_RETRY_MS, crush);
       }
@@ -465,8 +491,31 @@ export function JojoFx() {
     const onContext = (e: Event) => {
       if (rush) e.preventDefault();
     };
-    // le thème change sans recharger : on range le Stand hors du thème JoJo
+    // Préchargement des sprites (décodés d'avance) et des sons, une fois, dès que le thème JoJo est
+    // affiché ; gardés en mémoire tant que l'app est ouverte.
+    let preloaded: (HTMLImageElement | HTMLAudioElement)[] | null = null;
+    const preload = () => {
+      if (preloaded || root().dataset.theme !== "jojo") return;
+      preloaded = [
+        ...SPRITES.map((src) => {
+          const img = new Image();
+          img.src = src;
+          img.decode().catch(() => {});
+          return img;
+        }),
+        ...Object.values(SOUNDS).map((src) => {
+          const audio = new Audio();
+          audio.preload = "auto";
+          audio.src = src;
+          return audio;
+        }),
+      ];
+    };
+
+    // le thème change sans recharger : on range le Stand hors du thème JoJo, on précharge en y
+    // entrant
     const themeWatch = new MutationObserver(() => {
+      preload();
       if (root().dataset.theme !== "jojo" && standOn) {
         endRush(false);
         setStand(false, { announce: false });
@@ -492,6 +541,7 @@ export function JojoFx() {
       later(14000, close);
     };
     later(2500, showHint);
+    later(800, preload);
     if (readStand()) setStand(true, { announce: false });
     frame = requestAnimationFrame(follow);
 

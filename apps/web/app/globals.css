@@ -787,21 +787,30 @@ html.jojo-rushing * {
   width: calc(350px * var(--s));
   height: calc(202px * var(--s));
   translate: -50% -82%;
-  background-image: url(/jojo/dio-road-roller-strip.png);
-  background-size: calc(15400px * var(--s)) 100%;
+  /* planche en grille (11 × 4 images) : une bande de 44 images dépasserait la taille de texture
+     des cartes graphiques et serait repeinte à chaque image */
+  background-image: url(/jojo/dio-road-roller-grid.png);
+  background-size: calc(3850px * var(--s)) calc(808px * var(--s));
   filter: drop-shadow(0 18px 18px rgb(0 0 0 / 0.6));
+  will-change: transform;
   animation:
     jojo-fx-fall 0.52s cubic-bezier(0.55, 0, 1, 0.45) both,
-    jojo-fx-roller 3.08s steps(44) infinite;
+    jojo-fx-roller-x 0.77s steps(11) infinite,
+    jojo-fx-roller-y 3.08s steps(4) infinite;
 }
 @keyframes jojo-fx-fall {
   from {
     transform: translateY(-130vh);
   }
 }
-@keyframes jojo-fx-roller {
+@keyframes jojo-fx-roller-x {
   to {
-    background-position-x: calc(-15400px * var(--s));
+    background-position-x: calc(-3850px * var(--s));
+  }
+}
+@keyframes jojo-fx-roller-y {
+  to {
+    background-position-y: calc(-808px * var(--s));
   }
 }
 /* « ORA ! » final : le rouleau repart dans les airs en tournoyant */
