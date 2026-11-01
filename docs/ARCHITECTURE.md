@@ -245,6 +245,16 @@ efface la projection. Le top dispose d’un remplacement atomique préservant le
 Les lecteurs utilisent le volume commun et `claimMediaFocus` pour suspendre la musique du portail.
 L’audio TV est activé explicitement, les commandes ne sont pas rejouées automatiquement.
 
+Le lot 6 relie les inscriptions et transitions aux notifications internes `core.notify`, avec
+le même `DbTx` et verrou d’édition : rollback commun, aucun message supplémentaire pour un
+rejeu versionné. Les destinataires sont les nouveaux inscrits ou participants actuels, sauf
+l’acteur et les identités supprimées. Aucun texte libre ni secret, aucune activité globale.
+Les profils restent lus depuis les services publics du portail. Le lecteur YouTube officiel
+applique le volume à `onReady`, signale blocages/erreurs et se détruit à la fermeture ; les
+jaquettes distantes disposent d’un repli et IGDB est attribué. Pas de cache binaire, stockage
+supplémentaire, variable ou migration. Le [guide d’exploitation](EXPLOITATION_GOTY_PARTY.md)
+couvre sauvegarde complète du portail, stockage privé commun, restauration isolée et diagnostic.
+
 ### trois et agents
 
 Décrits dans les README des jeux : [games/trois/README.md](../games/trois/README.md) (`games`,
@@ -850,7 +860,8 @@ L’intégration native de GOTY Party est définie dans le
 [plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) et le
 [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Le serveur couvre préparation,
 pronostics, cérémonie et snapshots ; l’interface, la synchronisation navigateur et les routes
-HTTP sont intégrées. Notifications, exploitation et recette finale restent à réaliser.
+HTTP sont intégrées, ainsi que les notifications et la documentation d’exploitation.
+La recette finale et la mise en service restent à réaliser.
 
 Côté cartes : boosters, collection, decks et parties (étape 13, à venir). Pas de récompense en
 monnaie dans TROIS pour l'instant.

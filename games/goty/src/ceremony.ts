@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { GotyError } from "./errors";
 import { mutateEdition, type EditionInput, type Options } from "./mutate";
+import { notifyEditionMembers } from "./notifications";
 import { shuffle } from "./rules";
 import { readScreen, type CeremonyScreen } from "./screen";
 import { accessInput, id, parse } from "./validation";
@@ -44,6 +45,11 @@ export async function controlEdition(input: ControlInput, opts?: Options) {
           where: { id: data.editionId },
           data: { phase: "preparation", screen: { mode: "waiting", roundId: null, audio: null } },
         });
+        if (access.edition.phase === "live")
+          await notifyEditionMembers(
+            { ...data, year: access.edition.year, event: "restart" },
+            { tx },
+          );
         return { ok: true as const };
       }
       const rounds = await tx.gotyRound.findMany({
@@ -100,6 +106,11 @@ export async function controlEdition(input: ControlInput, opts?: Options) {
             where: { id: data.editionId },
             data: { phase: "live", screen: { mode: "round", roundId: round.id, audio: null } },
           });
+          if (access.edition.phase === "preparation")
+            await notifyEditionMembers(
+              { ...data, year: access.edition.year, event: "live" },
+              { tx },
+            );
           return { ok: true as const };
         }
         if (data.action === "lock") {
@@ -182,6 +193,7 @@ export async function controlEdition(input: ControlInput, opts?: Options) {
           where: { id: data.editionId },
           data: { phase: "closed", screen: { mode: "leaderboard", roundId: null, audio: null } },
         });
+        await notifyEditionMembers({ ...data, year: access.edition.year, event: "closed" }, { tx });
         return { ok: true as const };
       }
       await tx.gotyEdition.update({ where: { id: data.editionId }, data: { screen } });

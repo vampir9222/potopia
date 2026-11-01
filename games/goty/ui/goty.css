@@ -687,6 +687,8 @@
   margin: 1.2rem auto 0;
 }
 .goty-video {
+  min-height: 200px;
+  min-width: 200px;
   aspect-ratio: 16/9;
   width: 100%;
   border: 0;

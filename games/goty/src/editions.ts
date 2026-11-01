@@ -2,6 +2,7 @@ import { getUsersByIds, listUsers } from "@app/core";
 import { db, withTx, type DbTx } from "@app/db";
 import { editionAccess, resolveActor } from "./access";
 import { GotyError } from "./errors";
+import { notifyEditionMembers } from "./notifications";
 import { initialRounds } from "./rules";
 import { accessInput, editionInput, id, membersInput, parse } from "./validation";
 
@@ -204,6 +205,11 @@ export async function setEditionMembers(
       data: { version: { increment: 1 } },
       select: { version: true },
     });
+    if (added.length)
+      await notifyEditionMembers(
+        { ...data, year: edition.year, event: "joined", recipients: added.map((m) => m.userId) },
+        { tx },
+      );
     return { ok: true as const, version: updated.version };
   }, opts);
 }

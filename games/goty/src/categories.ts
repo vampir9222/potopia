@@ -3,6 +3,7 @@ import { z } from "zod";
 import { editionAccess, resolveActor } from "./access";
 import { GotyError } from "./errors";
 import { mutateEdition, requireParticipant, type EditionInput, type Options } from "./mutate";
+import { notifyEditionMembers } from "./notifications";
 import { normalizeCategoryName, votesNeeded } from "./rules";
 import { accessInput, id, parse } from "./validation";
 
@@ -107,6 +108,10 @@ export async function prepareEdition(
         where: { id: data.editionId },
         data: { phase: "preparation" },
       });
+      await notifyEditionMembers(
+        { ...data, year: access.edition.year, event: "preparation" },
+        { tx },
+      );
       return { ok: true as const };
     },
     opts,

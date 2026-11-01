@@ -8,12 +8,14 @@ et celui de la monnaie viennent de `packages/config/brand.ts`.
 
 - Choix techniques et règles d'architecture : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Étapes de réalisation : [docs/ROADMAP.md](docs/ROADMAP.md)
-- Intégration de GOTY Party (lots 1 à 5 réalisés) :
+- Intégration de GOTY Party (lots 1 à 6 réalisés) :
   [plan d’action](docs/PLAN_INTEGRATION_GOTY_PARTY.md) et
   [contrat fonctionnel](docs/CONTRAT_FONCTIONNEL_GOTY_PARTY.md).
   Le [module GOTY](games/goty/README.md) propose l’interface `/goty`, la préparation,
   les imports CSV/XLSX, IGDB facultatif, les pronostics, la télécommande et l’écran TV.
-  Notifications, exploitation et recette de mise en service restent aux lots 6 et 7.
+  Les notifications internes sont intégrées et le [guide d’exploitation](docs/EXPLOITATION_GOTY_PARTY.md)
+  décrit configuration, médias, sauvegarde/restauration et diagnostic. Recette finale et mise
+  en service restent au lot 7.
 
 **Stack** : monorepo pnpm + Turborepo, TypeScript strict, Next.js 16 (App Router), Tailwind v4,
 PostgreSQL + Prisma 7, Better Auth (Discord), stockage S3 (Cloudflare R2 en prod, RustFS en

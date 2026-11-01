@@ -90,6 +90,13 @@ function GameEditor({
           {searching ? "Recherche…" : "Rechercher"}
         </button>
       </div>
+      <p className="goty-muted">
+        Catalogue et jaquettes :{" "}
+        <a href="https://www.igdb.com/" target="_blank" rel="noopener noreferrer">
+          IGDB
+        </a>
+        .
+      </p>
       {message && (
         <p role="status" className="goty-muted">
           {message}

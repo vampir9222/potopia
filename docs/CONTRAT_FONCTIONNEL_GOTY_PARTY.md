@@ -200,6 +200,22 @@ La clôture exige toutes les rubriques `done`. Les archives offrent listes de je
 personne, comparaison par rubrique et classement avec détail des bonnes réponses. Aucune édition
 clôturée ne peut être réouverte ou modifiée dans ce périmètre.
 
+### Notifications et médias (lot 6)
+
+Notifications internes aux nouveaux inscrits, puis aux participants actuels lors de l’ouverture
+de préparation, première annonce de soirée, retour effectif en préparation et clôture. Exclure
+l’acteur et les identités supprimées. Ne notifier ni chaque rubrique ni chaque révélation ;
+une relance volontaire après retour en préparation ouvre un nouveau cycle. Écriture atomique
+avec l’action métier : rollback = aucun message, rejeu versionné = aucun doublon.
+Contenu fixe : GOTY, année, phrase d’étape et lien interne, sans nom libre ni information privée.
+Pas d’activité publique, d’email ou de message Discord dans ce périmètre. Les liens restent soumis
+aux droits courants. Les profils sont ceux du portail, sans copie métier.
+
+Jaquettes IGDB distantes attribuées avec icône de repli ; vidéos lues via le lecteur officiel
+YouTube visible, jamais téléchargées ou extraites. Activation TV manuelle, volume avant lecture,
+message si bloqué/indisponible et lien externe. Aucun nouveau média privé ni cache binaire.
+Voir le [guide d’exploitation](EXPLOITATION_GOTY_PARTY.md) pour les sources et procédures.
+
 ## 5. Transitions et invariants
 
 | Commande               | Conditions                                                                                                    | Effet                                                                                                       |

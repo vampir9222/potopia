@@ -1,11 +1,13 @@
 # GOTY Party dans Potopia
 
-Les lots 2 à 5 livrent `@app/goty` : éditions, préparation, pronostics, cérémonie, archives,
+Les lots 2 à 6 livrent `@app/goty` : éditions, préparation, pronostics, cérémonie, archives,
 interface React et écran TV. La tuile membre ouvre `/goty` ; `/admin/goty` permet aux admins
-de créer les éditions. Notifications, exploitation et recette finale restent aux lots 6 et 7.
+de créer les éditions. Les notifications internes et le guide d’exploitation sont intégrés ;
+la recette finale et la mise en service restent au lot 7.
 
 - [Plan des lots](../../docs/PLAN_INTEGRATION_GOTY_PARTY.md)
 - [Contrat fonctionnel et recette](../../docs/CONTRAT_FONCTIONNEL_GOTY_PARTY.md)
+- [Installation, sauvegardes, médias et diagnostic](../../docs/EXPLOITATION_GOTY_PARTY.md)
 
 ## Données
 
@@ -274,7 +276,39 @@ TypeScript, ESLint, formatage, frontières et build de production vérifiés. Le
 également été relancés après la correction de l’arrêt volontaire d’une musique suspendue.
 La suite globale nécessite le stockage S3 du projet : l’émulateur S3rver utilisé pour la recette
 ne vérifie pas le Content-Type d’un PUT présigné comme RustFS/R2 et échoue sur ce test existant.
-La recette exhaustive, les fournisseurs réels et l’exploitation restent aux lots 6 et 7.
+Le lot 6 ajoute les tests de notifications et médias décrits ci-dessous. La recette exhaustive
+sur matériel et fournisseurs réels reste au lot 7.
+
+## Services communs et médias (lot 6)
+
+Les identités sont lues via `core` ; aucun profil ni portrait supplémentaire n’est stocké.
+Les services d’inscription, d’ouverture de préparation et de pilotage émettent des notifications
+via `core.notify`, dans leur transaction et sous le verrou d’édition. Seuls les nouveaux inscrits
+ou les participants actuels sont ciblés ; l’acteur est exclu et les identités supprimées ignorées.
+Messages fixes avec année et lien interne, sans nom libre d’édition, réponse, média ou score.
+Le début de soirée n’est notifié qu’à la première annonce après préparation ; un retour en
+préparation et une relance volontaire constituent de nouvelles transitions. Pas de message par
+révélation, vote ou commande audio, pas de fil d’activité ni de notification externe.
+
+Les notifications sont annulées avec l’action si sa transaction échoue. Les accès au lien sont
+revérifiés au moment de l’ouverture ; un ancien message ne conserve aucun droit. Tests PostgreSQL :
+nouveaux inscrits, acteur/retrait/non-participant, rôle inchangé, concurrence, rejeu, rollback,
+identité supprimée, profils actualisés et absence de contenu privé dans les messages/l’activité.
+
+Le lecteur utilise l’API YouTube officielle, chargée à l’ouverture, pour appliquer le volume
+avant lecture, signaler les erreurs et l’autoplay bloqué, puis détruire le lecteur à la fermeture.
+Il ne reprend au retour d’onglet qu’une vidéo qui jouait avant masquage. Les iframes restent
+visibles (minimum 200 × 200), en nocookie avec origine et politique de referrer explicites.
+Les jaquettes en erreur deviennent une icône et le catalogue est attribué à IGDB. Aucun objet
+R2 ni nouveau cache média ; voir le guide pour les sources fournisseurs consultées le
+1er novembre 2026, les limites externes et les procédures d’exploitation. Aucun nouveau réglage,
+script versionné ou objet SQL pour ce lot. Les tests DOM simulent YouTube sans requête réelle.
+
+Validation du lot 6 : 123 tests GOTY, 156 tests web et 43 tests core réussis sur PostgreSQL 17
+avec stockage local simulé ; TypeScript, ESLint, frontières, formatage et build vérifiés.
+L’émulateur conserve la limite de signature S3 décrite au lot 5. Les outils clients PostgreSQL
+de sauvegarde/restauration ne sont pas installés sur l’environnement de recette : la procédure
+est documentée, sa répétition effective sur sauvegarde d’exploitation reste au lot 7.
 
 ## Règles pures
 

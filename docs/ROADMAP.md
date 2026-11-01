@@ -537,12 +537,13 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 
 ---
 
-## Étape 14 : intégration de GOTY Party (interface et écran TV intégrés)
+## Étape 14 : intégration de GOTY Party (services et exploitation préparés)
 
 Le [plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) décrit les lots. Le
 [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) fixe droits, transitions, projections HTTP
 et scénarios de recette. Le module possède sa tuile et ses pages dans le portail ;
-la préparation de l’exploitation et la mise en service restent à réaliser.
+les notifications et le [guide d’exploitation](EXPLOITATION_GOTY_PARTY.md) sont intégrés.
+La recette finale et la mise en service restent à réaliser.
 
 - [x] Lot 1 : comparaison des sources, règles, matrice des droits, transitions, contrats HTTP et
       scénarios R01 à R30. Décisions utilisateur : départ à zéro, archives pour tous les membres.
@@ -553,7 +554,8 @@ la préparation de l’exploitation et la mise en service restent à réaliser.
 - [x] Lot 4 : pronostics, score, commandes de cérémonie versionnées, conducteur, audio,
       snapshots membres/TV confidentiels, archives et tests de concurrence PostgreSQL.
 - [x] Lot 5 : interface React, navigation du portail, routes privées, synchronisation et écran TV.
-- [ ] Lot 6 : services communs, médias, notifications et exploitation.
+- [x] Lot 6 : profils du portail, notifications transactionnelles ciblées, médias externes
+      et guide d’installation, sauvegarde/restauration, diagnostic et bascule.
 - [ ] Lot 7 : recette complète, contrôles CI et mise en service autorisée.
 
 **Fini quand**

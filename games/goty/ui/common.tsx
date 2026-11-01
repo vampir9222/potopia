@@ -1,7 +1,9 @@
 "use client";
-import { claimMediaFocus, Modal, useVolume } from "@app/ui";
+import { Modal } from "@app/ui";
 import { ExternalLink, Film, Gamepad2, Trophy } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { YoutubePlayer } from "./YoutubePlayer";
+export { YoutubePlayer } from "./YoutubePlayer";
 import type { MemberSnapshot } from "../src/snapshot";
 
 export type Game = MemberSnapshot["games"][number];
@@ -35,43 +37,21 @@ export function Cover({
   game: Pick<Game, "title" | "cover">;
   large?: boolean;
 }) {
+  const [failed, setFailed] = useState<string | null>(null);
   return (
     <div className={large ? "goty-cover goty-cover-large" : "goty-cover"}>
-      {game.cover ? (
-        <img src={game.cover} alt={`Jaquette de ${game.title}`} loading="lazy" />
+      {game.cover && failed !== game.cover ? (
+        <img
+          src={game.cover}
+          alt={`Jaquette de ${game.title}`}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(game.cover)}
+        />
       ) : (
         <Gamepad2 size={large ? 64 : 32} aria-hidden />
       )}
     </div>
-  );
-}
-export function YoutubePlayer({ videoId }: { videoId: string }) {
-  const frame = useRef<HTMLIFrameElement>(null);
-  const volume = useVolume();
-  const command = (func: string, args: unknown[] = []) =>
-    frame.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: "command", func, args }),
-      "https://www.youtube-nocookie.com",
-    );
-  useEffect(() => claimMediaFocus(), []);
-  useEffect(() => {
-    command("setVolume", [volume.muted ? 0 : Math.round(volume.level * 100)]);
-  }, [volume]);
-  useEffect(() => {
-    const visibility = () => command(document.hidden ? "pauseVideo" : "playVideo");
-    document.addEventListener("visibilitychange", visibility);
-    return () => document.removeEventListener("visibilitychange", visibility);
-  }, []);
-  return (
-    <iframe
-      ref={frame}
-      title="Lecteur YouTube"
-      className="goty-video"
-      src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&playsinline=1&enablejsapi=1`}
-      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-      allowFullScreen
-      onLoad={() => command("setVolume", [volume.muted ? 0 : Math.round(volume.level * 100)])}
-    />
   );
 }
 export function Trailer({ game, onOpen }: { game: Game; onOpen?: () => void }) {

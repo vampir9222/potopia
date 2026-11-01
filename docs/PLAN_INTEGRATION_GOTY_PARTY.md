@@ -1,6 +1,6 @@
 # Plan d’intégration de GOTY Party dans Potopia
 
-Statut : lots 1 à 5 terminés ; exploitation et recette finale aux lots 6 et 7. Analyse des dépôts le
+Statut : lots 1 à 6 terminés ; recette finale et mise en service au lot 7. Analyse des dépôts le
 31 octobre 2026. Ce document ne déclenche ni migration ni déploiement.
 
 Le [contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) détaille les droits, transitions,
@@ -199,7 +199,7 @@ télécommande et TV, avec contrôle mobile à 390 px. Les tests métier, HTTP e
 cette recette ; la recette exhaustive de production reste au lot 7. Voir les limites de
 validation dans le [README du module](../games/goty/README.md).
 
-### Lot 6 — Relier les services communs et préparer l’exploitation
+### Lot 6 — Relier les services communs et préparer l’exploitation ✅
 
 - Ajouter des notifications ciblées pour les étapes utiles, sans titre de jeu ni réponse secrète.
   Publier éventuellement la fin d’édition dans l’activité, après validation du contenu public.
@@ -212,6 +212,16 @@ validation dans le [README du module](../games/goty/README.md).
 
 **Fini quand :** la documentation permet d’installer et d’exploiter le module sans MariaDB,
 Express ni le déploiement historique de GOTY Party.
+
+Livré : profils communs conservés, notifications internes ciblées (inscription, préparation,
+début de soirée, retour en préparation, archives) dans la transaction métier, sans texte libre
+ni donnée secrète. Aucun événement d’activité ajouté. Attribution IGDB, jaquettes de repli,
+lecteur YouTube officiel avec volume à la disponibilité, blocages explicites et destruction
+à la fermeture. Conditions fournisseurs consultées le 1er novembre 2026, sans redistribution
+des médias. Le [guide d’exploitation](EXPLOITATION_GOTY_PARTY.md) décrit installation, variables,
+sauvegardes de base complète et stockage privé commun, restauration isolée, diagnostic et retrait.
+Aucune nouvelle migration ou variable. Les tests couvrent ciblage, rejeu, rollback, identités
+et comportement des médias simulés ; la répétition sur sauvegarde réelle reste au lot 7.
 
 ### Lot 7 — Recette et mise en service
 
