@@ -631,18 +631,19 @@
     opacity: 0;
     animation: jojo-star ease-in-out infinite;
   }
-  /* DIO et The World, en attente, tournés vers Jotaro : 38 images de 101 × 141 */
+  /* DIO seul, en attente, tourné vers Jotaro : 6 images de 66 × 120 (The World ne sort qu'au
+     choc des rafales, JojoFx) */
   .jojo-dio {
     position: absolute;
     left: 28vw;
     bottom: 0;
-    width: 121px;
-    height: 169px;
-    background: url(/jojo/dio-the-world-idle-strip.png) 0 0 / 4606px 169px no-repeat;
+    width: 92px;
+    height: 168px;
+    background: url(/jojo/dio-idle-strip.png) 0 0 / 552px 168px no-repeat;
     image-rendering: pixelated;
     opacity: 0.6;
     filter: drop-shadow(0 0 10px color-mix(in oklab, var(--accent) 60%, transparent));
-    animation: jojo-dio 4.2s steps(38) infinite;
+    animation: jojo-dio 0.6s steps(6) infinite;
   }
   /* Jotaro prend la pose (« yare yare daze ») dans le coin : 30 images de 72 × 113 */
   .jojo-pose {
@@ -1181,7 +1182,7 @@
 }
 @keyframes jojo-dio {
   to {
-    background-position-x: -4606px;
+    background-position-x: -552px;
   }
 }
 @keyframes jojo-pose {

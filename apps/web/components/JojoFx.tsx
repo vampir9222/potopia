@@ -114,27 +114,46 @@ export function JojoFx() {
       return el;
     };
 
-    /** Fait trembler `el` (la case frappée, ou toute la page). */
-    const shake = (el: Element | null, power: number, ms: number) => {
-      if (!el || reducedMotion()) return;
+    /*
+     * Tremblement purement visuel : on secoue le contenu d'une case, jamais la case ni une zone qui
+     * défile (sa barre bougerait avec elle) ; dans une zone qui défile, c'est son contenu qui
+     * tremble. Rien ne change de taille ni de place pour la page : les barres de défilement restent
+     * immobiles.
+     */
+    const shaken = new WeakMap<Element, Element[]>();
+    const contents = (el: Element): Element[] => {
+      const known = shaken.get(el);
+      if (known) return known;
+      const parts = [...el.children].flatMap((child) => {
+        const { overflowX, overflowY } = getComputedStyle(child);
+        return /auto|scroll/.test(overflowX + overflowY) ? contents(child) : [child];
+      });
+      shaken.set(el, parts);
+      return parts;
+    };
+    const jolt = (targets: Element[], power: number, ms: number) => {
+      if (reducedMotion()) return;
       const frames = Array.from({ length: 6 }, (_, i) => ({
         transform:
           i === 5
             ? "none"
             : `translate(${rand(-power, power)}px, ${rand(-power, power)}px) rotate(${rand(-power, power) / 8}deg)`,
       }));
-      root().classList.add("jojo-shaking");
-      el.animate(frames, { duration: ms, composite: "add" }).addEventListener("finish", () =>
-        root().classList.remove("jojo-shaking"),
-      );
+      for (const t of targets) t.animate(frames, { duration: ms, composite: "add" });
     };
+    /** Fait trembler le contenu de la case frappée (rien hors d'une case). */
+    const shake = (card: Element | null, power: number, ms: number) => {
+      if (card) jolt(contents(card), power, ms);
+    };
+    /** Gros impact (rouleau compresseur) : c'est le décor du fond qui tremble, pas la page. */
+    const quake = (power: number, ms: number) =>
+      jolt([...document.querySelectorAll(".jojo-decor, .jojo-fx")], power, ms);
     /** La case de la page sous le point (x, y) : là où frappent les poings. */
-    const struck = (x: number, y: number) => {
-      const el = document
+    const struck = (x: number, y: number) =>
+      document
         .elementsFromPoint(x, y)
-        .find((e) => !e.closest(".jojo-fx, .jojo-decor, .jojo-fx-hint"));
-      return el?.closest(".theme-frame") ?? el?.closest("main") ?? null;
-    };
+        .find((e) => !e.closest(".jojo-fx, .jojo-decor, .jojo-fx-hint"))
+        ?.closest(".theme-frame") ?? null;
 
     /** Mot de rafale (ORA, MUDA) qui claque près du point visé, avec un éclat d'impact. */
     const word = (x: number, y: number, text: string, color: string, spread: number) => {
@@ -175,17 +194,15 @@ export function JojoFx() {
     let floater: HTMLElement | null = null;
     let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     let pos = { ...mouse };
-    let facing = 1; // 1 : regarde à droite, -1 : à gauche
     let frame = 0;
 
     const follow = () => {
       if (floater && !rush) {
-        // derrière la souris, un peu au-dessus, côté opposé au regard ; il rattrape en douceur
-        pos.x += (mouse.x - 70 * facing - pos.x) * 0.12;
+        // tourné vers la gauche, à droite de la souris et un peu au-dessus ; il rattrape en douceur
+        pos.x += (mouse.x + 70 - pos.x) * 0.12;
         pos.y += (mouse.y - 50 - pos.y) * 0.12;
         floater.style.left = `${pos.x}px`;
         floater.style.top = `${pos.y}px`;
-        floater.style.scale = `${facing} 1`;
       }
       frame = requestAnimationFrame(follow);
     };
@@ -199,7 +216,7 @@ export function JojoFx() {
         /* navigation privée : le Stand ne survivra pas au rechargement */
       }
       if (standOn && !floater) {
-        pos = { x: mouse.x - 70, y: mouse.y - 50 };
+        pos = { x: mouse.x + 70, y: mouse.y - 50 };
         floater = spawn("jojo-fx-sprite jojo-fx-floater");
         if (announce) {
           play(SOUNDS.menacing, { volume: 0.7 });
@@ -218,11 +235,16 @@ export function JojoFx() {
     let holdTimer = 0;
     let start = { x: 0, y: 0 };
 
+    // Star Platinum frappe toujours vers la gauche : ses poings sont du côté gauche de l'image,
+    // près de la souris.
     const placeRush = (r: Rush) => {
       r.star.style.left = `${mouse.x}px`;
       r.star.style.top = `${mouse.y}px`;
-      r.star.style.scale = `${facing} 1`;
-      r.star.classList.toggle("jojo-fx-star-left", facing < 0);
+    };
+    /** Le bout des poings : c'est là que les coups portent (case qui tremble, DIO, mots). */
+    const fist = (r: Rush) => {
+      const b = r.star.getBoundingClientRect();
+      return { x: b.left + b.width * 0.06, y: b.top + b.height * 0.45 };
     };
 
     const beginRush = () => {
@@ -241,8 +263,8 @@ export function JojoFx() {
       placeRush(r);
       r.ticker = window.setInterval(() => {
         placeRush(r);
-        const { x, y } = mouse;
-        // DIO à portée : il sort The World, tourné vers Star Platinum
+        const { x, y } = fist(r);
+        // DIO à portée des poings : il sort The World, tourné vers Star Platinum
         const dio = document.querySelector(".jojo-dio");
         const d = dio ? center(dio) : null;
         const near = !!d && Math.hypot(d.x - x, d.y - y) < DIO_RANGE;
@@ -266,8 +288,8 @@ export function JojoFx() {
           word((x + d.x) / 2, y, "MUDA", "#c78cff", 60);
         }
         word(x, y, "ORA", "#f4c430", r.world ? 60 : 80);
-        shake(struck(x, y), 5, 120);
-        if (roller) shake(roller.el, 6, 120);
+        shake(struck(x, y), 4, 120);
+        if (roller) jolt([roller.el], 6, 120);
       }, HIT_EVERY_MS);
     };
 
@@ -290,15 +312,15 @@ export function JojoFx() {
       r.muda?.pause();
       fadeOut(r.theme, 1500);
       root().classList.remove("jojo-rushing");
+      const { x, y } = fist(r);
       r.star.remove();
       r.world?.remove();
       floater?.classList.remove("jojo-fx-hidden");
       if (!final) return;
-      const { x, y } = mouse;
       transient("jojo-fx-final", { left: `${x}px`, top: `${y}px`, color: "#f4c430" }, "ORA !");
       transient("jojo-fx-ring", { left: `${x}px`, top: `${y}px` });
-      transient("jojo-fx-don", { left: `${x + 70}px`, top: `${y - 80}px` }, "ドン");
-      shake(struck(x, y), 16, 420);
+      transient("jojo-fx-don", { left: `${x - 70}px`, top: `${y - 80}px` }, "ドン");
+      shake(struck(x, y), 8, 420);
       // le rouleau : renvoyé après une rafale assez longue, sinon il retombe bientôt
       if (roller && performance.now() - r.startedAt >= ROLLER_PUSH_MS) launchRoller();
       else if (roller) {
@@ -329,7 +351,7 @@ export function JojoFx() {
       transient("jojo-fx-shout", {}, "ROAD ROLLER DA !");
       later(520, () => {
         transient("jojo-fx-ring", { left: `${mouse.x}px`, top: `${mouse.y}px` });
-        shake(document.querySelector("main"), 22, 650);
+        quake(22, 650);
       });
       roller = { el, escape: later(ROLLER_ESCAPE_MS, crush) };
     };
@@ -385,8 +407,6 @@ export function JojoFx() {
       holdTimer = window.setTimeout(beginRush, HOLD_MS);
     };
     const onMove = (e: PointerEvent) => {
-      const dx = e.clientX - mouse.x;
-      if (Math.abs(dx) > 2) facing = dx > 0 ? 1 : -1;
       mouse = { x: e.clientX, y: e.clientY };
       if (!rush && Math.hypot(mouse.x - start.x, mouse.y - start.y) > MOVE_TOLERANCE) {
         window.clearTimeout(holdTimer);

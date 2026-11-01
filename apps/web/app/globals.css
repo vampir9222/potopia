@@ -565,9 +565,6 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
 .jojo-fx > * {
   position: absolute;
 }
-html.jojo-shaking body {
-  overflow-x: clip;
-}
 html.jojo-rushing,
 html.jojo-rushing * {
   user-select: none;
@@ -705,21 +702,19 @@ html.jojo-rushing * {
   image-rendering: pixelated;
   filter: drop-shadow(0 0 14px color-mix(in oklab, #7a4cff 75%, transparent));
 }
-/* Star Platinum : 24 images de 148 × 124, poings tendus vers la droite, sur le point visé */
+/* Star Platinum : 24 images de 148 × 124, retourné pour frapper toujours vers la gauche ; ses
+   poings arrivent sur la souris */
 .jojo-fx-star {
   --s: 2.2;
   width: calc(148px * var(--s));
   height: calc(124px * var(--s));
-  translate: -80% -55%;
+  translate: -20% -55%;
+  scale: -1 1;
   background-image: url(/jojo/star-platinum-ora-strip.png);
   background-size: calc(3552px * var(--s)) 100%;
   animation:
     jojo-fx-arrive 0.18s ease-out,
     jojo-fx-star 1.1s steps(24) infinite;
-}
-/* tourné vers la gauche (miroir) : les poings sont alors du côté gauche de l'image */
-.jojo-fx-star-left {
-  translate: -20% -55%;
 }
 @keyframes jojo-fx-star {
   to {
@@ -749,6 +744,7 @@ html.jojo-rushing * {
   width: calc(104px * var(--s));
   height: calc(133px * var(--s));
   translate: -50% -50%;
+  scale: -1 1;
   opacity: 0.92;
   background-image: url(/jojo/star-platinum-idle-strip.png);
   background-size: calc(2184px * var(--s)) 100%;
