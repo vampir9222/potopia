@@ -85,7 +85,12 @@ export function randomConfig(
   palettes: Palettes,
   rng: Rng = Math.random,
 ): AvatarConfig {
-  const morphs = availableMorphs(catalog);
+  // Un premier avatar ne possède encore aucun élément à débloquer.
+  const freeCatalog: Catalog = {
+    ...catalog,
+    items: catalog.items.filter((item) => item.unlock === "free"),
+  };
+  const morphs = availableMorphs(freeCatalog);
   const morph =
     pickWeighted(
       rng,
@@ -108,7 +113,7 @@ export function randomConfig(
   };
 
   const choose = (category: Category, filter: (item: CatalogItem) => boolean = () => true) => {
-    const item = pick(rng, optionsFor(catalog, config, category).filter(filter));
+    const item = pick(rng, optionsFor(freeCatalog, config, category).filter(filter));
     if (item) {
       config.items[category] = {
         id: item.id,
@@ -127,7 +132,7 @@ export function randomConfig(
   if (chance(0.6)) choose("eyebrows");
   if (chance(0.35)) choose("nose");
   if (chance(0.3) && morph === "male") choose("beards");
-  if (chance(0.15) && optionsFor(catalog, config, "dress").length > 0) {
+  if (chance(0.15) && optionsFor(freeCatalog, config, "dress").length > 0) {
     choose("dress");
   } else {
     choose("torso");
@@ -136,6 +141,6 @@ export function randomConfig(
   if (chance(0.85)) choose("feet");
   if (chance(0.15)) choose("hat");
   if (chance(0.12)) choose("cape");
-  config = fitConfig(config, catalog);
+  config = fitConfig(config, freeCatalog);
   return config;
 }

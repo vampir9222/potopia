@@ -1,7 +1,8 @@
 import type { Role } from "../users";
+import { isGotyEnabled } from "@app/config/features";
 
 /** Icônes lucide disponibles pour les tuiles (la correspondance est dans ui/AppGrid). */
-export type AppIconName = "grid" | "lightbulb" | "mask" | "palette" | "shield";
+export type AppIconName = "grid" | "lightbulb" | "mask" | "palette" | "shield" | "trophy";
 
 export type AppEntry = {
   id: string;
@@ -13,6 +14,7 @@ export type AppEntry = {
 
 /** Apps de la plateforme, dans l'ordre d'affichage des tuiles. */
 export const apps: readonly AppEntry[] = [
+  { id: "goty", name: "GOTY Party", icon: "trophy", route: "/goty", requiredRole: "member" },
   { id: "trois", name: "TROIS", icon: "grid", route: "/trois", requiredRole: "member" },
   {
     id: "agents",
@@ -39,5 +41,9 @@ export const apps: readonly AppEntry[] = [
 ];
 
 export function getVisibleApps(user: { role: Role }): AppEntry[] {
-  return apps.filter((app) => app.requiredRole === "member" || user.role === "admin");
+  return apps.filter(
+    (app) =>
+      (app.id !== "goty" || isGotyEnabled()) &&
+      (app.requiredRole === "member" || user.role === "admin"),
+  );
 }

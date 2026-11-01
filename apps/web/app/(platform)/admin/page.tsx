@@ -1,14 +1,21 @@
 import Link from "next/link";
 import { BRAND } from "@app/config/brand";
+import { isGotyEnabled } from "@app/config/features";
 import { Card } from "@app/ui";
 import { countIdeas } from "@app/ideas";
-import { Coins, Layers, Lightbulb, Smile } from "lucide-react";
+import { Coins, Layers, Lightbulb, Smile, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import { getCurrentAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Administration" };
 
 const SECTIONS = (ideasCount: number) => [
+  {
+    href: "/admin/goty",
+    title: "GOTY Party",
+    description: "Éditions annuelles, participants et organisation de la soirée.",
+    icon: Trophy,
+  },
   {
     href: "/admin/economy",
     title: "Monnaie",
@@ -38,7 +45,9 @@ const SECTIONS = (ideasCount: number) => [
 export default async function AdminPage() {
   // Le layout vérifie déjà, mais une page peut être rendue sans lui : on revérifie.
   await getCurrentAdmin();
-  const sections = SECTIONS(await countIdeas());
+  const sections = SECTIONS(await countIdeas()).filter(
+    (section) => section.href !== "/admin/goty" || isGotyEnabled(),
+  );
   return (
     <Card title="Administration">
       <ul className="grid gap-3 sm:grid-cols-2">

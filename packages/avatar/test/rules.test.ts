@@ -160,6 +160,19 @@ describe("empreinte", () => {
 });
 
 describe("avatar aléatoire (catalogue réel)", () => {
+  it("ne donne aucun élément verrouillé au premier tirage, même pour les parties obligatoires", () => {
+    const body = catalog.items.find((item) => item.category === "body");
+    if (!body) throw new Error("Corps de fixture absent");
+    const withLockedBody = {
+      ...catalog,
+      items: [{ ...body, id: "locked_body", unlock: { item: "locked_body" } }, ...catalog.items],
+    };
+    // Le premier candidat est verrouillé ; le chapeau de la fixture l’est également.
+    const config = randomConfig(withLockedBody, palettes, () => 0);
+    expect(checkConfig(config, withLockedBody, palettes)).toEqual([]);
+    expect(config.items.body?.id).toBe("body");
+    expect(config.items.hat).toBeUndefined();
+  });
   it("est toujours valide, sur une centaine de tirages", () => {
     let seed = 42;
     const rng = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;

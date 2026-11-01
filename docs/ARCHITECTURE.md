@@ -39,6 +39,7 @@ Pourquoi Better Auth plutôt qu'Auth.js :
 apps/web/            app Next mince : routes, layouts, server actions, route handlers
 games/
   agents/            Agents Doubles, jeu d'espions coopératif à deux (règles de Codenames Duet)
+  goty/              GOTY Party : services, imports, IGDB, UI React, cérémonie et TV
   tcg/               futur jeu de cartes : pour l'instant, le vote du design des cartes (/cartes)
   trois/             Wordle français à 3 mots par jour (premier jeu intégré)
 packages/
@@ -195,6 +196,78 @@ passe d'une partie à l'autre sans rechargement.
   l'illustration, point central x/y en % et zoom de 1 à 4 ; l'image n'est jamais rognée), ideaId? (index simple, `ideas.ideas`
   sans relation : lien de gestion, une idée peut donner plusieurs cartes), baseCardId? (variante full art → sa carte de base), createdAt, updatedAt. La base ne
   contient aucune logique d'effet : seulement la clé d'un effet du catalogue et ses réglages.
+
+### goty
+
+Huit tables métier dans le schéma `goty` : `editions`, `members`, `rounds`, `games`, `choices`,
+`predictions`, `proposals`, `votes`. Le module utilise les identités de `core` sans FK entre
+domaines. Année unique, clés composites pour inscriptions, choix, pronostics et votes ; noms
+normalisés et positions uniques dans le conducteur. Les FK de jeux utilisés sont restrictives.
+
+Le socle fournit création d’édition, résumés filtrés, identités publiques et gestion des inscrits.
+Les écritures sont composables avec `{ tx }`. Le remplacement des inscrits verrouille la ligne
+édition, vérifie `expectedVersion` puis l’incrémente. Les lectures d’accès prennent un verrou
+partagé sur cette ligne pour stabiliser phase, version et inscriptions. Les droits d’admin sont
+recalculés via `core`, et les archives sont lisibles par tous les membres du portail.
+
+La migration `20261031230000_goty` est additive et n’importe aucune donnée de goty-party.
+Le lot 3 ajoute catégories/votes, ouverture en préparation, jeux et palmarès privés. Chaque
+écriture verrouille l’édition et incrémente sa version ; les lectures partagées ne transmettent
+ni choix caché ni ordre futur de révélation. Les imports CSV/XLSX disposent d’un aperçu réutilisable
+et sont revalidés atomiquement au moment de l’ajout.
+
+La migration additive `20261101010000_goty_catalog` ajoute deux tables techniques :
+`catalog_cache` (métadonnées IGDB publiques, expiration d’une heure) et `catalog_quotas` (limites
+communes entre instances : 30 recherches/membre/minute et 4 appels fournisseur/seconde, fenêtres
+fixes, protégées par verrou consultatif). Aucun secret ou jeton OAuth en base. Les variables
+facultatives `IGDB_CLIENT_ID` et `IGDB_CLIENT_SECRET` restent côté serveur ; sans clés ou en cas
+de panne, la saisie manuelle reste possible. Les appels réseau sont bornés à 10 secondes chacun.
+
+Le lot 4 fournit pronostics, score dérivé des réponses révélées, commandes versionnées de
+cérémonie, conducteur, état audio et archives. `getMemberSnapshot` ne retourne que ses choix
+et pronostics personnels ou ceux déjà révélés ; `getPresentationSnapshot` omet aussi les
+réponses personnelles cachées, les rôles et les compteurs de préparation, même pour un admin.
+L’ordre futur du tirage n’est jamais transmis. Le classement accepte les ex æquo sans départage
+et n’est visible qu’aux présentateurs/admins, lorsqu’affiché ou après clôture (sur la TV,
+uniquement lorsqu’affiché ou archivé).
+
+Les snapshots gardent le verrou partagé de l’édition pendant toutes leurs lectures GOTY,
+ce qui empêche les écritures métier entre deux requêtes même en READ COMMITTED. Les commandes
+et changements de conducteur vérifient la version attendue sous verrou exclusif : un rejeu ou
+une commande concurrente devient un conflit sans deuxième effet. L’échange des positions utilise
+deux passes pour respecter leur unicité. Le retour en préparation exige `confirmRestart: true`,
+garde les choix et pronostics, efface les tirages et remet les points dérivés à zéro. Les archives
+sont immuables. Aucun nouvel objet SQL ni variable d’environnement pour ce lot ; voir le
+[README du module](../games/goty/README.md).
+
+Le lot 5 ajoute les exports React `@app/goty/ui` et ses styles, la tuile du portail,
+`/goty`, `/admin/goty`, les onglets d’édition et le layout TV séparé. Les handlers
+`/api/goty/[...path]` contrôlent session, origine des mutations et tailles d’entrée avant
+d’appeler les services publics ; aucun accès direct aux tables. Les réponses sont privées et
+`no-store`. Le polling à trois secondes s’arrête hors écran et utilise un ETag lié à l’acteur,
+aux droits et à la version. Les réponses périmées sont ignorées ; compte changé ou accès révoqué
+efface la projection. Le top dispose d’un remplacement atomique préservant les places figées.
+Les lecteurs utilisent le volume commun et `claimMediaFocus` pour suspendre la musique du portail.
+L’audio TV est activé explicitement, les commandes ne sont pas rejouées automatiquement.
+
+Le lot 6 relie les inscriptions et transitions aux notifications internes `core.notify`, avec
+le même `DbTx` et verrou d’édition : rollback commun, aucun message supplémentaire pour un
+rejeu versionné. Les destinataires sont les nouveaux inscrits ou participants actuels, sauf
+l’acteur et les identités supprimées. Aucun texte libre ni secret, aucune activité globale.
+Les profils restent lus depuis les services publics du portail. Le lecteur YouTube officiel
+applique le volume à `onReady`, signale blocages/erreurs et se détruit à la fermeture ; les
+jaquettes distantes disposent d’un repli et IGDB est attribué. Pas de cache binaire, stockage
+supplémentaire, variable ou migration. Le [guide d’exploitation](EXPLOITATION_GOTY_PARTY.md)
+couvre sauvegarde complète du portail, stockage privé commun, restauration isolée et diagnostic.
+
+Le lot 7 ajoute `@app/config/features` : `isGotyEnabled()` consulte `GOTY_ENABLED` côté serveur.
+Absent ou `true` = actif ; sinon le registre et l’administration cachent leurs entrées et
+`resolveActor` refuse les accès métier en 404. Les pages traduisent ce refus après authentification.
+Pas de suppression de données, d’inscription ou de notification lors du retrait/rétablissement.
+Les confirmations utilisent le dialogue du portail et capturent la commande/version à l’ouverture,
+pour conserver le conflit serveur malgré le polling. Le [bilan de recette](RECETTE_GOTY_PARTY.md)
+consigne cycle HTTP complet, tests globaux PostgreSQL/RustFS et restauration complète vérifiée
+sur données fictives, ainsi que les validations terrain et de mise en service encore ouvertes.
 
 ### trois et agents
 
@@ -892,6 +965,13 @@ palettes), jamais son code (GPL) : le compositeur est fait maison.
       import), puis boosters, collection, decks et parties.
 
 ## Hors périmètre (pour l'instant)
+
+L’intégration native de GOTY Party est définie dans le
+[plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) et le
+[contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md). Le serveur couvre préparation,
+pronostics, cérémonie et snapshots ; l’interface, la synchronisation navigateur et les routes
+HTTP sont intégrées, ainsi que les notifications et la documentation d’exploitation.
+La recette finale et la mise en service restent à réaliser.
 
 Côté cartes : boosters, collection, decks et parties (étape 13, à venir). Pas de récompense en
 monnaie dans TROIS pour l'instant.

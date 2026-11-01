@@ -1,0 +1,168 @@
+// Domaine GOTY : les identifiants utilisateurs désignent core sans relation entre domaines.
+
+enum GotyPhase {
+  categories
+  preparation
+  live
+  closed
+
+  @@schema("goty")
+}
+
+enum GotyRoundStatus {
+  draft
+  announced
+  locked
+  revealing
+  done
+
+  @@schema("goty")
+}
+
+model GotyEdition {
+  id        String         @id @default(uuid(7))
+  year      Int            @unique
+  name      String         @db.VarChar(100)
+  phase     GotyPhase      @default(categories)
+  version   Int            @default(1)
+  screen    Json           @default("{\"mode\":\"waiting\",\"audio\":null}")
+  createdAt DateTime       @default(now()) @map("created_at")
+  members   GotyMember[]
+  rounds    GotyRound[]
+  games     GotyGame[]
+  proposals GotyProposal[]
+
+  @@map("editions")
+  @@schema("goty")
+}
+
+model GotyMember {
+  editionId String      @map("edition_id")
+  userId    String      @map("user_id")
+  organizer Boolean     @default(false)
+  presenter Boolean     @default(false)
+  edition   GotyEdition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
+  @@id([editionId, userId])
+  @@index([userId, organizer])
+  @@map("members")
+  @@schema("goty")
+}
+
+model GotyRound {
+  id             String           @id @default(uuid(7))
+  editionId      String           @map("edition_id")
+  name           String           @db.VarChar(100)
+  normalizedName String           @map("normalized_name") @db.VarChar(200)
+  rank           Int?
+  position       Int
+  status         GotyRoundStatus  @default(draft)
+  soundtrack     Boolean          @default(false)
+  revealOrder    String[]         @default([]) @map("reveal_order")
+  revealedCount  Int              @default(0) @map("revealed_count")
+  edition        GotyEdition      @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  choices        GotyChoice[]
+  predictions    GotyPrediction[]
+
+  @@unique([editionId, normalizedName])
+  @@unique([editionId, position])
+  @@index([editionId, status])
+  @@map("rounds")
+  @@schema("goty")
+}
+
+model GotyGame {
+  id               String           @id @default(uuid(7))
+  editionId        String           @map("edition_id")
+  userId           String           @map("user_id")
+  title            String           @db.VarChar(200)
+  platform         String           @default("") @db.VarChar(100)
+  period           String           @default("") @db.VarChar(100)
+  completed        Boolean          @default(false)
+  platinum         Boolean          @default(false)
+  igdbId           Int?             @map("igdb_id")
+  cover            String?          @db.VarChar(500)
+  trailerYoutubeId String?          @map("trailer_youtube_id") @db.VarChar(11)
+  edition          GotyEdition      @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  choices          GotyChoice[]
+  predictions      GotyPrediction[]
+
+  @@index([editionId, userId])
+  @@map("games")
+  @@schema("goty")
+}
+
+model GotyChoice {
+  roundId   String    @map("round_id")
+  userId    String    @map("user_id")
+  gameId    String    @map("game_id")
+  precision String    @default("") @db.VarChar(500)
+  youtube   String?   @db.VarChar(255)
+  round     GotyRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  game      GotyGame  @relation(fields: [gameId], references: [id], onDelete: Restrict)
+
+  @@id([roundId, userId])
+  @@index([gameId])
+  @@map("choices")
+  @@schema("goty")
+}
+
+model GotyPrediction {
+  roundId  String    @map("round_id")
+  userId   String    @map("user_id")
+  targetId String    @map("target_id")
+  gameId   String    @map("game_id")
+  round    GotyRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  game     GotyGame  @relation(fields: [gameId], references: [id], onDelete: Restrict)
+
+  @@id([roundId, userId, targetId])
+  @@index([gameId])
+  @@map("predictions")
+  @@schema("goty")
+}
+
+model GotyProposal {
+  id             String      @id @default(uuid(7))
+  editionId      String      @map("edition_id")
+  userId         String      @map("user_id")
+  name           String      @db.VarChar(100)
+  normalizedName String      @map("normalized_name") @db.VarChar(200)
+  edition        GotyEdition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  votes          GotyVote[]
+
+  @@unique([editionId, normalizedName])
+  @@index([editionId, userId])
+  @@map("proposals")
+  @@schema("goty")
+}
+
+model GotyVote {
+  proposalId String       @map("proposal_id")
+  userId     String       @map("user_id")
+  proposal   GotyProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@id([proposalId, userId])
+  @@map("votes")
+  @@schema("goty")
+}
+
+// Métadonnées publiques IGDB ; aucun jeton ou secret fournisseur n'est stocké.
+model GotyCatalogCache {
+  key       String   @id
+  games     Json
+  expiresAt DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("catalog_cache")
+  @@schema("goty")
+}
+
+// Quotas partagés entre instances (membre par minute et fournisseur par seconde).
+model GotyCatalogQuota {
+  scope     String   @id
+  startedAt DateTime @map("started_at")
+  count     Int
+
+  @@map("catalog_quotas")
+  @@schema("goty")
+}

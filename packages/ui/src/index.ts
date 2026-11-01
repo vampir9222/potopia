@@ -35,7 +35,15 @@ export {
   useToBeContinuedDisabled,
 } from "./toBeContinued";
 export { ROAD_ROLLER_EVENT, ZA_WARUDO_EVENT, zaWarudo } from "./zaWarudo";
-export { isTimeStopped, onTimeStop, resumeTime, stopTime, timeNow, trackMedia } from "./timeStop";
+export {
+  claimMediaFocus,
+  isTimeStopped,
+  onTimeStop,
+  resumeTime,
+  stopTime,
+  timeNow,
+  trackMedia,
+} from "./timeStop";
 export { DEFAULT_THEME, resolveTheme, THEME_COOKIE, THEMES, type ThemeId } from "./themes";
 export {
   effectiveVolume,

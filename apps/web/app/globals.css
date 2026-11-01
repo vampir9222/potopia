@@ -2,6 +2,7 @@
 @import "@app/ui/theme.css";
 @import "@app/trois/ui/trois.css";
 @import "@app/agents/ui/agents.css";
+@import "@app/goty/ui/goty.css";
 @import "@app/tcg/ui/tcg.css";
 
 /* Les packages sont liés dans node_modules, que Tailwind n'analyse pas : on les déclare. */
@@ -12,6 +13,7 @@
 @source "../../../packages/ideas/ui";
 @source "../../../packages/inventory/ui";
 @source "../../../games/agents/ui";
+@source "../../../games/goty/ui";
 @source "../../../games/tcg/ui";
 @source "../../../games/trois/ui";
 

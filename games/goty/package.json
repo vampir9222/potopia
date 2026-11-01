@@ -1,0 +1,43 @@
+{
+  "name": "@app/goty",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./rules": "./src/rules.ts",
+    "./import-preview": "./src/import-preview.ts",
+    "./ui": "./ui/index.ts",
+    "./ui/goty.css": "./ui/goty.css"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@app/config": "workspace:*",
+    "@app/core": "workspace:*",
+    "@app/db": "workspace:*",
+    "@app/ui": "workspace:*",
+    "lucide-react": "1.61.0",
+    "zod": "4.6.7",
+    "papaparse": "5.7.0",
+    "read-excel-file": "6.0.3"
+  },
+  "peerDependencies": {
+    "react": "19.3.1"
+  },
+  "devDependencies": {
+    "happy-dom": "21.0.4",
+    "react-dom": "19.3.1",
+    "@types/react-dom": "19.3.0",
+    "react": "19.3.1",
+    "@types/react": "19.3.0",
+    "@types/node": "26.6.5",
+    "@types/papaparse": "5.5.2",
+    "eslint": "10.13.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}

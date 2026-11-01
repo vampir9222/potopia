@@ -551,3 +551,36 @@ catalogue, admin des cartes). Détails : section « Cartes du jeu » de [ARCHITE
 
 - Les cartes du set 1 sont en base de prod et modifiables dans l'admin ; puis les étapes suivantes
   (boosters, parties) cochées.
+
+---
+
+## Étape 14 : intégration de GOTY Party (services et exploitation préparés)
+
+Le [plan d’intégration](PLAN_INTEGRATION_GOTY_PARTY.md) décrit les lots. Le
+[contrat fonctionnel](CONTRAT_FONCTIONNEL_GOTY_PARTY.md) fixe droits, transitions, projections HTTP
+et scénarios de recette. Le module possède sa tuile et ses pages dans le portail ;
+les notifications et le [guide d’exploitation](EXPLOITATION_GOTY_PARTY.md) sont intégrés.
+La recette technique locale, le parcours navigateur et la restauration isolée sont réalisés ; la répétition terrain,
+l’acceptation et la mise en service restent ouvertes dans le [bilan](RECETTE_GOTY_PARTY.md).
+
+- [x] Lot 1 : comparaison des sources, règles, matrice des droits, transitions, contrats HTTP et
+      scénarios R01 à R30. Décisions utilisateur : départ à zéro, archives pour tous les membres.
+- [x] Lot 2 : module `games/goty`, schéma PostgreSQL (huit tables), migration additive, règles
+      pures, services d’accès, éditions, inscriptions, tests de concurrence et de transactions.
+- [x] Lot 3 : préparation serveur, catégories et votes, jeux, imports CSV/XLSX avec aperçu,
+      palmarès privés et catalogue IGDB (cache et quotas PostgreSQL partagés). Formulaires au lot 5.
+- [x] Lot 4 : pronostics, score, commandes de cérémonie versionnées, conducteur, audio,
+      snapshots membres/TV confidentiels, archives et tests de concurrence PostgreSQL.
+- [x] Lot 5 : interface React, navigation du portail, routes privées, synchronisation et écran TV.
+- [x] Lot 6 : profils du portail, notifications transactionnelles ciblées, médias externes
+      et guide d’installation, sauvegarde/restauration, diagnostic et bascule.
+- [ ] Lot 7 : contrôles locaux et restauration fictive validés ; confirmations intégrées au
+      portail et retrait temporaire `GOTY_ENABLED` testés. Parcours navigateur complet et
+      synchronisation TV sous cinq secondes vérifiés localement. Répétition terrain, acceptation,
+      CI GitHub et mise en service autorisée restent nécessaires ; voir le bilan de recette.
+
+**Fini quand**
+
+- Une édition fictive complète passe la recette sur plusieurs comptes et une TV ; les droits,
+  les projections confidentielles et la concurrence sont vérifiés sur PostgreSQL.
+- Les contrôles habituels passent et la mise en service suit le circuit de PR du dépôt.

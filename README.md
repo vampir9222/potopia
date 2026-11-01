@@ -8,6 +8,15 @@ et celui de la monnaie viennent de `packages/config/brand.ts`.
 
 - Choix techniques et règles d'architecture : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Étapes de réalisation : [docs/ROADMAP.md](docs/ROADMAP.md)
+- Intégration de GOTY Party (lots 1 à 6 réalisés) :
+  [plan d’action](docs/PLAN_INTEGRATION_GOTY_PARTY.md) et
+  [contrat fonctionnel](docs/CONTRAT_FONCTIONNEL_GOTY_PARTY.md).
+  Le [module GOTY](games/goty/README.md) propose l’interface `/goty`, la préparation,
+  les imports CSV/XLSX, IGDB facultatif, les pronostics, la télécommande et l’écran TV.
+  Les notifications internes sont intégrées et le [guide d’exploitation](docs/EXPLOITATION_GOTY_PARTY.md)
+  décrit configuration, médias, sauvegarde/restauration et diagnostic. Recette finale et mise
+  en service sont suivies dans le [bilan de recette](docs/RECETTE_GOTY_PARTY.md) : contrôles locaux
+  et restauration fictive réalisés, validation terrain et autorisation de publication restantes.
 
 **Stack** : monorepo pnpm + Turborepo, TypeScript strict, Next.js 16 (App Router), Tailwind v4,
 PostgreSQL + Prisma 7, Better Auth (Discord), stockage S3 (Cloudflare R2 en prod, RustFS en
@@ -62,6 +71,13 @@ remplir » demandent une action.
 
 Toute nouvelle variable va dans `.env.example` (documentée) et dans `globalPassThroughEnv` de
 `turbo.json`. Le fichier `.env` n'est jamais versionné.
+
+GOTY Party utilise facultativement `IGDB_CLIENT_ID` et `IGDB_CLIENT_SECRET` (application Twitch,
+côté serveur uniquement). Sans ces clés, la saisie manuelle reste disponible. Le
+[README du module](games/goty/README.md) décrit son catalogue, ses limites et les imports.
+`GOTY_ENABLED=false` retire la tuile et ferme pages/API GOTY sans supprimer ses données ;
+absent ou `true` active le module, toute autre valeur le désactive. Redémarrer/redéployer après
+changement. Le [bilan du lot 7](docs/RECETTE_GOTY_PARTY.md) distingue recette locale et mise en service.
 
 ---
 
@@ -133,6 +149,7 @@ packages/
   ui/            thèmes et composants de base
 games/
   agents/        Agents Doubles, le jeu d'espions coopératif à deux
+  goty/          GOTY Party : préparation, pronostics, cérémonie, archives et interface React/TV
   tcg/           jeu de cartes : vote du design (/cartes), cartes et effets (admin /admin/cartes)
   trois/         TROIS, le Wordle à 3 mots par jour
 ```
