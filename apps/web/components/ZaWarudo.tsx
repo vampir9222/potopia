@@ -1,6 +1,14 @@
 "use client";
 
-import { cx, effectiveVolume, resumeTime, stopTime, trackMedia, ZA_WARUDO_EVENT } from "@app/ui";
+import {
+  cx,
+  effectiveVolume,
+  resumeTime,
+  ROAD_ROLLER_EVENT,
+  stopTime,
+  trackMedia,
+  ZA_WARUDO_EVENT,
+} from "@app/ui";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -11,6 +19,7 @@ const WAVE_MS = 950; // l'onde s'étend puis se referme ; le temps est arrêté 
 const RESUME_HIT_MS = 800;
 const OUT_MS = 500;
 const VOLUME = 0.8;
+const ROLLER_LANDS_MS = 700; // secret JoJo : le rouleau compresseur tombe, puis le temps reprend
 
 type Phase = "off" | "wave" | "stopped" | "resume";
 
@@ -112,7 +121,22 @@ export function ZaWarudo() {
   return createPortal(
     <div
       className={cx("za-layer fixed inset-0 z-100", phase === "stopped" && "cursor-pointer")}
-      onClick={() => skipRef.current()}
+      onClick={(e) => {
+        // secret du thème JoJo : un clic sur DIO pendant l'arrêt du temps, et il lâche son
+        // rouleau compresseur dans le temps arrêté (JojoFx) ; le temps reprend une fois le
+        // rouleau posé
+        const dio = document.querySelector(".jojo-dio")?.getBoundingClientRect();
+        const onDio =
+          phase === "stopped" &&
+          dio &&
+          e.clientX >= dio.left &&
+          e.clientX <= dio.right &&
+          e.clientY >= dio.top &&
+          e.clientY <= dio.bottom;
+        if (!onDio) return skipRef.current();
+        window.dispatchEvent(new Event(ROAD_ROLLER_EVENT));
+        window.setTimeout(() => skipRef.current(), ROLLER_LANDS_MS);
+      }}
     >
       {(phase === "wave" || phase === "resume") && (
         <span className={cx("za-wave", phase === "resume" && "za-wave-out")} />

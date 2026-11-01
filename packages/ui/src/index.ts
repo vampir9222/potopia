@@ -5,6 +5,7 @@ export { Card } from "./Card";
 export { cx } from "./cx";
 export { Embers } from "./Embers";
 export { JojoDecor } from "./JojoDecor";
+export { StandCard, type StandStats } from "./StandCard";
 export { DON_EVENT, don } from "./don";
 export { EmptyState } from "./EmptyState";
 export { Input, Label, Select, Textarea } from "./fields";
@@ -20,7 +21,7 @@ export {
   toBeContinued,
   useToBeContinuedDisabled,
 } from "./toBeContinued";
-export { ZA_WARUDO_EVENT, zaWarudo } from "./zaWarudo";
+export { ROAD_ROLLER_EVENT, ZA_WARUDO_EVENT, zaWarudo } from "./zaWarudo";
 export { isTimeStopped, onTimeStop, resumeTime, stopTime, timeNow, trackMedia } from "./timeStop";
 export { DEFAULT_THEME, resolveTheme, THEME_COOKIE, THEMES, type ThemeId } from "./themes";
 export {

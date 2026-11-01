@@ -553,6 +553,460 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
   }
 }
 
+/* Effets interactifs du thème JoJo (JojoFx) : rafales ORA / MUDA, rouleau compresseur, Jotaro. */
+.jojo-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  overflow: hidden;
+  pointer-events: none;
+  font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+}
+.jojo-fx > * {
+  position: absolute;
+}
+html.jojo-rushing,
+html.jojo-rushing * {
+  user-select: none;
+  cursor: crosshair;
+}
+
+/* mot d'une rafale : surgit en grand, se pose, s'efface */
+.jojo-fx-word {
+  translate: -50% -50%;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  -webkit-text-stroke: 2px #050308;
+  paint-order: stroke fill;
+  text-shadow: 3px 3px 0 #050308;
+  animation: jojo-fx-pop 0.45s ease-out forwards;
+}
+@keyframes jojo-fx-pop {
+  0% {
+    opacity: 0;
+    scale: 2.2;
+  }
+  15% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.15;
+    transform: translateY(-14px);
+  }
+}
+
+/* éclat d'impact : étoile blanche bordée d'or */
+.jojo-fx-impact {
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(circle, #fff 0 35%, #ffe27a 55%, transparent 72%);
+  clip-path: polygon(
+    50% 0,
+    58% 34%,
+    85% 15%,
+    66% 42%,
+    100% 50%,
+    66% 58%,
+    85% 85%,
+    58% 66%,
+    50% 100%,
+    42% 66%,
+    15% 85%,
+    34% 58%,
+    0 50%,
+    34% 42%,
+    15% 15%,
+    42% 34%
+  );
+  animation: jojo-fx-impact 0.25s ease-out forwards;
+}
+@keyframes jojo-fx-impact {
+  from {
+    opacity: 1;
+    scale: 0.3;
+  }
+  to {
+    opacity: 0;
+    scale: 1.4;
+  }
+}
+
+/* coup final : le mot écrase l'écran, puis s'efface */
+.jojo-fx-final {
+  translate: -50% -50%;
+  white-space: nowrap;
+  font-size: clamp(4rem, 12vw, 9rem);
+  letter-spacing: 0.05em;
+  -webkit-text-stroke: 5px #050308;
+  paint-order: stroke fill;
+  text-shadow: 7px 7px 0 #050308;
+  animation: jojo-fx-final 1s cubic-bezier(0.2, 0.9, 0.3, 1.3) forwards;
+}
+@keyframes jojo-fx-final {
+  0% {
+    opacity: 0;
+    scale: 3.5;
+    transform: skewX(-12deg);
+  }
+  18%,
+  70% {
+    opacity: 1;
+    scale: 1;
+    transform: skewX(-12deg);
+  }
+  100% {
+    opacity: 0;
+    scale: 1.08;
+    transform: skewX(-12deg);
+  }
+}
+
+/* onde de choc */
+.jojo-fx-ring {
+  width: 40px;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border: 6px solid #f4c430;
+  border-radius: 50%;
+  box-shadow:
+    0 0 24px #f4c430,
+    inset 0 0 18px #c78cff;
+  animation: jojo-fx-ring 0.6s ease-out forwards;
+}
+@keyframes jojo-fx-ring {
+  to {
+    width: 70vmax;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* « ドン » rose, en biais */
+.jojo-fx-don {
+  translate: -50% -50%;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: #ff4fa3;
+  -webkit-text-stroke: 3px #050308;
+  paint-order: stroke fill;
+  text-shadow: 4px 4px 0 #050308;
+  rotate: -14deg;
+  animation: jojo-fx-final 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.3) forwards;
+}
+
+/* ── Sprites du jeu de Capcom (bandes d'images, animées en steps()) ── */
+.jojo-fx-sprite {
+  --s: 2;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 14px color-mix(in oklab, #7a4cff 75%, transparent));
+}
+/* Star Platinum : 24 images de 148 × 124, dessiné frappant vers la gauche ; ses poings arrivent
+   sur la souris */
+.jojo-fx-star {
+  --s: 2.2;
+  width: calc(148px * var(--s));
+  height: calc(124px * var(--s));
+  translate: -20% -55%;
+  background-image: url(/jojo/star-platinum-ora-strip.png);
+  background-size: calc(3552px * var(--s)) 100%;
+  animation:
+    jojo-fx-fade-in 0.15s ease-out,
+    jojo-fx-star 1.1s steps(24) infinite;
+}
+@keyframes jojo-fx-star {
+  to {
+    background-position-x: calc(-3552px * var(--s));
+  }
+}
+/* The World : 18 images de 220 × 140, retourné pour faire face à Star Platinum */
+.jojo-fx-world {
+  width: calc(220px * var(--s));
+  height: calc(140px * var(--s));
+  translate: -50% -60%;
+  background-image: url(/jojo/the-world-muda-strip.png);
+  background-size: calc(3960px * var(--s)) 100%;
+  filter: drop-shadow(0 0 14px color-mix(in oklab, #f4c430 70%, transparent));
+  animation:
+    jojo-fx-fade-in 0.15s ease-out,
+    jojo-fx-world 0.75s steps(18) infinite;
+}
+@keyframes jojo-fx-world {
+  to {
+    background-position-x: calc(-3960px * var(--s));
+  }
+}
+/* Star Platinum invoqué, en attente (21 images de 104 × 133) : il flotte près de la souris */
+.jojo-fx-floater {
+  --s: 1.5;
+  width: calc(104px * var(--s));
+  height: calc(133px * var(--s));
+  translate: -50% -50%;
+  opacity: 0.92;
+  background-image: url(/jojo/star-platinum-idle-strip.png);
+  background-size: calc(2184px * var(--s)) 100%;
+  transition: opacity 0.15s;
+  animation:
+    jojo-fx-fade-in 0.45s ease-out,
+    jojo-fx-floater 2.1s steps(21) infinite,
+    jojo-fx-bob 2.4s ease-in-out infinite;
+}
+@keyframes jojo-fx-floater {
+  to {
+    background-position-x: calc(-2184px * var(--s));
+  }
+}
+@keyframes jojo-fx-bob {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.jojo-fx-hidden {
+  opacity: 0;
+}
+/* écrasé par le rouleau compresseur : éclair blanc */
+.jojo-fx-flash {
+  inset: 0;
+  background: #fff;
+  animation: jojo-fx-flash 0.6s ease-out forwards;
+}
+@keyframes jojo-fx-flash {
+  to {
+    opacity: 0;
+  }
+}
+/* apparition en fondu (le glissement vers la droite vient du suivi de la souris) */
+@keyframes jojo-fx-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+/* DIO sur le rouleau compresseur : 44 images de 350 × 202 ; il tombe du ciel, puis martèle */
+.jojo-fx-roller {
+  width: calc(350px * var(--s));
+  height: calc(202px * var(--s));
+  translate: -50% -82%;
+  /* planche en grille (11 × 4 images) : une bande de 44 images dépasserait la taille de texture
+     des cartes graphiques et serait repeinte à chaque image */
+  background-image: url(/jojo/dio-road-roller-grid.png);
+  background-size: calc(3850px * var(--s)) calc(808px * var(--s));
+  /* pas d'ombre floue : recalculée à chaque image d'un sprite aussi grand, elle saccade */
+  filter: none;
+  will-change: transform;
+  animation:
+    jojo-fx-fall 0.52s cubic-bezier(0.55, 0, 1, 0.45) both,
+    jojo-fx-roller-x 0.77s steps(11) infinite,
+    jojo-fx-roller-y 3.08s steps(4) infinite;
+}
+@keyframes jojo-fx-fall {
+  from {
+    transform: translateY(-130vh);
+  }
+}
+@keyframes jojo-fx-roller-x {
+  to {
+    background-position-x: calc(-3850px * var(--s));
+  }
+}
+@keyframes jojo-fx-roller-y {
+  to {
+    background-position-y: calc(-808px * var(--s));
+  }
+}
+/* « ORA ! » final : le rouleau repart dans les airs en tournoyant */
+.jojo-fx-roller-out {
+  animation: jojo-fx-fly 0.9s cubic-bezier(0.3, 0.6, 0.6, 1) forwards;
+}
+@keyframes jojo-fx-fly {
+  to {
+    opacity: 0;
+    transform: translate(40vw, -110vh) rotate(540deg);
+  }
+}
+/* le Stand rappelé s'efface en fondu */
+.jojo-fx-leave {
+  animation: jojo-fx-leave 0.5s ease-in forwards;
+}
+@keyframes jojo-fx-leave {
+  to {
+    opacity: 0;
+  }
+}
+
+.jojo-fx-shout {
+  left: 50%;
+  top: 16%;
+  translate: -50% -50%;
+  white-space: nowrap;
+  font-size: clamp(2.6rem, 8vw, 6.5rem);
+  letter-spacing: 0.04em;
+  color: #f4c430;
+  -webkit-text-stroke: 5px #050308;
+  paint-order: stroke fill;
+  text-shadow:
+    6px 6px 0 #050308,
+    0 0 30px #c78cff;
+  animation: jojo-fx-shout 2.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards;
+}
+@keyframes jojo-fx-shout {
+  0% {
+    opacity: 0;
+    scale: 2.6;
+    transform: skewX(-14deg);
+  }
+  12%,
+  85% {
+    opacity: 1;
+    scale: 1;
+    transform: skewX(-14deg);
+  }
+  100% {
+    opacity: 0;
+    transform: skewX(-14deg) translateY(-20px);
+  }
+}
+
+/* bulle qui explique une capacité de la fiche de Stand (clic sur « Puissance »…) */
+.jojo-fx-tip {
+  position: fixed;
+  z-index: 92;
+  display: flex;
+  max-width: min(260px, calc(100vw - 16px));
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 2px solid #050308;
+  border-radius: 10px;
+  background: #f6efdc;
+  color: #1a1203;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  box-shadow: 4px 4px 0 #050308;
+  animation: jojo-fx-fade-in 0.15s ease-out;
+}
+.jojo-fx-tip strong {
+  font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  color: #7a4cff;
+}
+
+/* bulle d'aide des secrets du thème (une fois par appareil) */
+.jojo-fx-hint {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 91;
+  display: flex;
+  max-width: min(420px, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 3px solid #050308;
+  border-radius: 14px;
+  background: #f6efdc;
+  color: #1a1203;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  box-shadow: 5px 5px 0 #050308;
+  cursor: pointer;
+  animation: jojo-fx-yare 12s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+.jojo-fx-hint strong {
+  font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+  color: #7a4cff;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+}
+
+/* ── Bulle d'un personnage du décor (Jotaro : « やれやれだぜ… », DIO : « WRYYYYY ! ») ── */
+.jojo-fx-bubble {
+  translate: -50% calc(-100% - 12px);
+  padding: 8px 16px;
+  border: 3px solid #050308;
+  border-radius: 18px;
+  background: #f6efdc;
+  color: #050308;
+  white-space: nowrap;
+  font-size: clamp(1.1rem, 2.4vw, 1.7rem);
+  box-shadow: 4px 4px 0 #050308;
+  animation: jojo-fx-bubble 2.2s cubic-bezier(0.2, 0.9, 0.3, 1.3) forwards;
+}
+.jojo-fx-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  border: 10px solid transparent;
+  border-top-color: #050308;
+  translate: -50% 0;
+}
+.jojo-fx-bubble-dio {
+  background: #ffe27a;
+  color: #4a1d8f;
+  transform: skewX(-10deg);
+}
+@keyframes jojo-fx-bubble {
+  0% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  10%,
+  85% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* ゴゴ violets animés qui montent autour de DIO */
+.jojo-fx-gogo {
+  width: 81px;
+  height: 141px;
+  translate: -50% -50%;
+  background: url(/jojo/menacing-gogo-strip.png) 0 0 / 648px 141px no-repeat;
+  animation:
+    jojo-fx-gogo-rise 1.6s ease-out forwards,
+    jojo-fx-gogo 0.8s steps(8) infinite;
+}
+@keyframes jojo-fx-gogo {
+  to {
+    background-position-x: -648px;
+  }
+}
+@keyframes jojo-fx-gogo-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.6);
+  }
+  20%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-90px) scale(1.1);
+  }
+}
+
+@keyframes jojo-fx-yare {
+  0% {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+  12%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
 /* « ZA WARUDO » (ZaWarudo, thème JoJo) : onde qui inverse les couleurs, puis temps arrêté. */
 .za-wave {
   position: absolute;
@@ -821,14 +1275,15 @@ html.tbc-freeze body > :not(.tbc-layer) *::after {
 }
 
 /* temps arrêté : tout se fige dans une teinte délavée, vert-gris */
-html.time-stop body > :not(.za-layer) {
+/* les effets JoJo (.jojo-fx) échappent à l'arrêt du temps, comme Star Platinum */
+html.time-stop body > :not(.za-layer, .jojo-fx) {
   filter: grayscale(0.85) sepia(0.25) hue-rotate(70deg) brightness(0.8) contrast(1.15);
   transition: filter 0.2s;
 }
 
-html.time-stop body > :not(.za-layer) *,
-html.time-stop body > :not(.za-layer) *::before,
-html.time-stop body > :not(.za-layer) *::after {
+html.time-stop body > :not(.za-layer, .jojo-fx) *,
+html.time-stop body > :not(.za-layer, .jojo-fx) *::before,
+html.time-stop body > :not(.za-layer, .jojo-fx) *::after {
   animation-play-state: paused !important;
 }
 

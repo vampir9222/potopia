@@ -195,6 +195,11 @@ export async function listPartners(userId: string): Promise<Who[]> {
  * nombre d'agents trouvés (et, pour les rares parties en mort subite, les cases trouvées, afin de
  * savoir si c'est encore à moi de toucher).
  */
+/** Nombre de parties du joueur, en cours ou terminées (fiche de Stand du thème JoJo). */
+export async function countGames(userId: string): Promise<number> {
+  return db.agentsGame.count({ where: { OR: [{ userA: userId }, { userB: userId }] } });
+}
+
 export async function listGames(userId: string): Promise<LobbyGame[]> {
   const games = await db.agentsGame.findMany({
     where: { OR: [{ userA: userId }, { userB: userId }] },

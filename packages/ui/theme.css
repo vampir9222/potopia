@@ -544,19 +544,23 @@
   .jojo-decor {
     display: var(--jojo);
   }
-  /* rayons dorés et violets qui partent du coin de DIO et tournent très lentement */
+  /* Rayons dorés et violets qui partent de DIO (en haut à droite, dans l'écran) et tournent très
+     lentement. Le calque est un carré centré sur ce point, assez grand pour couvrir tout l'écran
+     quel que soit l'angle : aucun bord ne passe dans le champ, les traits ne sont jamais coupés. */
   .jojo-rays {
     position: absolute;
-    inset: -60%;
+    left: calc(82vw - 150vmax);
+    top: calc(18vh - 150vmax);
+    width: 300vmax;
+    height: 300vmax;
     background: repeating-conic-gradient(
-      from 0deg at 78% 22%,
+      from 0deg,
       color-mix(in oklab, var(--accent) 7%, transparent) 0deg 4deg,
       transparent 4deg 12deg,
       color-mix(in oklab, var(--arcane) 8%, transparent) 12deg 15deg,
       transparent 15deg 24deg
     );
     animation: spin 240s linear infinite;
-    transform-origin: 78% 22%;
   }
   /* trame de manga, plus dense vers les bords */
   .jojo-tone {
@@ -597,14 +601,16 @@
     opacity: 0.14;
     mask-image: radial-gradient(circle at 55% 45%, #000 25%, transparent 68%);
   }
-  /* « ゴゴゴ » qui montent lentement en se balançant */
+  /* « ゴゴ » violets animés (8 images de 181 × 314) qui montent lentement en se balançant */
   .jojo-menace {
     position: absolute;
-    bottom: -140px;
-    aspect-ratio: 89 / 160;
-    background: url(/jojo/menacing.png) center / contain no-repeat;
+    bottom: -160px;
+    aspect-ratio: 181 / 314;
+    background: url(/jojo/menacing-gogo-strip.png) 0 0 / 800% 100% no-repeat;
     opacity: 0;
-    animation: jojo-menace linear infinite;
+    animation:
+      jojo-menace var(--menace-time, 20s) linear var(--menace-delay, 0s) infinite,
+      jojo-gogo 0.8s steps(8, jump-none) infinite;
   }
   /* étoiles Joestar qui scintillent */
   .jojo-star {
@@ -625,6 +631,20 @@
     opacity: 0;
     animation: jojo-star ease-in-out infinite;
   }
+  /* DIO seul, en attente, tourné vers Jotaro : 6 images de 66 × 120 (The World ne sort qu'au
+     choc des rafales, JojoFx) */
+  .jojo-dio {
+    position: absolute;
+    left: 28vw;
+    bottom: 0;
+    width: 92px;
+    height: 168px;
+    background: url(/jojo/dio-idle-strip.png) 0 0 / 552px 168px no-repeat;
+    image-rendering: pixelated;
+    opacity: 0.6;
+    filter: drop-shadow(0 0 10px color-mix(in oklab, var(--accent) 60%, transparent));
+    animation: jojo-dio 0.6s steps(6) infinite;
+  }
   /* Jotaro prend la pose (« yare yare daze ») dans le coin : 30 images de 72 × 113 */
   .jojo-pose {
     position: absolute;
@@ -637,6 +657,172 @@
     opacity: 0.55;
     filter: drop-shadow(0 0 10px color-mix(in oklab, var(--arcane) 70%, transparent));
     animation: jojo-pose 3.6s steps(30) infinite;
+  }
+
+  /* Fiche de Stand du membre (StandCard), dans le cadre du compte : affichée seulement par le
+     thème JoJo, à la place de la ligne avatar + nom. */
+  .jojo-stand {
+    display: none;
+    position: relative;
+    padding: 10px 12px 6px;
+    border: 2px solid #050308;
+    background:
+      radial-gradient(circle, rgb(255 255 255 / 0.06) 1px, transparent 1.6px) 0 0 / 6px 6px,
+      linear-gradient(160deg, #2a1c5c 0%, #140f2e 60%, #0c0a1c 100%);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--accent) 50%, transparent),
+      4px 4px 0 #050308;
+    overflow: hidden;
+  }
+  [data-theme="jojo"] .jojo-stand {
+    display: block;
+  }
+  /* bouton « STAND » (police JoJo), en tête de fiche : il s'allume quand le Stand est sorti
+     (classe posée par JojoFx) */
+  .jojo-stand-toggle {
+    display: inline-block;
+    margin: 0 0 6px 2px;
+    padding: 2px 11px 1px;
+    border: 2px solid #050308;
+    background: #2a1c5c;
+    color: var(--muted);
+    font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    transform: skewX(-10deg);
+    box-shadow: 3px 3px 0 #050308;
+    cursor: pointer;
+    transition:
+      color 0.2s,
+      background 0.2s,
+      box-shadow 0.2s;
+  }
+  .jojo-stand-toggle:hover,
+  .jojo-stand-toggle:focus-visible {
+    outline: none;
+    color: var(--accent);
+  }
+  html.jojo-stand-on .jojo-stand-toggle {
+    background: var(--accent-gradient);
+    color: #1a1203;
+    box-shadow:
+      3px 3px 0 #050308,
+      0 0 16px 2px color-mix(in oklab, var(--arcane) 80%, transparent);
+  }
+  .jojo-stand-name {
+    display: block;
+    max-width: 100%;
+    text-align: left;
+    cursor: pointer;
+  }
+  .jojo-stand-name:hover,
+  .jojo-stand-name:focus-visible {
+    outline: none;
+    filter: brightness(1.15);
+  }
+  [data-theme="jojo"] .theme-identity {
+    /* !important : la classe flex de Tailwind (couche utilities) passerait devant */
+    display: none !important;
+  }
+  /* sur une seule ligne ; un nom vraiment long finit en « … » */
+  .jojo-stand-name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+    font-size: 1.2rem;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    -webkit-text-stroke: 1.5px #050308;
+    paint-order: stroke fill;
+    text-shadow: 3px 3px 0 #050308;
+    transform: skewX(-8deg);
+    transform-origin: left;
+  }
+  .jojo-stand-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  /* avatar dans son aura de Stand : violet et or qui pulsent */
+  .jojo-stand-photo {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--surface-hover);
+    font-weight: 700;
+    animation: jojo-aura 2.6s ease-in-out infinite;
+  }
+  .jojo-stand-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .jojo-stand-owner {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    font-weight: 700;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+  .jojo-stand-owner small {
+    font-size: 0.65rem;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* l'hexagone des capacités, comme dans l'anime */
+  .jojo-stand-chart {
+    display: block;
+    width: 192px;
+    max-width: 100%;
+    margin: 4px auto 0;
+    overflow: visible;
+  }
+  /* un clic sur une capacité affiche ce qu'elle mesure (bulle, JojoFx) */
+  .jojo-stand-stat {
+    cursor: pointer;
+  }
+  .jojo-stand-stat:hover .jojo-stand-label {
+    fill: var(--accent);
+  }
+  .jojo-stand-ring {
+    fill: none;
+    stroke: color-mix(in oklab, var(--muted) 35%, transparent);
+    stroke-width: 0.8;
+  }
+  .jojo-stand-axis {
+    stroke: color-mix(in oklab, var(--muted) 30%, transparent);
+    stroke-width: 0.8;
+  }
+  .jojo-stand-shape {
+    fill: color-mix(in oklab, var(--accent) 45%, transparent);
+    stroke: var(--accent);
+    stroke-width: 1.6;
+    filter: drop-shadow(0 0 4px color-mix(in oklab, var(--accent) 70%, transparent));
+  }
+  .jojo-stand-label {
+    font-size: 10px;
+    fill: var(--muted);
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+  .jojo-stand-grade {
+    font-family: var(--font-jojo-face, Impact), Impact, sans-serif;
+    font-size: 13px;
+    fill: var(--text);
+    text-anchor: middle;
+    paint-order: stroke;
+    stroke: #050308;
+    stroke-width: 2.5px;
   }
 
   /* Décor du thème One Piece (composants OnePieceDecor, OnePieceHaki), affiché seulement par ce
@@ -987,6 +1173,31 @@
   50% {
     opacity: 0.65;
     transform: scale(1) rotate(36deg);
+  }
+}
+@keyframes jojo-aura {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px #050308,
+      0 0 10px 3px color-mix(in oklab, var(--arcane) 75%, transparent),
+      0 0 22px 6px color-mix(in oklab, var(--accent) 25%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px #050308,
+      0 0 16px 6px color-mix(in oklab, var(--arcane) 90%, transparent),
+      0 0 34px 12px color-mix(in oklab, var(--accent) 45%, transparent);
+  }
+}
+@keyframes jojo-gogo {
+  to {
+    background-position-x: 100%;
+  }
+}
+@keyframes jojo-dio {
+  to {
+    background-position-x: -552px;
   }
 }
 @keyframes jojo-pose {
