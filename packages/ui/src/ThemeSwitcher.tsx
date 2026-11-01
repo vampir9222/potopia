@@ -4,6 +4,7 @@ import { Check, Palette } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cx } from "./cx";
 import { THEME_COOKIE, THEMES, type ThemeId } from "./themes";
+import { apothicaire } from "./apothicaire";
 import { don } from "./don";
 import { zaWarudo } from "./zaWarudo";
 
@@ -40,6 +41,8 @@ export function ThemeSwitcher({ current }: { current: ThemeId }) {
     if (id === "jojo") zaWarudo();
     // passer au thème One Piece : « ドン!! », coup de tambour et onomatopée de manga
     if (id === "onepiece" && theme !== "onepiece") don();
+    // passer au thème Apothicaire : le rouleau du titre se déroule sur l'opening
+    if (id === "apothicaire" && theme !== "apothicaire") apothicaire();
     setTheme(id);
     setOpen(false);
     document.documentElement.dataset.theme = id;

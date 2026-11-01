@@ -209,6 +209,13 @@ Pour chaque étape, les critères de fin incluent toujours que `pnpm lint`, `pnp
       avec le Jolly Roger, titres façon logo ; le cadre du compte devient l'avis de recherche du
       membre (sa prime = son solde, chapeau de paille au coin) ; le choisir déclenche « ドン!! »
       avec Gear 5 et les Tambours de la Libération.
+    - Thème Apothicaire (Les Carnets de l'apothicaire) : le Palais intérieur de nuit (Voie lactée,
+      vraie lune de l'anime, lanternes, pétales, poisons du carnet de Mao Mao), cadres de laque
+      vermillon filetés d'or ; le cadre du compte devient le registre du Palais (rang de
+      servante à concubine de haut rang selon TROIS et Agents Doubles, sceau à son initiale) ;
+      le choisir déroule le rouleau du titre sur l'opening ; Mao Mao, Jinshi et la lune
+      répondent au clic avec des extraits de l'anime (voix d'Aoi Yuuki) ; « poison » tapé au
+      clavier : sa grande extase.
     - Navigation sans rechargement entre les pages (tuiles, logo, notifications, jeux : `AppLink`
       et `useNavigate` de `@app/ui`) : la musique du header continue d'une page à l'autre.
     - Sur mobile, la colonne gauche passe dans un menu.
