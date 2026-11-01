@@ -9,8 +9,9 @@ import {
   Input,
   Select,
   cx,
-  toBeContinued,
+  defeat,
   useNavigate,
+  victory,
 } from "@app/ui";
 import {
   useCallback,
@@ -74,8 +75,10 @@ export function AgentsGame({ id }: { id: string }) {
     shown.current = next;
     setFlipped(changed);
     setView(next);
-    // mission perdue sous nos yeux (pas en rouvrant une partie déjà finie) : To Be Continued
-    if (prev?.status === "playing" && next.status === "lost") toBeContinued();
+    // mission finie sous nos yeux (pas en rouvrant une partie déjà finie) : défaite (To Be
+    // Continued, ou Mao Mao après 3 d'affilée) ou victoire (qui arrête la série)
+    if (prev?.status === "playing" && next.status === "lost") defeat();
+    if (prev?.status === "playing" && next.status === "won") victory();
   }, []);
 
   const load = useCallback(async () => {

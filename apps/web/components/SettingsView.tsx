@@ -1,6 +1,13 @@
 "use client";
 
-import { Card, cx, setToBeContinuedDisabled, useToBeContinuedDisabled } from "@app/ui";
+import {
+  Card,
+  cx,
+  setMaoMaoDisabled,
+  setToBeContinuedDisabled,
+  useMaoMaoDisabled,
+  useToBeContinuedDisabled,
+} from "@app/ui";
 
 /** Interrupteur : allumé à droite, couleur d'accent ; éteint à gauche, gris. */
 function Switch({
@@ -35,11 +42,12 @@ function Switch({
 }
 
 /**
- * Paramètres du membre, gardés sur cet appareil. Le premier : l'arrêt sur image « To Be
- * Continued » quand on perd une partie.
+ * Paramètres du membre, gardés sur cet appareil : l'arrêt sur image « To Be Continued » quand on
+ * perd une partie, et le regard de Mao Mao après 3 défaites d'affilée.
  */
 export function SettingsView() {
   const tbcDisabled = useToBeContinuedDisabled();
+  const maoDisabled = useMaoMaoDisabled();
   return (
     <Card title="Paramètres">
       <ul className="flex flex-col">
@@ -54,6 +62,20 @@ export function SettingsView() {
             label="« To Be Continued » quand on perd"
             on={!tbcDisabled}
             onChange={(on) => setToBeContinuedDisabled(!on)}
+          />
+        </li>
+        <li className="flex items-center justify-between gap-4 py-2">
+          <div>
+            <p className="text-text text-sm font-medium">Mao Mao après 3 défaites d'affilée</p>
+            <p className="text-muted text-xs">
+              Son regard de jugement (Les Carnets de l&apos;apothicaire), et son sourire narquois
+              quand tu gagnes enfin.
+            </p>
+          </div>
+          <Switch
+            label="Mao Mao après 3 défaites d'affilée"
+            on={!maoDisabled}
+            onChange={(on) => setMaoMaoDisabled(!on)}
           />
         </li>
       </ul>

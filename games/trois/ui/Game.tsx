@@ -1,6 +1,6 @@
 "use client";
 
-import { preloadImages, toBeContinued } from "@app/ui";
+import { defeat, preloadImages, victory } from "@app/ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   dayStarted,
@@ -165,6 +165,7 @@ export function Game({
           setRevealing(null);
           if (w.status === "won") {
             onOutcome?.("won");
+            victory();
             celebrate(false);
             dance(view, row);
             flash(PRAISE[row] ?? "Bravo !");
@@ -173,7 +174,7 @@ export function Game({
             onOutcome?.("lost");
             sfx.lose();
             flash(`C'était « ${w.answer?.toUpperCase()} »`, 2500);
-            toBeContinued();
+            defeat();
           }
         }, REVEAL_MS);
         return;
@@ -197,6 +198,7 @@ export function Game({
         setRevealing(null);
         if (w.status === "won") {
           onOutcome?.("won");
+          victory();
           celebrate(perfect);
           dance(r.slot, row);
           flash(perfect ? "Trois sur trois ! 🏆" : (PRAISE[row] ?? "Bravo !"));
@@ -205,7 +207,7 @@ export function Game({
           onOutcome?.("lost");
           sfx.lose();
           flash(`C'était « ${w.answer?.toUpperCase()} »`, 2500);
-          toBeContinued();
+          defeat();
         }
         if (w.status !== "playing" && r.slot < r.day.words.length - 1)
           setTimeout(() => setView(r.slot + 1), 1200);
