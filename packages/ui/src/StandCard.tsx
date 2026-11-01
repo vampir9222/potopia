@@ -1,37 +1,60 @@
-// Stands célèbres : le membre en reçoit un, toujours le même (tiré de son identifiant).
-const STANDS = [
-  "Star Platinum",
-  "The World",
-  "Crazy Diamond",
-  "Killer Queen",
-  "Gold Experience",
-  "Sticky Fingers",
-  "King Crimson",
-  "Stone Free",
-  "Hermit Purple",
-  "Magician's Red",
-  "Hierophant Green",
-  "Silver Chariot",
-  "The Hand",
-  "Heaven's Door",
-  "Purple Haze",
-  "Sex Pistols",
-  "Aerosmith",
-  "Made in Heaven",
-  "Whitesnake",
-  "Weather Report",
-  "Soft & Wet",
-  "Tusk",
+// Noms de Stand en jeu de mots sur le pseudo, calqués sur de vrais Stands ; le membre en reçoit
+// toujours le même (tiré de son identifiant).
+const PUNS: ((n: string) => string)[] = [
+  (n) => `${n} Experience`, // Gold Experience
+  (n) => `Crazy ${n}`, // Crazy Diamond
+  (n) => `Killer ${n}`, // Killer Queen
+  (n) => `${n} Platinum`, // Star Platinum
+  (n) => `The ${n}`, // The World
+  (n) => `Silver ${n}`, // Silver Chariot
+  (n) => `Sticky ${n}`, // Sticky Fingers
+  (n) => `King ${n}`, // King Crimson
+  (n) => `${n} Free`, // Stone Free
+  (n) => `Hierophant ${n}`, // Hierophant Green
+  (n) => `Purple ${n}`, // Purple Haze
+  (n) => `${n} in Heaven`, // Made in Heaven
 ];
 
-// Les six capacités de la fiche, dans l'ordre de l'hexagone (en partant du haut).
+// Les six capacités, dans l'ordre de l'hexagone (en partant du haut).
 const STATS = ["破壊力", "スピード", "射程距離", "持続力", "精密動作性", "成長性"] as const;
 const STAT_LABELS = ["Puissance", "Vitesse", "Portée", "Endurance", "Précision", "Potentiel"];
 const GRADES = ["E", "D", "C", "B", "A"] as const;
 
+/** Les vraies données du membre dont viennent les notes. */
+export type StandStats = {
+  /** Puissance : solde de Potocoins. */
+  balance: number;
+  /** Vitesse : essais moyens par mot trouvé à TROIS (null sans mot trouvé). */
+  avgTries: number | null;
+  /** Portée : parties d'Agents Doubles. */
+  agentsGames: number;
+  /** Endurance : plus longue série de journées TROIS terminées. */
+  maxStreak: number;
+  /** Précision : journées TROIS parfaites (tous les mots trouvés). */
+  perfectDays: number;
+  /** Potentiel : émeraudes du Chaos trouvées (sur 7). */
+  emeralds: number;
+};
+
+/** Note de 0 (E) à 4 (A) : le nombre de seuils atteints (seuils de D à A, croissants). */
+const grade = (value: number, thresholds: [number, number, number, number]) =>
+  thresholds.filter((t) => value >= t).length;
+
+function grades(s: StandStats): number[] {
+  return [
+    grade(s.balance, [50, 200, 500, 1000]),
+    // moins d'essais = plus rapide : on note l'inverse (6 essais au plus)
+    s.avgTries === null ? 0 : grade(6 - s.avgTries, [1.5, 2.5, 3, 3.5]),
+    grade(s.agentsGames, [2, 6, 15, 30]),
+    grade(s.maxStreak, [3, 7, 14, 30]),
+    grade(s.perfectDays, [1, 4, 10, 20]),
+    grade(s.emeralds, [1, 3, 5, 7]),
+  ];
+}
+
 /** Nombre pseudo-aléatoire stable tiré d'un texte (même résultat côté serveur et client). */
-function hash(text: string, salt: number): number {
-  let h = 2166136261 ^ salt;
+function hash(text: string): number {
+  let h = 2166136261;
   for (const ch of text) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   return (h >>> 0) / 4294967296;
 }
@@ -44,34 +67,39 @@ function vertex(i: number, r: number): [number, number] {
 const ring = (r: number) => STATS.map((_, i) => vertex(i, r).join(",")).join(" ");
 
 type Props = {
-  /** Identifiant du membre : choisit son Stand et ses notes, toujours les mêmes. */
+  /** Identifiant du membre : choisit la forme du nom de son Stand, toujours la même. */
   userId: string;
   name: string;
   image: string | null;
+  stats: StandStats;
 };
 
 /**
- * Fiche de Stand du membre (thème JoJo), comme les fiches de l'anime : nom du Stand, « Manieur »,
- * avatar dans son aura, et l'hexagone des six capacités notées de A à E. Rendue pour tous les
- * thèmes mais affichée seulement par celui-ci (theme.css), où elle remplace la ligne du profil
- * dans le cadre du compte.
+ * Fiche de Stand du membre (thème JoJo), comme les fiches de l'anime : nom du Stand (jeu de mots
+ * sur son pseudo, « Requiem » avec les 7 émeraudes), « Manieur », avatar dans son aura, et
+ * l'hexagone des six capacités notées de A à E d'après ses vraies données. Un clic l'invoque :
+ * Star Platinum flotte alors autour de la souris (`JojoFx` de l'app). Rendue pour tous les thèmes
+ * mais affichée seulement par celui-ci (theme.css), où elle remplace la ligne du profil.
  */
-export function StandCard({ userId, name, image }: Props) {
-  const stand = STANDS[Math.floor(hash(userId, 1) * STANDS.length)] ?? STANDS[0];
-  const grades = STATS.map((_, i) => Math.floor(hash(userId, 10 + i) * GRADES.length));
+export function StandCard({ userId, name, image, stats }: Props) {
+  const first = name.trim().split(/\s+/)[0] || name;
+  const pun = PUNS[Math.floor(hash(userId) * PUNS.length)] ?? PUNS[0];
+  const stand = `${pun?.(first) ?? first}${stats.emeralds >= 7 ? " Requiem" : ""}`;
+  const notes = grades(stats);
   const R = 62;
-  const shape = grades.map((g, i) => vertex(i, (R * (g + 1)) / GRADES.length).join(",")).join(" ");
-  const summary = STAT_LABELS.map((l, i) => `${l} ${GRADES[grades[i] ?? 0]}`).join(", ");
+  const shape = notes.map((g, i) => vertex(i, (R * (g + 1)) / GRADES.length).join(",")).join(" ");
+  const summary = STAT_LABELS.map((l, i) => `${l} ${GRADES[notes[i] ?? 0]}`).join(", ");
 
   return (
-    <div
+    <button
+      type="button"
       className="jojo-stand"
-      role="img"
-      aria-label={`Stand : ${stand}, manieur ${name}. ${summary}.`}
+      data-stand-toggle
+      aria-label={`Stand : ${stand}, manieur ${name}. ${summary}. Invoquer ou rappeler le Stand.`}
     >
-      <p className="jojo-stand-kind">「スタンド」</p>
-      <p className="jojo-stand-name">{stand}</p>
-      <div className="jojo-stand-user">
+      <span className="jojo-stand-kind">「スタンド」</span>
+      <span className="jojo-stand-name">{stand}</span>
+      <span className="jojo-stand-user">
         <span className="jojo-stand-photo">
           {image ? <img src={image} alt="" /> : name.slice(0, 1).toUpperCase()}
         </span>
@@ -79,7 +107,7 @@ export function StandCard({ userId, name, image }: Props) {
           <small>Manieur</small>
           {name}
         </span>
-      </div>
+      </span>
       <svg className="jojo-stand-chart" viewBox="-112 -104 224 208" aria-hidden>
         {GRADES.map((_, g) => (
           <polygon
@@ -102,12 +130,16 @@ export function StandCard({ userId, name, image }: Props) {
                 {label}
               </text>
               <text x={gx} y={gy} dy={4} className="jojo-stand-grade">
-                {GRADES[grades[i] ?? 0]}
+                {GRADES[notes[i] ?? 0]}
               </text>
             </g>
           );
         })}
       </svg>
-    </div>
+      <span className="jojo-stand-call">
+        <span className="jojo-stand-call-off">Clic : invoquer ton Stand</span>
+        <span className="jojo-stand-call-on">Stand invoqué · clic : le rappeler</span>
+      </span>
+    </button>
   );
 }

@@ -717,6 +717,10 @@ html.jojo-rushing * {
     jojo-fx-arrive 0.18s ease-out,
     jojo-fx-star 1.1s steps(24) infinite;
 }
+/* tourné vers la gauche (miroir) : les poings sont alors du côté gauche de l'image */
+.jojo-fx-star-left {
+  translate: -20% -55%;
+}
 @keyframes jojo-fx-star {
   to {
     background-position-x: calc(-3552px * var(--s));
@@ -726,8 +730,7 @@ html.jojo-rushing * {
 .jojo-fx-world {
   width: calc(220px * var(--s));
   height: calc(140px * var(--s));
-  translate: -12% -55%;
-  scale: -1 1;
+  translate: -50% -60%;
   background-image: url(/jojo/the-world-muda-strip.png);
   background-size: calc(3960px * var(--s)) 100%;
   filter: drop-shadow(0 0 14px color-mix(in oklab, #f4c430 70%, transparent));
@@ -738,6 +741,45 @@ html.jojo-rushing * {
 @keyframes jojo-fx-world {
   to {
     background-position-x: calc(-3960px * var(--s));
+  }
+}
+/* Star Platinum invoqué, en attente (21 images de 104 × 133) : il flotte près de la souris */
+.jojo-fx-floater {
+  --s: 1.5;
+  width: calc(104px * var(--s));
+  height: calc(133px * var(--s));
+  translate: -50% -50%;
+  opacity: 0.92;
+  background-image: url(/jojo/star-platinum-idle-strip.png);
+  background-size: calc(2184px * var(--s)) 100%;
+  transition: opacity 0.15s;
+  animation:
+    jojo-fx-arrive 0.3s ease-out,
+    jojo-fx-floater 2.1s steps(21) infinite,
+    jojo-fx-bob 2.4s ease-in-out infinite;
+}
+@keyframes jojo-fx-floater {
+  to {
+    background-position-x: calc(-2184px * var(--s));
+  }
+}
+@keyframes jojo-fx-bob {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.jojo-fx-hidden {
+  opacity: 0;
+}
+/* écrasé par le rouleau compresseur : éclair blanc */
+.jojo-fx-flash {
+  inset: 0;
+  background: #fff;
+  animation: jojo-fx-flash 0.6s ease-out forwards;
+}
+@keyframes jojo-fx-flash {
+  to {
+    opacity: 0;
   }
 }
 @keyframes jojo-fx-arrive {
