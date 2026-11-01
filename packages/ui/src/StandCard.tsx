@@ -1,5 +1,7 @@
+import { StandName } from "./StandName";
+
 // Noms de Stand en jeu de mots sur le pseudo, calqués sur de vrais Stands ; le membre en reçoit
-// toujours le même (tiré de son identifiant).
+// un par défaut, toujours le même (tiré de son identifiant), et peut en changer d'un clic.
 const PUNS: ((n: string) => string)[] = [
   (n) => `${n} Experience`, // Gold Experience
   (n) => `Crazy ${n}`, // Crazy Diamond
@@ -130,16 +132,19 @@ type Props = {
  * Fiche de Stand du membre (thème JoJo), comme les fiches de l'anime : nom du Stand (jeu de mots
  * sur son pseudo, « Requiem » avec les 7 émeraudes), « Manieur », avatar dans son aura, et
  * l'hexagone des six capacités notées de A à E d'après ses vraies données (un clic sur une
- * capacité l'explique). Le bouton « STAND » l'invoque : Star Platinum flotte alors autour de la
+ * capacité l'explique, un clic sur le nom en propose un autre). Le bouton « STAND » l'invoque : Star Platinum flotte alors autour de la
  * souris (`JojoFx` de l'app). Rendue pour tous les thèmes mais affichée seulement par celui-ci
  * (theme.css), où elle remplace la ligne du profil.
  */
 export function StandCard({ userId, name, image, stats }: Props) {
   const first = name.trim().split(/\s+/)[0] || name;
-  const pun = PUNS[Math.floor(hash(userId) * PUNS.length)] ?? PUNS[0];
-  const stand = `${pun?.(first) ?? first}${stats.emeralds >= 7 ? " Requiem" : ""}`;
+  const requiem = stats.emeralds >= 7 ? " Requiem" : "";
+  const names = PUNS.map((pun) => `${pun(first)}${requiem}`);
+  const initial = Math.floor(hash(userId) * PUNS.length);
+  const stand = names[initial] ?? first;
   const notes = STATS.map((s) => s.grade(stats));
-  const R = 62;
+  // petit hexagone, mais textes à leur taille : le dessin est rendu à l'échelle 1 (theme.css)
+  const R = 40;
   const shape = notes.map((g, i) => vertex(i, (R * (g + 1)) / GRADES.length).join(",")).join(" ");
   const summary = STATS.map((s, i) => `${s.label} ${GRADES[notes[i] ?? 0]}`).join(", ");
 
@@ -149,9 +154,7 @@ export function StandCard({ userId, name, image, stats }: Props) {
       <button type="button" className="jojo-stand-toggle" data-stand-toggle aria-pressed="false">
         STAND
       </button>
-      <span className="jojo-stand-name" aria-hidden>
-        {stand}
-      </span>
+      <StandName names={names} initial={initial} />
       <span className="jojo-stand-user" aria-hidden>
         <span className="jojo-stand-photo">
           {image ? <img src={image} alt="" /> : name.slice(0, 1).toUpperCase()}
@@ -161,7 +164,7 @@ export function StandCard({ userId, name, image, stats }: Props) {
           {name}
         </span>
       </span>
-      <svg className="jojo-stand-chart" viewBox="-112 -104 224 208" aria-hidden>
+      <svg className="jojo-stand-chart" viewBox="-96 -80 192 160" aria-hidden>
         {GRADES.map((_, g) => (
           <polygon
             key={g}
@@ -175,7 +178,7 @@ export function StandCard({ userId, name, image, stats }: Props) {
         })}
         <polygon points={shape} className="jojo-stand-shape" />
         {STATS.map((stat, i) => {
-          const [x, y] = vertex(i, R + 32);
+          const [x, y] = vertex(i, R + 28);
           const [gx, gy] = vertex(i, R + 9);
           return (
             <g key={stat.label} className="jojo-stand-stat" data-stand-help={stat.help}>

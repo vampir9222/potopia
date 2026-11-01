@@ -791,7 +791,8 @@ html.jojo-rushing * {
      des cartes graphiques et serait repeinte à chaque image */
   background-image: url(/jojo/dio-road-roller-grid.png);
   background-size: calc(3850px * var(--s)) calc(808px * var(--s));
-  filter: drop-shadow(0 18px 18px rgb(0 0 0 / 0.6));
+  /* pas d'ombre floue : recalculée à chaque image d'un sprite aussi grand, elle saccade */
+  filter: none;
   will-change: transform;
   animation:
     jojo-fx-fall 0.52s cubic-bezier(0.55, 0, 1, 0.45) both,
@@ -1274,14 +1275,15 @@ html.jojo-rushing * {
 }
 
 /* temps arrêté : tout se fige dans une teinte délavée, vert-gris */
-html.time-stop body > :not(.za-layer) {
+/* les effets JoJo (.jojo-fx) échappent à l'arrêt du temps, comme Star Platinum */
+html.time-stop body > :not(.za-layer, .jojo-fx) {
   filter: grayscale(0.85) sepia(0.25) hue-rotate(70deg) brightness(0.8) contrast(1.15);
   transition: filter 0.2s;
 }
 
-html.time-stop body > :not(.za-layer) *,
-html.time-stop body > :not(.za-layer) *::before,
-html.time-stop body > :not(.za-layer) *::after {
+html.time-stop body > :not(.za-layer, .jojo-fx) *,
+html.time-stop body > :not(.za-layer, .jojo-fx) *::before,
+html.time-stop body > :not(.za-layer, .jojo-fx) *::after {
   animation-play-state: paused !important;
 }
 

@@ -162,8 +162,7 @@ export function JojoFx() {
       if (card) jolt(contents(card), power, ms);
     };
     /** Gros impact (rouleau compresseur) : c'est le décor du fond qui tremble, pas la page. */
-    const quake = (power: number, ms: number) =>
-      jolt([...document.querySelectorAll(".jojo-decor, .jojo-fx")], power, ms);
+    const quake = (power: number, ms: number) => jolt([layer], power, ms);
     /** La case de la page sous le point (x, y) : là où frappent les poings. */
     const struck = (x: number, y: number) =>
       document
@@ -376,18 +375,16 @@ export function JojoFx() {
       toBeContinued();
     };
     const roadRoller = () => {
-      // il tombe quand le temps reprend
-      if (root().classList.contains("time-stop")) return void later(150, roadRoller);
-      if (!isJojo() || roller) return;
+      // il tombe dans le temps arrêté (les effets JoJo y échappent, comme Star Platinum)
+      if (root().dataset.theme !== "jojo" || roller) return;
       if (!standOn) setStand(true, { announce: false });
       play(SOUNDS.roller, { volume: 1 });
-      const el = spawn("jojo-fx-sprite jojo-fx-roller", {
-        left: `${mouse.x}px`,
-        top: `${mouse.y}px`,
-      });
+      // au milieu de l'écran (on vient de cliquer sur DIO, dans un coin)
+      const at = { x: window.innerWidth * 0.55, y: window.innerHeight * 0.6 };
+      const el = spawn("jojo-fx-sprite jojo-fx-roller", { left: `${at.x}px`, top: `${at.y}px` });
       transient("jojo-fx-shout", {}, "ROAD ROLLER DA !");
       later(520, () => {
-        transient("jojo-fx-ring", { left: `${mouse.x}px`, top: `${mouse.y}px` });
+        transient("jojo-fx-ring", { left: `${at.x}px`, top: `${at.y}px` });
         quake(22, 650);
       });
       roller = { el, escape: later(ROLLER_ESCAPE_MS, crush) };

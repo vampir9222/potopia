@@ -19,6 +19,7 @@ const WAVE_MS = 950; // l'onde s'étend puis se referme ; le temps est arrêté 
 const RESUME_HIT_MS = 800;
 const OUT_MS = 500;
 const VOLUME = 0.8;
+const ROLLER_LANDS_MS = 700; // secret JoJo : le rouleau compresseur tombe, puis le temps reprend
 
 type Phase = "off" | "wave" | "stopped" | "resume";
 
@@ -122,7 +123,8 @@ export function ZaWarudo() {
       className={cx("za-layer fixed inset-0 z-100", phase === "stopped" && "cursor-pointer")}
       onClick={(e) => {
         // secret du thème JoJo : un clic sur DIO pendant l'arrêt du temps, et il lâche son
-        // rouleau compresseur au moment où le temps reprend (JojoFx)
+        // rouleau compresseur dans le temps arrêté (JojoFx) ; le temps reprend une fois le
+        // rouleau posé
         const dio = document.querySelector(".jojo-dio")?.getBoundingClientRect();
         const onDio =
           phase === "stopped" &&
@@ -131,8 +133,9 @@ export function ZaWarudo() {
           e.clientX <= dio.right &&
           e.clientY >= dio.top &&
           e.clientY <= dio.bottom;
-        skipRef.current();
-        if (onDio) window.dispatchEvent(new Event(ROAD_ROLLER_EVENT));
+        if (!onDio) return skipRef.current();
+        window.dispatchEvent(new Event(ROAD_ROLLER_EVENT));
+        window.setTimeout(() => skipRef.current(), ROLLER_LANDS_MS);
       }}
     >
       {(phase === "wave" || phase === "resume") && (
