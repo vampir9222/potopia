@@ -100,7 +100,7 @@ const STATS: { label: string; help: string; grade: (s: StandStats) => number }[]
   },
   {
     label: "Potentiel",
-    help: "Les émeraudes du Chaos que tu as trouvées. D dès 1, C dès 3, B dès 5, A avec les 7 : ton Stand passe alors en Requiem.",
+    help: "Les émeraudes du Chaos que tu as trouvées. D dès 1, C dès 3, B dès 5, A avec les 7 : deux noms Requiem se débloquent (clic sur le nom de ton Stand).",
     grade: (s) => grade(s.emeralds, [1, 3, 5, 7]),
   },
 ];
@@ -130,7 +130,7 @@ type Props = {
 
 /**
  * Fiche de Stand du membre (thème JoJo), comme les fiches de l'anime : nom du Stand (jeu de mots
- * sur son pseudo, « Requiem » avec les 7 émeraudes), « Manieur », avatar dans son aura, et
+ * sur son pseudo ; les 7 émeraudes débloquent les deux Requiem), « Manieur », avatar dans son aura, et
  * l'hexagone des six capacités notées de A à E d'après ses vraies données (un clic sur une
  * capacité l'explique, un clic sur le nom en propose un autre). Le bouton « STAND » l'invoque : Star Platinum flotte alors autour de la
  * souris (`JojoFx` de l'app). Rendue pour tous les thèmes mais affichée seulement par celui-ci
@@ -138,8 +138,11 @@ type Props = {
  */
 export function StandCard({ userId, name, image, stats }: Props) {
   const first = name.trim().split(/\s+/)[0] || name;
-  const requiem = stats.emeralds >= 7 ? " Requiem" : "";
-  const names = PUNS.map((pun) => `${pun(first)}${requiem}`);
+  // les deux seuls Stands Requiem de JoJo, débloqués par les 7 émeraudes, à la fin de la liste
+  const names = [
+    ...PUNS.map((pun) => pun(first)),
+    ...(stats.emeralds >= 7 ? [`${first} Experience Requiem`, `Silver ${first} Requiem`] : []),
+  ];
   const initial = Math.floor(hash(userId) * PUNS.length);
   const stand = names[initial] ?? first;
   const notes = STATS.map((s) => s.grade(stats));
